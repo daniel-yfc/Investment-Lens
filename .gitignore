@@ -1,0 +1,14 @@
+```gitignore
+# Windows artefacts
+desktop.ini
+Thumbs.db
+
+# macOS artefacts
+.DS_Store
+
+# Portfolio snapshots (contain personal financial data — do not commit)
+assets/portfolio-snapshot.csv
+
+# Temporary files
+*.tmp
+*.bak
