@@ -1,132 +1,175 @@
 ---
 name: update-quote
-description: 更新投資組合 CSV 的最新報價、持有部位市值、未實現損益與 value_date。當用戶說「更新報價」、「update quote」、「刷新組合」、「更新市值」時觸發。
-argument-hint: "[CSV 內容 或 檔案路徑]"
-disable-model-invocation: false
-allowed-tools: Read, Write, Bash(date *)
+description: >
+  Refreshes market prices, NAVs, and exchange rates in a portfolio CSV.
+  Updates the value_date field to current timestamp with [auto] tag.
+  Handles: Taiwan stocks/ETFs (Yahoo Finance .TW suffix), US/EU/AU equities
+  (Yahoo Finance), cryptocurrencies (CoinGecko API), and exchange rates
+  (Bank of Taiwan official rates). Does NOT perform investment analysis —
+  outputs a refreshed CSV only. Domestic Taiwan funds (CMOGEU/CFOGEU) and
+  eToro Smart Portfolios require manual confirmation; this skill will prompt
+  the user for these values instead of auto-fetching.
+argument-hint: "[CSV content | ticker symbol | 'FX only']"
+disable-model-invocation: true
+allowed-tools: Bash(curl *), Bash(python *), Read, Write
+effort: medium
 ---
 
-# Update Quote — 投資組合報價更新程序
+# Update-Quote Skill v1.1 — Price Refresh Execution
 
-## 任務目標
+## Purpose & Strict Scope
 
-接收用戶提供的投資組合 CSV（貼上內容或指定路徑），針對每個有效標的查詢最新市場報價，更新以下欄位後輸出完整修訂版 CSV，並在頁首寫入本次更新的 `value_date`。
+This skill has ONE job: refresh prices and update `value_date`. It does NOT analyse, recommend, rebalance, or modify any field other than `最新報價`, `持有部位(原幣)`, `持有部位(台幣)`, `未實現損益(原幣)`, `未實現損益(TWD)`, `未實現報酬率`, `value_date`, and `last_updated_by`.
+
+**HARD RULE**: Do not invoke investment analysis, routing logic, or any framework from `investment-lens`. If the user asks "and what do you think about this portfolio?", respond: "Quote refresh complete. For analysis, please use `/investment-lens`."
 
 ---
 
-## Step 1：接收輸入
+## STEP 1 — Input Parsing
 
-接受以下任一形式：
-- 用戶直接貼上 CSV 原始文字
-- 用戶提供本地檔案路徑（用 Read 工具讀取）
-- 用戶說「用上次的組合」→ 嘗試讀取 `assets/portfolio-snapshot.csv`
+Accept one of three input modes:
 
-解析 CSV 時識別以下欄位（依順序）：
+1. **Full CSV paste**: Parse all holdings. Apply the update matrix below to each row.
+2. **Single ticker override**: e.g., `GOOG 175.50` — update only that ticker's price.
+3. **FX-only update**: e.g., `USD=32.5, EUR=35.2, AUD=20.8` — recalculate all TWD values using new rates without fetching new equity prices.
 
+---
+
+## STEP 2 — CFI-to-Source Routing Matrix
+
+Load `references/asset-classification.md` to resolve ambiguous tickers. Apply the source routing table:
+
+| CFI Code | Asset Type | Ticker Format | Primary Source | Fallback |
+|---------|-----------|--------------|---------------|---------|
+| `ESVUFR` / `CEOGDU` / `CEOBDU` (Taiwan) | TW stocks/ETFs | `{code}.TW` | Yahoo Finance | Manual |
+| `CEOBDU` (00720B) | TW Bond ETF | `00720B.TW` | Yahoo Finance | Manual |
+| `ESVTFR` / `CEORDU` (US) | US stocks/ETFs | Ticker as-is | Yahoo Finance | Manual |
+| `ESVUFR` (EUR listed) | EU stocks | `{code}.MI`, `{code}.AS` etc. | Yahoo Finance | Manual |
+| `ESVUFR` (AUD listed) | AU stocks | `{code}.AX` | Yahoo Finance | Manual |
+| `CIOGBU` | Crypto (BTC/ETH) | CoinGecko ID | CoinGecko API | Manual |
+| `CMOGEU` / `CFOGEU` / `CMOBDU` | Domestic TW funds (T+1 NAV) | ISIN | ⚠️ MANUAL ONLY | — |
+| `CIOGMU` / `CIOGLU` / `CIOIMU` | eToro Smart Portfolios | — | ⚠️ MANUAL ONLY | — |
+| `CFOGEU` | Foreign currencies | — | Bank of Taiwan official rates | Manual |
+| `CEOGEU` / `CEOIBU` (LU/IE ISIN) | Foreign funds | ISIN | ⚠️ MANUAL ONLY (monthly) | — |
+
+**For all MANUAL ONLY items**: Output a prompt in the following format:
 ```
-標的代碼, Google Finance, 標的名稱, 類別, ISIN, 計價幣別, 匯率,
-單位數, 平均成本(原幣), 持有部位(原幣), 持有部位(台幣),
-最新報價, 未實現報酬率, 交易成本(原幣), 未實現損益(原幣), 未實現損益(TWD),
-資產類別, 交易平台, 備註
+⚠️ [Holding Name] ([CFI Code]) cannot be auto-fetched.
+Please provide the current NAV/price manually:
+- Source: [specific URL or platform]
+- Expected format: [NAV per unit in original currency]
+Paste the value here, or type 'skip' to leave this holding unchanged.
 ```
 
 ---
 
-## Step 2：分類處理邏輯
+## STEP 3 — Staleness Pre-Check
 
-### 可自動查詢報價的標的（優先處理）
+Read the current `value_date` from the CSV header. Determine which holdings genuinely need updating:
 
-| 類型 | 識別方式 | 報價來源 |
-|------|---------|---------|
-| 台股 ETF / 個股 | 計價幣別 = TWD，代碼為數字或 00xxx | 台灣證交所 / Yahoo Finance TW |
-| 美股個股 / ETF | 計價幣別 = USD，代碼為英文字母 | Yahoo Finance / Google Finance |
-| 歐股個股 | 計價幣別 = EUR | Yahoo Finance（加 .AS / .MI 後綴） |
-| 澳股個股 | 計價幣別 = AUD | Yahoo Finance（加 .AX 後綴） |
-| 加密貨幣 | 資產類別 = 加密貨幣 | CoinGecko / Yahoo Finance |
-
-### 需要人工確認的標的（標記後跳過自動更新）
-
-| 類型 | 識別條件 | 處理方式 |
-|------|---------|---------|
-| 境內基金 | 無標的代碼（代碼欄空白），ISIN 為 TW000T 開頭 | 標記 `⚠️ 需手動更新（投信官網）`，保留原報價 |
-| 境外基金 | ISIN 為 LU / IE 開頭，代碼欄空白 | 標記 `⚠️ 需手動更新（基金公司官網）`，保留原報價 |
-| eToro 智慧投資組合 | 資產類別 = `eToro 智慧投資組合` | 標記 `⚠️ 需登入 eToro 確認`，保留成本作為估算市值 |
+| Days since value_date | Action |
+|----------------------|--------|
+| ≤ 1 trading day | Skip auto-fetchable items (already fresh). Still prompt for MANUAL items if >3 days. |
+| 2–3 trading days | Fetch all auto-fetchable items. Prompt for MANUAL items. |
+| 4+ trading days | Fetch all auto-fetchable items. Strongly prompt for MANUAL items with urgency flag. |
 
 ---
 
-## Step 3：更新計算公式
+## STEP 4 — Price Fetch Execution
 
-取得最新報價後，依序重新計算：
+For each auto-fetchable holding, construct the appropriate API call:
 
-**持有部位（原幣）：**
-$$\text{持有部位(原幣)} = \text{單位數} \times \text{最新報價}$$
+**Yahoo Finance (stocks/ETFs)**:
+```bash
+curl -s "https://query1.finance.yahoo.com/v8/finance/chart/{TICKER}?interval=1d&range=1d" \
+  | python3 -c "import sys,json; d=json.load(sys.stdin); \
+    print(d['chart']['result'][0]['meta']['regularMarketPrice'])"
+```
 
-**持有部位（台幣）：**
+**CoinGecko (BTC/ETH)**:
+```bash
+curl -s "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd" \
+  | python3 -c "import sys,json; d=json.load(sys.stdin); print(d['bitcoin']['usd'])"
+```
+
+**BTC Price Sanity Check**: If fetched BTC price < $10,000 or > $500,000, flag as `[PRICE ANOMALY — verify manually]` and do NOT write to CSV. This guards against the known anomaly (CSV showing $31.05).
+
+---
+
+## STEP 5 — TWD Recalculation
+
+After all prices are updated, recalculate:
+
 $$\text{持有部位(台幣)} = \text{持有部位(原幣)} \times \text{匯率}$$
 
-**未實現損益（原幣）：**
-$$\text{未實現損益(原幣)} = (\text{最新報價} - \text{平均成本(原幣)}) \times \text{單位數} - \text{交易成本(原幣)}$$
+$$\text{未實現損益(TWD)} = (\text{最新報價} - \text{平均成本(原幣)}) \times \text{單位數} \times \text{匯率}$$
 
-**未實現損益（台幣）：**
-$$\text{未實現損益(TWD)} = \text{未實現損益(原幣)} \times \text{匯率}$$
+$$\text{未實現報酬率} = \frac{\text{最新報價} - \text{平均成本(原幣)}}{\text{平均成本(原幣)}} \times 100\%$$
 
-**未實現報酬率：**
-$$\text{未實現報酬率} = \frac{\text{未實現損益(原幣)}}{\text{平均成本(原幣)} \times \text{單位數}} \times 100\%$$
+Use the exchange rates specified in the input. If not specified, use the most recent Bank of Taiwan mid-rate and note: `[FX rate: Bank of Taiwan mid-rate as of session date — verify at rate.bot.com.tw]`.
 
 ---
 
-## Step 4：輸出格式
+## STEP 6 — value_date Write-Back (MANDATORY)
 
-### 4-1 在 CSV 頭部插入 value_date 後輸出完整 CSV
-
-輸出的第一行固定為：
+After all updates are applied, update the CSV header:
 
 ```
-# value_date: YYYY-MM-DD HH:MM (UTC+8)
-# last_updated_by: investment-lens/update-quote
-# auto_updated: [可自動更新的標的數量] / [總標的數量]
+# value_date: [YYYY-MM-DD HH:MM] (UTC+8) [auto]
+# last_updated_by: investment-lens/update-quote v1.1
 ```
 
-之後接原 CSV 格式，已更新欄位直接覆寫，無法更新的標的保留原值並在「備註」欄追加警告標記。
+The `[auto]` tag distinguishes system-updated timestamps from user-entered ones. This is the canonical record for `investment-lens`'s Gate 0-A freshness check.
 
-### 4-2 輸出更新摘要（純文字，顯示於對話框）
+---
+
+## STEP 7 — Update Summary Report
+
+Output a structured summary before returning the updated CSV:
 
 ```
-📅 報價更新完成 — value_date: [日期時間]
+✅ Update-Quote Complete — [YYYY-MM-DD HH:MM UTC+8]
 
-✅ 自動更新（[N] 個標的）：
-  GOOG   USD 298.79 → [新報價]  ([漲跌 %])
-  VOO    USD 597.94 → [新報價]  ([漲跌 %])
-  0050   TWD  75.90 → [新報價]  ([漲跌 %])
-  ...
+Auto-updated (Yahoo Finance): [N] holdings
+Auto-updated (CoinGecko): [N] holdings
+Manual confirmation pending: [list of holdings]
+Skipped (already fresh): [N] holdings
+Anomalies flagged: [list, or 'None']
 
-⚠️ 需手動更新（[N] 個標的）：
-  元大台灣加權（TW000T0574Y1）— 請至元大投信官網查詢淨值
-  路博邁收益成長（TW000T5003W0）— 請確認是否已贖回
-  ...
+FX rates used:
+  USD/TWD: [X]
+  EUR/TWD: [X]
+  AUD/TWD: [X]
 
-⚠️ eToro 智慧投資組合（[N] 個）— 請登入 eToro 確認最新損益：
-  Gioben Capital - Chameleon
-  Capital Protection 2030 - Franklin Templeton
-  Long Short Alpha Momentum-LS
+Portfolio total (TWD): NT$[X]
+Change from previous value_date: [+/-]NT$[Y] ([+/-]Z%)
 
-💼 組合總市值變動：
-  更新前：NT$ [原總市值]
-  更新後：NT$ [新總市值]（[漲跌金額] / [漲跌 %]）
-  （⚠️ 不含手動更新標的，數字為部分估算）
+⚠️ Pending manual updates for: [list]
+To proceed with analysis: /investment-lens [paste updated CSV]
 ```
 
 ---
 
-## Step 5：儲存快照（可選）
+## Guidelines (MANDATORY constraints)
 
-若用戶確認後，將更新完成的 CSV 寫入 `assets/portfolio-snapshot.csv`，以便下次用「用上次的組合」快速載入。
+1. **No analysis**: Never output Buy/Sell/Hold recommendations. Never comment on whether a price change is "good" or "bad".
+2. **No CFI reclassification**: Do not change any CFI code in the CSV, even if you believe it is incorrect. Flag suspected CFI errors as `[CFI CHECK NEEDED: current=[X], suggest=[Y]]` in the Notes column.
+3. **No field deletion**: Never remove fields or rows from the CSV. Only update the price-related columns specified in the Purpose section.
+4. **Domestic fund NAV**: For `CMOGEU`/`CFOGEU`/`CMOBDU` Taiwan domestic funds — mark as `T+1 NAV` and set `value_date` for these specific rows to yesterday's date: `[YYYY-MM-DD] (T+1 NAV)`.
+5. **eToro Smart Portfolio**: For `CIOGMU`/`CIOGLU`/`CIOIMU` — never auto-fill. Always prompt for manual input and note the source as `(eToro platform — login required)`.
+6. **BTC anomaly guard**: The known anomaly of BTC showing $31.05 in the CSV is a display error from a historical snapshot. The actual BTC price as of early 2026 is in the $80,000–$100,000+ range. Always verify fetched crypto prices against this known range before writing.
 
 ---
 
-## 執行限制與注意事項
+## Examples
 
-- **匯率不自動更新**：本 Skill 不更新匯率欄位，匯率需由用戶手動維護或另行告知。若需更新匯率，用戶可說「同時更新匯率」，Skill 將查詢當日台銀匯率後一併更新。
-- **加密貨幣報價**：BTC 等加密貨幣 24 小時波動，報價時間點需特別注意，輸出時會標注查詢時間。
-- **eToro 智慧投資組合**：eToro 不提供公開 API，無法自動抓取，必須人工登入確認。
-- **境內基金淨值**：台灣投信基金為每日收盤後公告 T+1 淨值，當日盤中無法取得，保留前一日淨值並標注日期。
+**Example — Valid invocations:**
+- `/update-quote [paste full CSV]`
+- `/update-quote GOOG`
+- `/update-quote USD=32.5`
+- "更新報價"
+- "Refresh my portfolio prices"
+
+**Example — Out of scope (redirect to investment-lens):**
+- "Update quotes AND tell me if I should rebalance" → Update quotes only, then say: "For rebalancing analysis, run `/investment-lens` with the updated CSV."
+- "Is the new BTC price a good entry?" → "Price updated. For analysis, use `/investment-lens BTC`."
