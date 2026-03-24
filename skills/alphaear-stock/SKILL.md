@@ -1,6 +1,6 @@
 ---
 name: alphaear-stock
-description: Search A-Share/HK/US finance stock tickers and retrieve finance stock price history. Use when user asks about finance stock codes, recent price changes, or specific company finance stock info.
+description: Search A-Share/HK/US finance stock tickers and retrieve raw historical stock price data (OHLCV). Use only when the user explicitly requests raw historical price data, specific stock codes, or raw daily price changes. Do NOT use for qualitative investment analysis, deep-dive earnings reviews, or evaluating a stock's buy/sell/hold potential (use investment-lens instead).
 ---
 
 # AlphaEar Stock Skill

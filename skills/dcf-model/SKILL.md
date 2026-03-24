@@ -1,6 +1,6 @@
 ---
 name: dcf-model
-description: Real DCF (Discounted Cash Flow) model creation for equity valuation. Retrieves financial data from SEC filings and analyst reports, builds comprehensive cash flow projections with proper WACC calculations, performs sensitivity analysis, and outputs professional Excel models with executive summaries. Use when users need to value a company using DCF methodology, request intrinsic value analysis, or ask for detailed financial modeling with growth projections and terminal value calculations.
+description: Creates standalone Excel (.xlsx) DCF (Discounted Cash Flow) models for equity valuation. Retrieves financial data from SEC filings and builds comprehensive cash flow projections, WACC, and sensitivity analysis in an Excel spreadsheet. Use strictly when users request an Excel-based quantitative DCF model, spreadsheet intrinsic value analysis, or detailed financial modeling in Excel. Do NOT use for qualitative stock analysis, general valuation discussions, or multi-asset investment lens analysis.
 ---
 
 # DCF Model Builder
