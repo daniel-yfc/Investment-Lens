@@ -1,6 +1,6 @@
 ---
 name: quant-analysis
-description: "Quantitative finance analysis including portfolio optimization, risk modeling, and time series econometrics using jupyter_execute. Use when the user asks about portfolio analysis, stock returns, financial risk, investment optimization, or volatility modeling."
+description: "Programmatic quantitative finance analysis using Python/Jupyter for portfolio optimization, mathematical risk modeling, and time series econometrics. Use when the user specifically asks for algorithmic or mathematical portfolio optimization, statistical stock returns analysis, quantitative financial risk models (VaR, GARCH), or programmatic volatility modeling. Do NOT use for qualitative investment advice or personal asset allocation."
 ---
 
 # Quantitative Analysis Skill
