@@ -1,13 +1,16 @@
 ---
 name: investment-lens
 description: >
-  Multi-asset investment analysis for individual stocks (AAPL, TSMC, 2330),
+  Qualitative and conceptual multi-asset investment analysis for individual stocks (AAPL, TSMC, 2330),
   ETFs and indices (VOO, 0050, QQQ), cryptocurrencies (BTC, ETH), and
   portfolio/allocation diagnostics. Applies ISO 10962:2021 CFI classification,
   All-Seasons framework mapping, Pre-Mortem risk assessment, and 6-philosophy
   routing. Triggers on: ticker analysis, portfolio review, allocation diagnosis,
-  valuation questions, rebalancing decisions. Does NOT trigger on: raw quote
-  update requests (use /update-quote), pure FX conversion, or non-investment queries.
+  qualitative valuation questions, rebalancing decisions. Does NOT trigger on: raw quote
+  update requests (use /update-quote), pure FX conversion,
+  personal CFA/retirement goal planning (use asset-allocation),
+  programmatic Python/Jupyter optimization (use quant-analysis),
+  Excel-based DCF models (use dcf-model), or non-investment queries.
 argument-hint: "[ticker | portfolio-csv | 'portfolio review']"
 effort: high
 user-invocable: true
