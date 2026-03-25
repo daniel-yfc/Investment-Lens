@@ -14,29 +14,38 @@
 
 ## 系統架構
 
-本儲存庫以三個**核心 Skill** 為主軸，形成整合分析流程，其餘為專項輔助工具。
+三個核心 Skill 為主軸，專項工具向它們供料。
 
 ```
-┌─────────────────────────────────────────────────────────┐
+┌───────────────────────────────────────────────────────────┐
+│  alphaear-news      alphaear-search     alphaear-stock   │
+│  (撷取新聞入庫)  (查詢本地 DB)   (OHLCV 數据)    │
+│  alphaear-sentiment   alphaear-deepear-lite              │
+└────────────────────────────┬─────────────────────────────┘
+                           │ 數据供料
+                           ▼
+┌───────────────────────────────────────────────────────────┐
 │                    investment-lens                       │
-│   主樞紐：分析、診斷、資產配置（模式 A / B / C）           │
-│   需要計算時，交棒給 quant-analysis                       │
-└──────────────┬──────────────────────────────────────────┘
+│   模式 A — 個股 / ETF / 加密貨分析                  │
+│   模式 B — 投資組合診斷與再平衡                    │
+│   模式 C — 個人配置與退休規劃（整合 asset-allocation）  │
+│   模式 D — 訊號監控（整合 alphaear-signal-tracker）  │
+└──────────────┬────────────────────────────────────────────┘
                │ 量化交棒
                ▼
-┌─────────────────────────────────────────────────────────┐
+┌───────────────────────────────────────────────────────────┐
 │                    quant-analysis                        │
-│   從屬引擎：VaR、最佳化、因子分析、                        │
-│   GARCH、Monte Carlo、回測                               │
-│   回傳結構化輸出 + reintegration_note                    │
-└──────────────┬──────────────────────────────────────────┘
-               │ 敘事輸出
+│   VaR、最佳化、因子分析、GARCH、Monte Carlo、回測      │
+│   回傳結構化輸出 + reintegration_note                │
+└──────────────┬────────────────────────────────────────────┘
+               │ 文字輸出
                ▼
-┌─────────────────────────────────────────────────────────┐
+┌───────────────────────────────────────────────────────────┐
 │                   alphaear-reporter                      │
-│   統一輸出層：研究筆記、首次涵蓋報告、                     │
-│   投資人材料 — 三種輸出模式                               │
-└─────────────────────────────────────────────────────────┘
+│   模式 A — 研究筆記                                   │
+│   模式 B — 首次涂蓋報告（5 任務工作流）（整合 init-cov） │
+│   模式 C — 投資人材料與簡報                         │
+└───────────────────────────────────────────────────────────┘
 ```
 
 ---
@@ -45,62 +54,67 @@
 
 ### 核心 Skills
 
-| Skill | 角色 | 主要 References | 主要 Assets |
-|-------|------|----------------|-------------|
-| [`investment-lens`](skills/investment-lens/) | 主分析樞紐 | `personal-allocation.md`、`quant-handoff.md`、`all-seasons-portfolio.md`、`valuation-models.md`、`bias-checklist.md` | `portfolio-template.md`、`allocation-template.md` |
-| [`quant-analysis`](skills/quant-analysis/) | 量化引擎 | `model-selection.md` | `input-schema.md`、`output-schema.md` |
-| [`alphaear-reporter`](skills/alphaear-reporter/) | 輸出層 | `coverage-format.md`、`investor-materials-format.md` | `report-templates/research-note.md`、`report-templates/initiating-coverage.md`、`report-templates/investor-brief.md` |
+| Skill | 角色 | 模式 |
+|-------|------|-------|
+| [`investment-lens`](skills/investment-lens/) | 主分析機核 | A: 個股分析、B: 投資組合診斷、C: 個人配置、D: 訊號監控 |
+| [`quant-analysis`](skills/quant-analysis/) | 量化引擎 | VaR、最佳化、因子分析、GARCH、Monte Carlo、回測 |
+| [`alphaear-reporter`](skills/alphaear-reporter/) | 輸出層 | A: 研究筆記、B: 首次涂蓋（5 任務）、C: 投資人材料 |
 
 ### AlphaEar 市場情報系統
 
 | Skill | 功能 |
 |-------|------|
 | [`alphaear-deepear-lite`](skills/alphaear-deepear-lite/) | 從 DeepEar Lite 儀表板獲取即時金融訊號與傳導鏈路分析 |
-| [`alphaear-news`](skills/alphaear-news/) | 熱門財經新聞、市場趨勢、預測市場數據（如 Polymarket） |
+| [`alphaear-news`](skills/alphaear-news/) | **撷取**即時財經新聞入庫（Reuters、Bloomberg、FT、CNBC、Nikkei、WSJ） |
+| [`alphaear-search`](skills/alphaear-search/) | **查詢**本地新聞 DB（`engine='local'`）或即時網路搜尋（Jina / DDG） |
 | [`alphaear-sentiment`](skills/alphaear-sentiment/) | 財經文本市場情緒分析（FinBERT / LLM） |
-| [`alphaear-stock`](skills/alphaear-stock/) | 股票代碼查詢與原始歷史股價（OHLCV）數據 |
-| [`alphaear-signal-tracker`](skills/alphaear-signal-tracker/) | 投資訊號演變追蹤，根據最新市場資訊更新邏輯 |
+| [`alphaear-stock`](skills/alphaear-stock/) | 取得全球交易所原始歷史股價（OHLCV），經由 yfinance |
 | [`alphaear-predictor`](skills/alphaear-predictor/) | 使用 Kronos 進行市場時間序列預測 |
-| [`alphaear-search`](skills/alphaear-search/) | 金融網頁搜尋與本地 RAG 上下文搜尋 |
-| [`alphaear-logic-visualizer`](skills/alphaear-logic-visualizer/) | 建立傳導鏈路視覺化邏輯圖（Draw.io XML） |
+| [`alphaear-logic-visualizer`](skills/alphaear-logic-visualizer/) | 建立傳導鏈路視覚化邏輯圖（Draw.io XML） |
 
 ### 投資組合管理
 
 | Skill | 功能 |
 |-------|------|
-| [`asset-allocation`](skills/asset-allocation/) | 基於 CFA 框架的個人財富管理與退休規劃 |
-| [`update-quote`](skills/update-quote/) | 自動更新投資組合 CSV 中的市場報價、基金淨值與匯率 |
+| [`update-quote`](skills/update-quote/) | 刷新投資組合 CSV 中的即時報價、基金淨値與匯率，重算台幣市値带更新 `value_date` |
 
 ### 機構級公司研究
 
 | Skill | 功能 |
 |-------|------|
-| [`initiating-coverage`](skills/initiating-coverage/) | 5 步驟機構級首次涵蓋研究報告工作流程 |
-| [`datapack-builder`](skills/datapack-builder/) | 從 CIM、SEC 備案萃取資料，建構符合投資委員會標準的 Excel 數據包 |
+| [`datapack-builder`](skills/datapack-builder/) | 從 CIM、SEC 申報萍取資料，建構符合投資委員會標準的 Excel 數据包 |
 
 ### 開發工具
 
 | Skill | 功能 |
 |-------|------|
-| [`skill-creator`](skills/skill-creator/) | 建立與更新 Agent Skills，設計、建構與打包新技能 |
+| [`skill-creator`](skills/skill-creator/) | 建立與更新 Agent Skills — 設計、建構與打包新技能 |
+
+### 已廲随整合（目錄保留供參考）
+
+| Skill | 整合至 |
+|-------|---------|
+| [`initiating-coverage`](skills/initiating-coverage/) | `alphaear-reporter` 模式 B |
+| [`asset-allocation`](skills/asset-allocation/) | `investment-lens` 模式 C |
+| [`alphaear-signal-tracker`](skills/alphaear-signal-tracker/) | `investment-lens` 模式 D |
 
 ---
 
 ## Skills 使用邊界
 
-各 Skill 之間有明確邊界，確保 Agent 路由正確：
-
 | 任務 | 使用 | 不使用 |
 |------|------|--------|
-| 個股與市場質化分析 | `investment-lens` | `alphaear-reporter` |
-| 個人資產配置與退休規劃 | `investment-lens`（Mode C） | `asset-allocation` |
-| 投資組合診斷（全天候框架） | `investment-lens` | `quant-analysis` |
+| 個股與市場質化分析 | `investment-lens` 模式 A | `alphaear-reporter` |
+| 個人資產配置與退休規劃 | `investment-lens` 模式 C | ~~`asset-allocation`~~ |
+| 投資組合診斷（全天候框架） | `investment-lens` 模式 B | `quant-analysis` |
+| 監控現有投資訊號狀態 | `investment-lens` 模式 D | ~~`alphaear-signal-tracker`~~ |
 | 程式化 VaR、最佳化、因子、GARCH | `quant-analysis` | `investment-lens` |
 | 研究筆記與投資報告 | `alphaear-reporter` | `investment-lens` |
-| 完整 5 步驟機構級首次涵蓋報告 | `initiating-coverage` | `alphaear-reporter` |
-| 原始歷史股價（OHLCV）數據 | `alphaear-stock` | `investment-lens` |
-| Excel DCF 估值模型 | `dcf-model` | `investment-lens` |
-| 投資人材料與募資簡報 | `alphaear-reporter` | `investor-materials` |
+| 機構級首次涂蓋報告（5 任務） | `alphaear-reporter` 模式 B | ~~`initiating-coverage`~~ |
+| 原始歷史股價資料（OHLCV） | `alphaear-stock` | `update-quote` |
+| 刷新投資組合 CSV 報價 | `update-quote` | `alphaear-stock` |
+| 撷取即時財經新聞（写入 DB） | `alphaear-news` | `alphaear-search` |
+| 查詢本地已存新聞 | `alphaear-search` `engine='local'` | `alphaear-news` |
 
 ---
 
@@ -127,31 +141,40 @@ your-project/
         │   └── references/
         ├── quant-analysis/
         ├── alphaear-reporter/
-        └── ... （其他 skills）
+        └── ...（其他 skills）
 ```
 
 **步驟三：開始使用**
 
-啟動 Claude Code 後，直接輸入指令，系統將自動路由至對應 Skill：
+啟動 Claude Code 後直接輸入指令，系統將自動路由至對應 Skill：
 
 ```
 # 投資組合診斷
-幫我診斷一下這個投資組合的全天候配置    → investment-lens
+幫我診斷一下這個投資組合的全天候配置    → investment-lens 模式 B
 
 # 個股分析
-分析台積電目前的估值是否合理             → investment-lens
+分析台積電目前的估値是否合理             → investment-lens 模式 A
 
 # 個人配置規劃
-我 45 歲，想規劃退休後的提領策略         → investment-lens Mode C
+我 45 歲，想規劃退休後的提領策略         → investment-lens 模式 C
+
+# 訊號監控
+我的台積電論點有變化嗎？                  → investment-lens 模式 D
 
 # 量化風險分析
 計算這個投資組合的 1 年期 95% VaR       → quant-analysis
 
-# 研究報告輸出
-幫我寫一份研究筆記                        → alphaear-reporter
+# 首次涂蓋報告
+幫我寫一份 TSMC 的首次涂蓋報告         → alphaear-reporter 模式 B
 
-# 原始股價數據
-幫我抓取特斯拉過去三個月的原始歷史股價   → alphaear-stock
+# 研究筆記
+幫我寫一份研究筆記                        → alphaear-reporter 模式 A
+
+# 更新報價
+更新報價                                     → update-quote
+
+# 歷史股價數据
+幫我抓取台積電過去半年的原始歷史股價   → alphaear-stock
 ```
 
 ---
