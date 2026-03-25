@@ -11,9 +11,7 @@ This skill utilizes the Kronos model (via `KronosPredictorUtility`) to perform t
 
 ## Capabilities
 
-### 1. Forecast Market Trends
-
-### 1. Forecast Market Trends
+### 1. Forecast Market Trends (Agentic Workflow)
 
 **Workflow:**
 1.  **Generate Base Forecast**: Use `scripts/kronos_predictor.py` (via `KronosPredictorUtility`) to generate the technical/quantitative forecast.
@@ -41,14 +39,26 @@ print(forecast)
 
 This skill requires the **Kronos** model and an embedding model.
 
-1.  **Kronos Model**:
-    -   Ensure `exports/models` directory exists in the project root.
-    -   Place trained news projector weights (e.g., `kronos_news_v1.pt`) in `exports/models/`.
-    -   Or depend on the base model (automatically downloaded).
+### 1. Kronos Model
 
-2.  **Environment Variables**:
-    -   `EMBEDDING_MODEL`: Path or name of the embedding model (default: `sentence-transformers/all-MiniLM-L6-v2`).
-    -   `KRONOS_MODEL_PATH`: Optional path to override model loading.
+-   Ensure `exports/models` directory exists in the project root.
+-   Place trained news projector weights (e.g., `kronos_news_v1.pt`) in `exports/models/`.
+    -   **Source**: Fine-tuned weights are project-specific and must be trained or provided separately. Contact the repository maintainer for pre-trained weights.
+    -   **Base model**: If no custom weights are provided, the skill falls back to the Hugging Face base Kronos checkpoint (`amazon/chronos-t5-small` or equivalent) which will be downloaded automatically on first run.
+-   Set `KRONOS_MODEL_PATH` environment variable to point to a custom checkpoint if needed.
+
+### 2. Fallback Behaviour
+
+| Condition | Behaviour |
+|-----------|----------|
+| `kronos_news_v1.pt` found in `exports/models/` | Uses fine-tuned news-aware model |
+| File not found, `KRONOS_MODEL_PATH` not set | Downloads and uses Hugging Face base checkpoint |
+| Network unavailable + no local weights | Raises `ModelNotAvailableError`; agent should inform user and suggest providing historical data for simpler statistical fallback |
+
+### 3. Environment Variables
+
+-   `EMBEDDING_MODEL`: Path or name of the embedding model (default: `sentence-transformers/all-MiniLM-L6-v2`).
+-   `KRONOS_MODEL_PATH`: Optional path to override model loading.
 
 ## Dependencies
 
