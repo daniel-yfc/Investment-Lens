@@ -1,8 +1,7 @@
 # Mode B — Initiating Coverage
 
 Load this file when the user requests a first formal equity research write-up
-for a company. This mode owns the full 5-task initiating coverage workflow,
-previously managed by the (now deprecated) `initiating-coverage` skill.
+for a company. This mode owns the full 5-task initiating coverage workflow.
 
 ---
 
@@ -64,17 +63,18 @@ Which task would you like to start with?
 
 ## Detailed Task Instructions
 
-Load the relevant file before starting each task:
+Load the relevant reference file before starting each task.
+All task files are located in `references/tasks/` within `alphaear-reporter`:
 
 | Task | Reference file |
-|------|-------------------------------------------------------|
-| 1 | `task1-company-research.md` |
-| 2 | `task2-financial-modeling.md` |
-| 3 | `task3-valuation.md` |
-| 4 | `task4-chart-generation.md` |
-| 5 | `task5-report-assembly.md` |
+|------|----------------|
+| 1 | `references/tasks/task1-company-research.md` |
+| 2 | `references/tasks/task2-financial-modeling.md` |
+| 3 | `references/tasks/task3-valuation.md` |
+| 4 | `references/tasks/task4-chart-generation.md` |
+| 5 | `references/tasks/task5-report-assembly.md` |
 
-Also available: `/references/valuation-methodologies.md`
+Also available: `references/tasks/valuation-methodologies.md`
 
 ---
 

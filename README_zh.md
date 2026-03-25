@@ -14,7 +14,7 @@
 
 ## 系統架構
 
-三個核心 Skill 為主軸，專項工具向它們供料。
+三個核心 Skill 為主軸，專項工具層層向它們供料。
 
 ```
 ┌───────────────────────────────────────────────────────────┐
@@ -28,8 +28,8 @@
 │                    investment-lens                       │
 │   模式 A — 個股 / ETF / 加密貨分析                  │
 │   模式 B — 投資組合診斷與再平衡                    │
-│   模式 C — 個人配置與退休規劃（整合 asset-allocation）  │
-│   模式 D — 訊號監控（整合 alphaear-signal-tracker）  │
+│   模式 C — 個人配置與退休規劃                      │
+│   模式 D — 訊號監控與狀態更新                      │
 └──────────────┬────────────────────────────────────────────┘
                │ 量化交棒
                ▼
@@ -43,7 +43,7 @@
 ┌───────────────────────────────────────────────────────────┐
 │                   alphaear-reporter                      │
 │   模式 A — 研究筆記                                   │
-│   模式 B — 首次涂蓋報告（5 任務工作流）（整合 init-cov） │
+│   模式 B — 首次涂蓋報告（5 任務工作流）                │
 │   模式 C — 投資人材料與簡報                         │
 └───────────────────────────────────────────────────────────┘
 ```
@@ -76,7 +76,7 @@
 
 | Skill | 功能 |
 |-------|------|
-| [`update-quote`](skills/update-quote/) | 刷新投資組合 CSV 中的即時報價、基金淨値與匯率，重算台幣市値带更新 `value_date` |
+| [`update-quote`](skills/update-quote/) | 刷新投資組合 CSV 中的即時報價、基金淨値與匯率，重算台幣市値並更新 `value_date` |
 
 ### 機構級公司研究
 
@@ -90,14 +90,6 @@
 |-------|------|
 | [`skill-creator`](skills/skill-creator/) | 建立與更新 Agent Skills — 設計、建構與打包新技能 |
 
-### 已廲随整合（目錄保留供參考）
-
-| Skill | 整合至 |
-|-------|---------|
-| [`initiating-coverage`](skills/initiating-coverage/) | `alphaear-reporter` 模式 B |
-| [`asset-allocation`](skills/asset-allocation/) | `investment-lens` 模式 C |
-| [`alphaear-signal-tracker`](skills/alphaear-signal-tracker/) | `investment-lens` 模式 D |
-
 ---
 
 ## Skills 使用邊界
@@ -105,15 +97,15 @@
 | 任務 | 使用 | 不使用 |
 |------|------|--------|
 | 個股與市場質化分析 | `investment-lens` 模式 A | `alphaear-reporter` |
-| 個人資產配置與退休規劃 | `investment-lens` 模式 C | ~~`asset-allocation`~~ |
+| 個人資產配置與退休規劃 | `investment-lens` 模式 C | — |
 | 投資組合診斷（全天候框架） | `investment-lens` 模式 B | `quant-analysis` |
-| 監控現有投資訊號狀態 | `investment-lens` 模式 D | ~~`alphaear-signal-tracker`~~ |
+| 監控現有投資訊號狀態 | `investment-lens` 模式 D | — |
 | 程式化 VaR、最佳化、因子、GARCH | `quant-analysis` | `investment-lens` |
 | 研究筆記與投資報告 | `alphaear-reporter` | `investment-lens` |
-| 機構級首次涂蓋報告（5 任務） | `alphaear-reporter` 模式 B | ~~`initiating-coverage`~~ |
+| 機構級首次涂蓋報告（5 任務） | `alphaear-reporter` 模式 B | — |
 | 原始歷史股價資料（OHLCV） | `alphaear-stock` | `update-quote` |
-| 刷新投資組合 CSV 報價 | `update-quote` | `alphaear-stock` |
-| 撷取即時財經新聞（写入 DB） | `alphaear-news` | `alphaear-search` |
+| 刷新投資組吃 CSV 報價 | `update-quote` | `alphaear-stock` |
+| 撷取即時財經新聞（寫入 DB） | `alphaear-news` | `alphaear-search` |
 | 查詢本地已存新聞 | `alphaear-search` `engine='local'` | `alphaear-news` |
 
 ---

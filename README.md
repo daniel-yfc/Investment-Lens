@@ -43,7 +43,7 @@ Three core skills form an integrated analysis pipeline. Specialized tools feed i
 ┌───────────────────────────────────────────────────────────┐
 │                   alphaear-reporter                      │
 │   Mode A — Research Note                                │
-│   Mode B — Initiating Coverage (absorbs init-coverage)  │
+│   Mode B — Initiating Coverage (5-task workflow)        │
 │   Mode C — Investor Materials                           │
 └───────────────────────────────────────────────────────────┘
 ```
@@ -90,14 +90,6 @@ Three core skills form an integrated analysis pipeline. Specialized tools feed i
 |-------|------|
 | [`skill-creator`](skills/skill-creator/) | Create and update Agent Skills — design, build, and package new skills |
 
-### Deprecated (content merged, directories retained for reference)
-
-| Skill | Merged into |
-|-------|-------------|
-| [`initiating-coverage`](skills/initiating-coverage/) | `alphaear-reporter` Mode B |
-| [`asset-allocation`](skills/asset-allocation/) | `investment-lens` Mode C |
-| [`alphaear-signal-tracker`](skills/alphaear-signal-tracker/) | `investment-lens` Mode D |
-
 ---
 
 ## Skill Boundaries
@@ -105,12 +97,12 @@ Three core skills form an integrated analysis pipeline. Specialized tools feed i
 | Task | Use | Not |
 |------|-----|-----|
 | Qualitative stock / market analysis | `investment-lens` Mode A | `alphaear-reporter` |
-| Personal allocation and retirement planning | `investment-lens` Mode C | ~~`asset-allocation`~~ |
+| Personal allocation and retirement planning | `investment-lens` Mode C | — |
 | Portfolio diagnosis (All-Seasons framework) | `investment-lens` Mode B | `quant-analysis` |
-| Monitoring existing investment signals | `investment-lens` Mode D | ~~`alphaear-signal-tracker`~~ |
+| Monitoring existing investment signals | `investment-lens` Mode D | — |
 | Programmatic VaR, optimisation, factor, GARCH | `quant-analysis` | `investment-lens` |
 | Research notes and investment reports | `alphaear-reporter` | `investment-lens` |
-| Institutional initiating coverage (5-task) | `alphaear-reporter` Mode B | ~~`initiating-coverage`~~ |
+| Institutional initiating coverage (5-task) | `alphaear-reporter` Mode B | — |
 | Raw historical OHLCV price series | `alphaear-stock` | `update-quote` |
 | Refresh current prices in portfolio CSV | `update-quote` | `alphaear-stock` |
 | Fetch live financial news (write to DB) | `alphaear-news` | `alphaear-search` |

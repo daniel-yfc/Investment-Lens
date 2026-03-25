@@ -3,23 +3,23 @@
 Load this file when the task involves monitoring an existing investment signal
 and assessing how new market information changes its status.
 
-This mode absorbs all content from the deprecated `alphaear-signal-tracker` skill.
+> Content from the former `alphaear-signal-tracker` skill is now fully inlined here.
 
 ---
 
 ## When to Use Mode D
 
 - User provides an existing investment thesis or signal and asks:
-  - "Has anything changed for my X position?"
-  - "Does this news affect my thesis?"
-  - "Is my signal still valid?"
-  - "Update my TSMC view based on latest earnings."
+  - “Has anything changed for my X position?”
+  - “Does this news affect my thesis?”
+  - “Is my signal still valid?”
+  - “Update my TSMC view based on latest earnings.”
 - Scheduled or event-triggered thesis review.
 - Post-event signal classification.
 
 ## Do Not Use Mode D
 
-- To generate a new investment thesis from scratch → use Mode A.
+- To generate a new investment thesis → use Mode A.
 - To rebalance a portfolio → use Mode B.
 - To adjust a personal allocation → use Mode C.
 
@@ -27,30 +27,28 @@ This mode absorbs all content from the deprecated `alphaear-signal-tracker` skil
 
 ## Required Inputs
 
-- Existing signal or thesis (text description or structured signal object).
+- Existing signal or thesis (text or structured signal object).
 - New market information (news, earnings, macro event, price action).
-- Original valid-as-of date of the signal.
+- Original valid-as-of date.
 - Asset identifier (ticker or name).
 
 ---
 
 ## Signal Classification Framework
 
-Assign exactly one of four statuses:
-
 | Status | Criteria |
 |--------|----------|
-| **Strengthened** | New information provides additional evidence supporting the original thesis; probability of the thesis being correct has increased |
-| **Weakened** | New information contradicts one or more key assumptions; probability reduced but thesis not disproven |
-| **Falsified** | A core assumption has been definitively proven wrong, OR a kill condition has been triggered |
-| **Unchanged** | New information is neutral, already priced in, or irrelevant to the thesis drivers |
+| **Strengthened** | New information adds evidence supporting original thesis; probability increased |
+| **Weakened** | New information contradicts a key assumption; probability reduced but not disproven |
+| **Falsified** | A core assumption definitively disproven, OR a kill condition triggered |
+| **Unchanged** | New information is neutral, already priced in, or irrelevant to thesis drivers |
 
 ---
 
 ## Analysis Workflow
 
 1. **Retrieve** the existing signal:
-   - Extract the original thesis, key assumptions, time horizon, and kill conditions.
+   - Extract original thesis, key assumptions, time horizon, and kill conditions.
    - Note the original valid-as-of date.
 
 2. **Research** new information:
@@ -61,10 +59,10 @@ Assign exactly one of four statuses:
    - Map new information against each key assumption.
    - Check whether any kill condition has been triggered.
    - Assign Strengthened / Weakened / Falsified / Unchanged.
-   - Justify the classification with specific evidence.
+   - Justify with specific evidence.
 
 4. **Update** the signal record:
-   - State the new valid-as-of date.
+   - State new valid-as-of date.
    - Revise the thesis text where warranted.
    - Revise kill conditions if the risk landscape has changed.
    - If Falsified: state clearly that the position should be reviewed immediately.
@@ -83,18 +81,25 @@ Assign exactly one of four statuses:
 
 ---
 
-## Prompts (for agentic use)
+## Agentic Pipeline Prompts
 
-If running as part of an agentic pipeline, load the following prompts
-from `alphaear-signal-tracker/references/PROMPTS.md`:
+If running as part of an agentic pipeline using `scripts/fin_agent.py`,
+load the following prompts from
+`skills/alphaear-signal-tracker/references/PROMPTS.md`:
 
-- **FinResearcher Prompt** — gather facts and price context for the signal.
+- **FinResearcher Prompt** — gather facts and price context.
 - **FinAnalyst Prompt** — generate the updated `InvestmentSignal` object.
 - **Signal Tracking Prompt** — classify evolution status.
 
-## Tech Debt (carried from alphaear-signal-tracker)
+> Note: `alphaear-signal-tracker` directory is retained for its `scripts/`
+> and `references/` content. The SKILL.md is deprecated but the supporting
+> files remain accessible.
+
+---
+
+## Tech Debt
 
 - [ ] Extract `track_signal` from `alphaear-signal-tracker/scripts/fin_agent.py`
       into a standalone `SignalTrackerUtility` class.
-- [ ] Add unit tests for Strengthened / Weakened / Falsified classification.
+- [ ] Add unit tests for signal classification logic.
 - [ ] Remove dependency on `fin_agent.py` once standalone utility is stable.

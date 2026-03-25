@@ -3,7 +3,8 @@
 Load this file when the task involves retirement allocation, goal-based asset
 allocation, or risk-tolerance-based asset mix for an individual user.
 
-This mode absorbs all content from the deprecated `asset-allocation` skill.
+> All content from the former `asset-allocation` skill is now fully inlined here.
+> No external skill directory references required.
 
 ---
 
@@ -16,23 +17,11 @@ This mode absorbs all content from the deprecated `asset-allocation` skill.
 - First-time allocation guidance.
 - Rebalancing plan for a personal portfolio.
 
-## References to Load
-
-| Reference | When to load |
-|-----------|--------------|
-| `references/personal-allocation.md` | Always — core framework for Mode C |
-| `references/product-selection.md` | Fund/ETF selection criteria |
-| `references/rebalancing-protocol.md` | Rebalancing rules |
-| `references/macro-framework.md` | Macro analysis framework |
-| `references/behavioral-biases.md` | Behavioural finance biases |
-| `references/purchase-guide.md` | Platform-specific execution guide |
-| `assets/allocation-template.md` | Output template |
-
 ---
 
 ## Required User Inputs
 
-If incomplete, request all before proceeding:
+If incomplete, collect all before proceeding:
 
 - **Time horizon** — years to target event or retirement
 - **Base currency** — primary currency of assets and liabilities
@@ -44,7 +33,7 @@ If incomplete, request all before proceeding:
 
 ---
 
-## Risk Level Framework (CFA IPS)
+## Risk Level Framework
 
 | Level | Type | Max Drawdown | Return Target |
 |-------|------|-------------|---------------|
@@ -84,10 +73,84 @@ Cash 5% | Bonds 10% | Hybrid 15% | Domestic 45% | Overseas 18% | Gold 7%
 
 Then:
 8. Translate into Strategic Asset Allocation (SAA).
-9. Apply product selection criteria from `references/product-selection.md`.
-10. Set rebalancing rules from `references/rebalancing-protocol.md`.
+9. Apply product selection criteria (see Product Selection below).
+10. Set rebalancing rules (see Rebalancing Rules below).
 11. Build IPS report (12 sections, see below).
 12. Define monitoring plan.
+
+---
+
+## Product Selection Criteria
+
+**Equity ETFs / Funds:**
+- Prefer low-cost index funds (TER < 0.5% for broad market).
+- For Taiwan: ETFs listed on TWSE preferred (00631L, 0050, 006208, etc.).
+- For US/Global: Vanguard / iShares / Schwab core ETF range.
+- Avoid leveraged or inverse ETFs in long-term allocation.
+
+**Bond ETFs / Funds:**
+- Match duration to investment horizon.
+- For inflation protection: TIPS or equivalent.
+- For Taiwan: government bond ETFs or high-grade corporate.
+
+**Alternatives:**
+- Gold: physical ETF (e.g., GLD, 00635U.TW) up to allocation limit.
+- REITs: only in tax-advantaged accounts where possible.
+
+**Domestic TW Funds:**
+- Confirm T+1 NAV structure before including in liquidity planning.
+
+---
+
+## Rebalancing Rules
+
+- **Threshold rebalancing**: rebalance when any asset class drifts >5% from target.
+- **Calendar rebalancing**: annual review as minimum; semi-annual if portfolio > NT$3M.
+- **Cash flow rebalancing**: direct new contributions to underweight assets first.
+- **Tax-aware**: in taxable accounts, prefer selling appreciated bonds over equities where possible.
+- **Emergency reserve**: maintain 3–6 months of expenses in cash or near-cash at all times; do not rebalance below this floor.
+
+---
+
+## Macro Framework (Merrill Lynch Investment Clock)
+
+| Phase | GDP | Inflation | Favoured Assets |
+|-------|-----|-----------|----------------|
+| Recovery | Rising | Falling | Equities, REITs |
+| Expansion | Rising | Rising | Commodities, equities |
+| Slowdown | Falling | Rising | Bonds, cash |
+| Contraction | Falling | Falling | Bonds, gold |
+
+Apply macro phase to tilt tactical allocation +/−5% from SAA target.
+
+---
+
+## Behavioural Biases to Check
+
+Before finalising the IPS, flag if any of these are present:
+- **Recency bias**: overweighting recent performance.
+- **Home bias**: excessive allocation to domestic market.
+- **Loss aversion**: setting drawdown tolerance below stated willingness.
+- **Overconfidence**: return expectations above long-run historical averages.
+- **Anchoring**: fixating on purchase price rather than current fundamentals.
+
+---
+
+## Platform Execution
+
+Ask for user’s country/region and preferred platform before recommending execution steps.
+
+| Region | Platform Examples | Asset Types |
+|--------|------------------|-------------|
+| Taiwan | 永豐金, 富邦證券, 國泰證券, 中信銀行 App | ETF, 基金, 台債, REITs |
+| US / Global | Interactive Brokers, Schwab, Fidelity, Vanguard | ETF, Stocks, Bonds, Mutual Funds |
+| Hong Kong | Futu (富途), Tiger Brokers, HSBC HK | HK/US ETF, MPF |
+
+**Taiwan-specific execution steps:**
+1. Open a securities account (證券戸) with a licensed broker.
+2. For foreign ETFs via Taiwan broker: use 海外證券委託 or buy on TWSE-listed foreign ETFs.
+3. For direct US/global access: Interactive Brokers (IBKR) is the most cost-efficient option.
+4. For domestic funds: purchase through bank trust (信託) or fund platform (e.g., 富財網).
 
 ---
 
@@ -108,22 +171,11 @@ Then:
 
 ---
 
-## Platform Execution
-
-When user is ready to execute, **ask for their country/region and preferred platform first**,
-then load the appropriate section from `asset-allocation/references/purchase-guide.md`.
-
-| Region | Platform Examples | Asset Types |
-|--------|------------------|-------------|
-| Taiwan | 永豐金, 富邦證券, 國泰證券, 中信銀行 App | ETF, 基金, 台債, REITs |
-| US / Global | Interactive Brokers, Schwab, Fidelity, Vanguard | ETF, Stocks, Bonds, Mutual Funds |
-| Hong Kong | Futu (富途), Tiger Brokers, HSBC HK | HK/US ETF, MPF |
-
----
-
 ## Disclaimer Requirement
 
 Every Mode C output must include:
 
-> *This output is an analysis per CFA IPS methodology and shall not constitute a financial advice.
-> Investment involves risk. Consult before making decisions.*
+> *This output is an analytical framework based on the CFA IPS methodology and
+> general educational guidance. It is not individualised regulated financial advice.
+> Investment involves risk. Past performance does not predict future results.
+> Consult a licensed financial advisor before making allocation decisions.*
