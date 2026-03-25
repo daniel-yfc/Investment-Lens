@@ -10,11 +10,11 @@ description: >
   (company research, financial modeling, valuation, chart generation, report
   assembly). Do NOT use as the primary analysis engine for discovering facts,
   generating quantitative models, or refreshing quotes.
-compatibility: No special runtime dependencies; requires completed analysis input from upstream skills (Modes A/C). Mode B requires xlsx, chart, docx skills.
-allowed-tools: Read Grep
+compatibility: Modes A/C require no runtime dependencies. Mode B requires xlsx, chart, docx skills.
+allowed-tools: Read Grep Bash(python*)
 metadata:
   argument-hint: "[research note | initiating coverage | investor brief | company name]"
-  version: "2.0"
+  version: "2.1"
   language: "zh-tw"
   last-updated: "2026-03-26"
   effort: "medium"
@@ -45,7 +45,14 @@ Unified output and publication layer for the Investment-Lens / AlphaEar stack.
 
 If core analysis is missing, stop and request it first.
 
-## Required Inputs (all modes)
+## Gotchas
+
+- Mode B operates **one task at a time**. Never chain tasks automatically. After completing a task, stop and wait for user to request the next one.
+- Tasks 3–5 require prior task outputs as inputs. Verify prerequisites before starting.
+- The `task5-report-assembly.md` reference is 53K characters — load only when executing Task 5.
+- Default font is Times New Roman throughout unless user specifies otherwise.
+
+## Required Inputs (All Modes)
 
 Before drafting, confirm:
 - Underlying analysis result or source material.
@@ -58,7 +65,7 @@ If missing, ask before drafting.
 
 ---
 
-## Writing Rules (all modes)
+## Writing Rules (All Modes)
 
 **Always:**
 - Preserve the substance of source analysis.
@@ -66,7 +73,6 @@ If missing, ask before drafting.
 - Match audience and tone.
 - Separate fact, interpretation, and recommendation.
 - Make uncertainty visible.
-- Preserve dates, assumptions, and source sensitivity.
 
 **Never:**
 - Invent evidence not found in source analysis.
@@ -95,14 +101,14 @@ Resolve duplication. Surface contradictions explicitly — never flatten them.
 
 ---
 
-## Validation Checks (before finalising)
+## Validation Checklist (before finalising)
 
-- Output format matches requested audience.
-- All recommendations supported by analysis.
-- Valid-as-of date visible.
-- No unsupported data claim introduced.
-- Language concise for requested format.
-- Mode B: single-task mode enforced — confirm which task was just completed.
+- [ ] Output format matches requested audience.
+- [ ] All recommendations supported by analysis.
+- [ ] Valid-as-of date visible.
+- [ ] No unsupported data claim introduced.
+- [ ] Language concise for requested format.
+- [ ] Mode B: single-task mode enforced — confirm which task was just completed.
 
 ---
 
@@ -119,7 +125,14 @@ Format references (load when needed):
 - `references/coverage-format.md`
 - `references/investor-materials-format.md`
 
-Templates:
+Templates (load only for the active task):
 - `assets/report-templates/research-note.md`
 - `assets/report-templates/initiating-coverage.md`
 - `assets/report-templates/investor-brief.md`
+
+Task references for Mode B (load only the active task):
+- `references/task1-company-research.md`
+- `references/task2-financial-modeling.md`
+- `references/task3-valuation.md`
+- `references/task4-chart-generation.md`
+- `references/task5-report-assembly.md` — load only when executing Task 5 (53K chars)

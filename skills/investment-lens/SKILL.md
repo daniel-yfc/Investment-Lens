@@ -12,11 +12,11 @@ description: >
   quantitative modelling, portfolio optimisation, Monte Carlo, VaR/CVaR, or
   factor regressions (use quant-analysis). Do NOT use for output formatting
   into research notes or reports (use alphaear-reporter).
-compatibility: Allowed-tools: Read Grep WebSearch
-allowed-tools: Read Grep WebSearch
+compatibility: Allowed-tools: Read Grep WebSearch Bash(python*)
+allowed-tools: Read Grep WebSearch Bash(python*)
 metadata:
   argument-hint: "[ticker | portfolio-csv | retirement allocation | signal update]"
-  version: "2.0"
+  version: "2.1"
   language: "zh-tw"
   last-updated: "2026-03-26"
   effort: "high"
@@ -49,16 +49,36 @@ Primary qualitative investment analysis hub. Covers:
 
 ## Mode Selection
 
-Classify the task before analysis, then load the mode file for full instructions and reference list.
+Classify the task before analysis, then load the mode file.
 
 | Mode | Use for | Load |
 |------|---------|------|
 | **A — Security Analysis** | Single stocks, ETFs, indices, crypto, qualitative valuation | `references/modes/mode-a-security-analysis.md` |
 | **B — Portfolio Diagnostics** | Portfolio review, rebalancing, concentration, All-Seasons mapping | `references/modes/mode-b-portfolio-diagnostics.md` |
-| **C — Personal Allocation** | Retirement allocation, goal-based allocation, CFA IPS framework, risk-tolerance mix | `references/modes/mode-c-personal-allocation.md` |
+| **C — Personal Allocation** | Retirement allocation, goal-based allocation, CFA IPS framework | `references/modes/mode-c-personal-allocation.md` |
 | **D — Signal Monitoring** | Monitoring existing signals, assessing Strengthened / Weakened / Falsified / Unchanged | `references/modes/mode-d-signal-monitoring.md` |
 
 Load **only** the mode file for the current task.
+
+---
+
+## Available Scripts
+
+Run with `uv run scripts/<file>.py` or `python scripts/<file>.py`.
+
+- **`scripts/fin_agent.py`** — Main pipeline controller: FinResearcher → FinAnalyst → Signal Tracking. Used by Mode D.
+
+See `scripts/SCRIPTS.md` for full script index and usage.
+
+---
+
+## Gotchas
+
+- `fin_agent.py` is a library module (no CLI entry point). Invoke it via the agentic pipeline described in `references/PROMPTS.md`, not as a standalone command.
+- `scripts/` uses relative imports (`from .utils.database_manager import ...`). Run from the `scripts/` directory or set `PYTHONPATH` accordingly.
+- The `sanitize_signal_output` method in `FinUtils` drops tickers it cannot verify against the local DB. If the DB is empty, all impact tickers will be stripped. Populate DB with `alphaear-news` first.
+- Mode C output must always include the IPS disclaimer. Do not omit even if user requests brevity.
+- Mode D “Unchanged” is a valid classification; do not default to “Weakened” when evidence is thin.
 
 ---
 
@@ -68,8 +88,6 @@ Before analysis:
 1. Check whether holdings or portfolio inputs include `value_date`.
 2. If stale (≥2 trading days), warn clearly and recommend `update-quote` first.
 3. If user chooses to proceed on stale data, mark output as reference-only.
-
-This skill reads and interprets data. It does not refresh prices or modify CSV files.
 
 ## Step 1 — Input Normalisation
 
@@ -95,7 +113,6 @@ mean-variance optimisation, Black-Litterman, risk parity, VaR/CVaR, Monte Carlo,
 When escalating, read `references/quant-handoff.md` and create a structured handoff request.
 
 After receiving quantitative outputs, integrate them into the final interpretation.
-Do not let statistical output replace judgment automatically.
 
 ## Step 4 — Bias and Risk Discipline
 
@@ -120,9 +137,9 @@ Every output must:
 
 ## Step 6 — Report Handoff (optional)
 
-If the user wants a formatted research note, investor brief, or initiating coverage report:
+If the user wants a formatted research note or coverage report:
 - Complete the analysis here first.
-- Then pass the output to `alphaear-reporter` with the target format specified.
+- Then pass to `alphaear-reporter` with target format specified.
 
 ---
 
