@@ -1,7 +1,20 @@
 ---
 name: alphaear-sentiment
-description: Analyze financial text sentiment using FinBERT (local) or LLM (agentic). Use when the user needs to determine the sentiment (positive/negative/neutral) and score of financial news, earnings releases, or market commentary. Supports both high-speed batch processing via FinBERT and higher-accuracy reasoning via LLM. Do NOT use for price retrieval or quantitative modeling.
+description: >
+  Analyze financial text sentiment using FinBERT (local) or LLM (agentic). Use when
+  the user needs to determine the sentiment (positive/negative/neutral) and score of
+  financial news, earnings releases, or market commentary. Supports both high-speed
+  batch processing via FinBERT and higher-accuracy reasoning via LLM. Do NOT use for
+  price retrieval or quantitative modeling — use alphaear-stock or quant-analysis instead.
 compatibility: Requires Python 3.9+, torch, transformers (for FinBERT local mode), sqlite3 (built-in), DatabaseManager initialized
+allowed-tools: Read Bash(python *)
+metadata:
+  argument-hint: "[financial text | news item | batch sentiment]"
+  version: "1.0"
+  language: "zh-tw"
+  last-updated: "2026-03-26"
+  effort: "medium"
+  user-invocable: "true"
 ---
 
 # AlphaEar Sentiment Skill
@@ -17,8 +30,6 @@ Sentiment analysis tailored for financial texts, supporting two modes:
 ### 1. Analyze Sentiment (FinBERT / Local)
 
 Use `scripts/sentiment_tools.py` via `SentimentTools`.
-
-**Key Methods:**
 
 - `analyze_sentiment(text)`: Get sentiment score and label using localized FinBERT model.
   - **Returns**: `{'score': float, 'label': str, 'reason': str}`
@@ -50,8 +61,6 @@ Text: {text}
 
 ## Dependencies
 
-- `torch` (for FinBERT)
-- `transformers` (for FinBERT)
+- `torch`, `transformers` (for FinBERT)
 - `sqlite3` (built-in)
-
-Ensure `DatabaseManager` is initialized before calling any method.
+- Ensure `DatabaseManager` is initialized before calling any method.

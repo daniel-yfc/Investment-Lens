@@ -8,11 +8,16 @@ description: >
   investment-lens or other AlphaEar analysis skills. Do NOT use it as the primary
   analysis engine when the task is to discover facts, generate new quantitative models,
   refresh quotes, or perform raw market research.
+compatibility: No special runtime dependencies; requires completed analysis input from upstream skills
 allowed-tools: Read Grep
 metadata:
   argument-hint: "[research note | initiating coverage | investor brief]"
+  version: "1.0"
+  language: "zh-tw"
+  last-updated: "2026-03-26"
   effort: "medium"
   user-invocable: "true"
+  upstream-primary-skill: "investment-lens"
   post-invoke-check: "Confirm output matches audience and template"
 ---
 
@@ -56,30 +61,19 @@ If these are missing, ask before drafting.
 Choose one output mode:
 
 ### Mode A — Research note
-Use for:
-- Short or medium-form research outputs.
-- Internal investment memos.
-- Thesis updates.
-- Signal summaries.
+Use for short/medium-form research outputs, internal memos, thesis updates, signal summaries.
 
-Load:
-- `assets/report-templates/research-note.md`
+Load: `assets/report-templates/research-note.md`
 
 ### Mode B — Initiating coverage
-Use for:
-- First formal write-up on a company, security, or theme.
-- Longer reports with thesis, business overview, drivers, risks, valuation framing, and monitoring plan.
+Use for first formal write-ups with thesis, business overview, drivers, risks, valuation framing, and monitoring plan.
 
 Load:
 - `references/coverage-format.md`
 - `assets/report-templates/initiating-coverage.md`
 
 ### Mode C — Investor materials
-Use for:
-- Investor briefings.
-- Board or committee-facing summaries.
-- One-page materials.
-- Narrative outputs intended for presentation or stakeholder communication.
+Use for investor briefings, board/committee-facing summaries, one-pagers, presentation-ready narratives.
 
 Load:
 - `references/investor-materials-format.md`
@@ -105,7 +99,6 @@ Never:
 ### If the source is from `investment-lens`
 - Preserve the recommendation, confidence, thesis, risks, and kill conditions.
 - Convert internal framework language into readable prose where needed.
-- Keep scenario language intact.
 
 ### If the source is from AlphaEar signal skills
 - Summarize the signal chain.
@@ -114,46 +107,27 @@ Never:
 
 ### If multiple analyses are provided
 - Merge only when they refer to the same asset, theme, or decision context.
-- Resolve duplication.
-- Surface contradictions explicitly instead of flattening them.
+- Resolve duplication. Surface contradictions explicitly instead of flattening them.
 
 ## Structure requirements
 
 ### Research note
-Include:
-- Title.
-- What changed.
-- Core view.
-- Evidence.
-- Risks.
-- Monitoring points.
+Title → What changed → Core view → Evidence → Risks → Monitoring points
 
 ### Initiating coverage
-Include:
-- Investment thesis.
-- Business or asset overview.
-- Key drivers.
-- Risks and counter-thesis.
-- Valuation or framework view.
-- Monitoring plan.
-- Recommendation and confidence.
+Investment thesis → Business overview → Key drivers → Risks and counter-thesis → Valuation/framework view → Monitoring plan → Recommendation and confidence
 
 ### Investor materials
-Include:
-- Executive summary.
-- What matters now.
-- Supporting evidence.
-- Risks.
-- Clear next-step framing.
+Executive summary → What matters now → Supporting evidence → Risks → Next-step framing
 
 ## Validation checks
 
 Before finalizing:
-- Check that the output format matches the requested audience.
-- Check that all recommendations are supported by analysis.
-- Check that the valid-as-of date is visible.
-- Check that no unsupported data claim was introduced.
-- Check that the language is concise enough for the requested format.
+- Output format matches requested audience.
+- All recommendations supported by analysis.
+- Valid-as-of date is visible.
+- No unsupported data claim introduced.
+- Language is concise for the requested format.
 
 ## References
 
