@@ -64,17 +64,17 @@ Which task would you like to start with?
 ## Detailed Task Instructions
 
 Load the relevant reference file before starting each task.
-All task files are located in `references/tasks/` within `alphaear-reporter`:
+All task files are located directly in `references/` within `alphaear-reporter`:
 
 | Task | Reference file |
 |------|----------------|
-| 1 | `references/tasks/task1-company-research.md` |
-| 2 | `references/tasks/task2-financial-modeling.md` |
-| 3 | `references/tasks/task3-valuation.md` |
-| 4 | `references/tasks/task4-chart-generation.md` |
-| 5 | `references/tasks/task5-report-assembly.md` |
+| 1 | `references/task1-company-research.md` |
+| 2 | `references/task2-financial-modeling.md` |
+| 3 | `references/task3-valuation.md` |
+| 4 | `references/task4-chart-generation.md` |
+| 5 | `references/task5-report-assembly.md` |
 
-Also available: `references/tasks/valuation-methodologies.md`
+Also available: `references/valuation-methodologies.md`
 
 ---
 

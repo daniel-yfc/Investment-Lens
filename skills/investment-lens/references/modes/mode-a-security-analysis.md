@@ -29,6 +29,14 @@ Load only what is relevant to the specific request. Do not load all files at onc
 | `references/bias-checklist.md` | Always run before finalizing any security view |
 | `references/market-bias-checklist.md` | When market-wide framing is involved |
 
+## Also Read (supplementary, load if directly relevant)
+
+| Reference | When to load |
+|-----------|-------------|
+| `references/behavioral-biases.md` | When user exhibits or asks about cognitive/emotional biases |
+| `references/btc-bottom-model.md` | For BTC / crypto cycle positioning analysis |
+| `references/us-value-investing.md` | For US equity deep-value or Graham-style analysis |
+
 ## Core Output Requirements
 
 1. Lead with recommendation or core judgment.

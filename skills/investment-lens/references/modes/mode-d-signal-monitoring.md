@@ -81,25 +81,31 @@ and assessing how new market information changes its status.
 
 ---
 
-## Agentic Pipeline Prompts
+## Agentic Pipeline
 
-If running as part of an agentic pipeline using `scripts/fin_agent.py`,
-load the following prompts from
-`skills/alphaear-signal-tracker/references/PROMPTS.md`:
+If running as part of an automated agentic pipeline, use:
 
-- **FinResearcher Prompt** — gather facts and price context.
-- **FinAnalyst Prompt** — generate the updated `InvestmentSignal` object.
-- **Signal Tracking Prompt** — classify evolution status.
+**Entry point:** `skills/investment-lens/scripts/fin_agent.py`
 
-> Note: `alphaear-signal-tracker` directory is retained for its `scripts/`
-> and `references/` content. The SKILL.md is deprecated but the supporting
-> files remain accessible.
+**Prompt definitions:** `skills/investment-lens/references/PROMPTS.md`
+
+| Prompt | Role |
+|--------|------|
+| FinResearcher | Gather facts, verify tickers, map industry chain, check price history |
+| FinAnalyst | Transform research into structured `InvestmentSignal` JSON (ISQ schema) |
+| Signal Tracking | Re-evaluate prior signal against new data; detect Strengthened / Weakened / Falsified |
+
+**Schema:** `skills/investment-lens/scripts/schema/isq_template.py` — defines the `InvestmentSignal` object structure.
+
+**Toolkits:** `skills/investment-lens/scripts/tools/toolkits.py` — price lookup, news fetch, search.
+
+> The former `alphaear-signal-tracker/scripts/` pipeline is superseded by the above.
+> The `alphaear-signal-tracker` directory is retained for archival reference only.
 
 ---
 
 ## Tech Debt
 
-- [ ] Extract `track_signal` from `alphaear-signal-tracker/scripts/fin_agent.py`
-      into a standalone `SignalTrackerUtility` class.
-- [ ] Add unit tests for signal classification logic.
-- [ ] Remove dependency on `fin_agent.py` once standalone utility is stable.
+- [ ] Remove legacy `alphaear-signal-tracker/scripts/fin_agent.py` once migration is validated.
+- [ ] Add unit tests for signal classification logic in `investment-lens/scripts/`.
+- [ ] Verify `toolkits.py` covers all tool calls previously handled by `alphaear-signal-tracker`.

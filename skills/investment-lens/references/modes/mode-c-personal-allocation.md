@@ -17,6 +17,15 @@ allocation, or risk-tolerance-based asset mix for an individual user.
 - First-time allocation guidance.
 - Rebalancing plan for a personal portfolio.
 
+## Also Read (supplementary, load if directly relevant)
+
+| Reference | When to load |
+|-----------|-------------|
+| `references/personal-allocation.md` | For full RRTTLLU IPS methodology and allocation templates |
+| `references/product-selection.md` | When recommending specific ETFs, funds, or instruments |
+| `references/purchase-guide.md` | For platform-specific execution guidance (Taiwan, US, HK) |
+| `references/rebalancing-protocol.md` | When defining or reviewing a rebalancing plan |
+
 ---
 
 ## Required User Inputs
@@ -73,18 +82,18 @@ Cash 5% | Bonds 10% | Hybrid 15% | Domestic 45% | Overseas 18% | Gold 7%
 
 Then:
 8. Translate into Strategic Asset Allocation (SAA).
-9. Apply product selection criteria (see Product Selection below).
-10. Set rebalancing rules (see Rebalancing Rules below).
+9. Apply product selection criteria (see Also Read: `product-selection.md`).
+10. Set rebalancing rules (see Also Read: `rebalancing-protocol.md`).
 11. Build IPS report (12 sections, see below).
 12. Define monitoring plan.
 
 ---
 
-## Product Selection Criteria
+## Product Selection Criteria (Summary)
 
 **Equity ETFs / Funds:**
 - Prefer low-cost index funds (TER < 0.5% for broad market).
-- For Taiwan: ETFs listed on TWSE preferred (00631L, 0050, 006208, etc.).
+- For Taiwan: ETFs listed on TWSE preferred (0050, 006208, 00929, etc.).
 - For US/Global: Vanguard / iShares / Schwab core ETF range.
 - Avoid leveraged or inverse ETFs in long-term allocation.
 
@@ -97,18 +106,19 @@ Then:
 - Gold: physical ETF (e.g., GLD, 00635U.TW) up to allocation limit.
 - REITs: only in tax-advantaged accounts where possible.
 
-**Domestic TW Funds:**
-- Confirm T+1 NAV structure before including in liquidity planning.
+> For full product lists and platform execution details, load `references/product-selection.md` and `references/purchase-guide.md`.
 
 ---
 
-## Rebalancing Rules
+## Rebalancing Rules (Summary)
 
-- **Threshold rebalancing**: rebalance when any asset class drifts >5% from target.
-- **Calendar rebalancing**: annual review as minimum; semi-annual if portfolio > NT$3M.
-- **Cash flow rebalancing**: direct new contributions to underweight assets first.
-- **Tax-aware**: in taxable accounts, prefer selling appreciated bonds over equities where possible.
-- **Emergency reserve**: maintain 3–6 months of expenses in cash or near-cash at all times; do not rebalance below this floor.
+- **Threshold**: rebalance when any asset class drifts >5% from target.
+- **Calendar**: annual review minimum; semi-annual if portfolio > NT$3M.
+- **Cash flow**: direct new contributions to underweight assets first.
+- **Tax-aware**: prefer selling appreciated bonds over equities in taxable accounts.
+- **Emergency reserve**: maintain 3–6 months expenses in cash; never rebalance below this floor.
+
+> For full protocol, load `references/rebalancing-protocol.md`.
 
 ---
 
@@ -136,9 +146,7 @@ Before finalising the IPS, flag if any of these are present:
 
 ---
 
-## Platform Execution
-
-Ask for user’s country/region and preferred platform before recommending execution steps.
+## Platform Execution (Summary)
 
 | Region | Platform Examples | Asset Types |
 |--------|------------------|-------------|
@@ -146,11 +154,7 @@ Ask for user’s country/region and preferred platform before recommending execu
 | US / Global | Interactive Brokers, Schwab, Fidelity, Vanguard | ETF, Stocks, Bonds, Mutual Funds |
 | Hong Kong | Futu (富途), Tiger Brokers, HSBC HK | HK/US ETF, MPF |
 
-**Taiwan-specific execution steps:**
-1. Open a securities account (證券戸) with a licensed broker.
-2. For foreign ETFs via Taiwan broker: use 海外證券委託 or buy on TWSE-listed foreign ETFs.
-3. For direct US/global access: Interactive Brokers (IBKR) is the most cost-efficient option.
-4. For domestic funds: purchase through bank trust (信託) or fund platform (e.g., 富財網).
+> For step-by-step Taiwan / IBKR execution instructions, load `references/purchase-guide.md`.
 
 ---
 

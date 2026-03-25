@@ -1,4 +1,14 @@
-# AlphaEar Signal Tracker Prompts
+# Investment Lens — Agentic Pipeline Prompts
+
+> **Canonical location:** `skills/investment-lens/references/PROMPTS.md`
+>
+> **Entry point script:** `skills/investment-lens/scripts/fin_agent.py`
+>
+> These prompts are used by Mode D (Signal Monitoring) and the broader
+> `investment-lens` agentic pipeline. Load this file when running
+> `scripts/fin_agent.py` or when manually constructing ISQ signal objects.
+
+---
 
 ## 1. FinResearcher
 
@@ -21,6 +31,8 @@ Your task is to investigate the "Raw Signal" to provide materials for deep analy
 Output a structured research report covering fundamentals, price trend, and industry background.
 ```
 
+---
+
 ## 2. FinAnalyst (Signal Parsing)
 
 **Prompt:**
@@ -42,9 +54,12 @@ Task: transform research materials into actionable Investment Intelligence (ISQ)
 4. **Logic**: `transmission_chain` with `node_name`, `impact_type`, `logic`.
 5. **Prediction**: `summary` must contain specific targets (price/change).
 
-### Output (Strict JSON - InvestmentSignal)
+### Output (Strict JSON — InvestmentSignal)
 Output valid JSON matching the InvestmentSignal schema.
+Schema definition: `skills/investment-lens/scripts/schema/isq_template.py`
 ```
+
+---
 
 ## 3. Signal Tracking (Evolution)
 
@@ -62,11 +77,26 @@ Task: Re-evaluate previous investment signal based on new market info.
 
 ### Requirements
 1. **Evolution Detection**:
-   - Has logic changed? (Falsified? Realized? strengthened?)
+   - Has logic changed? (Falsified? Realized? Strengthened?)
    - Mark `reasoning` with "Logic Evolution: ...".
 2. **Parameter Correction**:
    - Update `sentiment_score`, `confidence`, `expectation_gap`.
 3. **Output**:
    - Keep `signal_id`.
    - Output full InvestmentSignal JSON.
+   - Schema: `skills/investment-lens/scripts/schema/isq_template.py`
 ```
+
+---
+
+## Related Files
+
+| File | Purpose |
+|------|---------|
+| `scripts/fin_agent.py` | Main pipeline controller; orchestrates FinResearcher → FinAnalyst → Signal Tracking |
+| `scripts/schema/isq_template.py` | `InvestmentSignal` object schema (ISQ) |
+| `scripts/schema/models.py` | Supporting data models |
+| `scripts/tools/toolkits.py` | Tool registry: price lookup, news fetch, web search |
+| `scripts/utils/database_manager.py` | Local DB read/write for signal persistence |
+| `scripts/utils/hybrid_search.py` | Hybrid local + web search |
+| `scripts/prompts/fin_agent.py` | Prompt templates (loaded by `fin_agent.py`) |
