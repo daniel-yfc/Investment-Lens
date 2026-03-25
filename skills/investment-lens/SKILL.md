@@ -12,8 +12,10 @@ description: >
   quantitative modelling, portfolio optimisation, Monte Carlo, VaR/CVaR, or
   factor regressions (use quant-analysis). Do NOT use for output formatting
   into research notes or reports (use alphaear-reporter).
-compatibility: Allowed-tools: Read Grep WebSearch Bash(python*)
-allowed-tools: Read Grep WebSearch Bash(python*)
+compatibility: >
+  Requires network access to financial data APIs.
+  No local runtime dependencies beyond standard agent environment.
+allowed-tools: Read Grep WebSearch Bash(python:*)
 metadata:
   argument-hint: "[ticker | portfolio-csv | retirement allocation | signal update]"
   version: "2.1"
