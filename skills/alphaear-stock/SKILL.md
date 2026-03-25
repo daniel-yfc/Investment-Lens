@@ -1,16 +1,19 @@
 ---
 name: alphaear-stock
 description: >
-  Search global stock tickers and retrieve raw historical OHLCV price data.
-  Supports all major exchanges via yfinance (US, TW, HK, JP, KR, EU, etc.).
-  Use only when the user explicitly requests raw historical price data, specific
-  stock codes, or raw daily price changes. Do NOT use for qualitative investment
-  analysis, earnings deep-dives, or buy/sell/hold evaluation — use investment-lens
-  instead.
-compatibility: Requires pandas, yfinance, requests, scripts/database_manager.py
+  Retrieve raw historical OHLCV price data for global stocks and ETFs via
+  yfinance. Use only when the task explicitly requires a historical price
+  series (open, high, low, close, volume) for analysis, charting, backtesting,
+  or quantitative modelling inputs. Supports all major exchanges via Yahoo
+  Finance ticker suffixes (US plain, Taiwan .TW/.TWO, HK .HK, Japan .T,
+  Korea .KS, Singapore .SI, Europe .L/.DE/.PA, etc.).
+  Do NOT use to refresh current portfolio prices or update value_date in a CSV
+  — use update-quote for that. Do NOT use for qualitative investment analysis
+  or buy/sell/hold judgment — use investment-lens for that.
+compatibility: Requires pandas, yfinance, scripts/database_manager.py
 allowed-tools: Read Bash(python *)
 metadata:
-  argument-hint: "[ticker | stock name | 'price AAPL 2024-01-01 2024-12-31']"
+  argument-hint: "[ticker | 'price AAPL 2024-01-01 2024-12-31' | '2330.TW']"
   version: "2.0"
   language: "zh-tw"
   last-updated: "2026-03-26"
@@ -20,11 +23,22 @@ metadata:
 
 # AlphaEar Stock Skill
 
-## Overview
+## Purpose
 
-Search global stock tickers and retrieve historical OHLCV price data.
-All markets are handled via **yfinance**, which supports global exchanges through
-standard Yahoo Finance ticker suffixes.
+Fetch raw historical OHLCV price data from Yahoo Finance for any globally
+listed stock or ETF. Data is cached locally in SQLite to avoid redundant fetches.
+
+**This skill provides data only. It does not analyse, recommend, or refresh CSV portfolios.**
+
+## Boundary with `update-quote`
+
+| Dimension | `alphaear-stock` | `update-quote` |
+|-----------|-----------------|----------------|
+| **Purpose** | Provide historical OHLCV series for analysis/modelling | Refresh current prices in a portfolio CSV |
+| **Output** | DataFrame (date, open, high, low, close, volume, change_pct) | Updated CSV with recalculated TWD values + new `value_date` |
+| **Writes to CSV?** | ❌ No | ✅ Yes |
+| **Updates `value_date`?** | ❌ No | ✅ Yes |
+| **Typical caller** | `investment-lens`, `quant-analysis`, `alphaear-predictor` | User directly, or after `investment-lens` flags stale data |
 
 ## Ticker Format
 
@@ -33,29 +47,26 @@ standard Yahoo Finance ticker suffixes.
 | US equities | Plain | `AAPL`, `TSLA` |
 | Taiwan (TWSE) | `.TW` | `2330.TW` |
 | Taiwan (OTC) | `.TWO` | `6443.TWO` |
-| Hong Kong | `.HK` | `0700.HK`, `00700.HK` |
+| Hong Kong | `.HK` | `0700.HK` |
 | Japan | `.T` | `7203.T` |
 | South Korea | `.KS` | `005930.KS` |
 | UK | `.L` | `SHEL.L` |
 | Germany | `.DE` | `SAP.DE` |
 | Singapore | `.SI` | `D05.SI` |
 
-For tickers without a suffix, yfinance defaults to US markets.
+## API
 
-## Capabilities
+Use `scripts/stock_tools.py` via `StockTools`:
 
-### 1. Stock Search & Data
-
-Use `scripts/stock_tools.py` via `StockTools`.
-
-- `search_ticker(query, exchange_hint)`: Fuzzy search by name or code.
-  - `exchange_hint`: optional string, e.g. `"TW"`, `"HK"`, `"JP"` — used to resolve ambiguous names.
+- `search_ticker(query, exchange_hint)` — fuzzy search by name or code.
+  - `exchange_hint`: optional string, e.g. `'TW'`, `'HK'`, `'JP'`.
   - Returns: `List[{code, name}]`
-- `get_stock_price(ticker, start_date, end_date)`: Returns DataFrame with OHLCV + `change_pct`.
-  - Date format: `"YYYY-MM-DD"`
+- `get_stock_price(ticker, start_date, end_date)` — returns DataFrame.
   - Ticker must include exchange suffix for non-US markets.
+  - Date format: `'YYYY-MM-DD'`.
+  - Defaults: 90 days to today.
 
 ## Dependencies
 
-- `pandas`, `yfinance`, `requests`
-- `scripts/database_manager.py` (local SQLite cache)
+- `pandas`, `yfinance`
+- `scripts/database_manager.py` — local SQLite cache
