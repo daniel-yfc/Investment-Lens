@@ -11,8 +11,6 @@ This skill specializes in creating visual representations of logic flows, specif
 
 ## Capabilities
 
-### 1. Generate Draw.io Diagrams
-
 ### 1. Generate Draw.io Diagrams (Agentic Workflow)
 
 **YOU (the Agent)** are the Visualizer. Use the prompts in `references/PROMPTS.md` to generate the XML.
