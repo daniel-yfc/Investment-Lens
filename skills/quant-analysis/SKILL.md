@@ -1,74 +1,156 @@
 ---
 name: quant-analysis
-description: "Programmatic quantitative finance analysis using Python/Jupyter for portfolio optimization, mathematical risk modeling, and time series econometrics. Use when the user specifically asks for algorithmic or mathematical portfolio optimization, statistical stock returns analysis, quantitative financial risk models (VaR, GARCH), or programmatic volatility modeling. Do NOT use for qualitative investment advice or personal asset allocation."
+description: >
+  Use this skill only when the user, or investment-lens, explicitly requires
+  Python/Jupyter-based quantitative finance analysis. This includes portfolio
+  optimization, econometric modeling, factor analysis, volatility modeling, risk
+  estimation, Value-at-Risk, Conditional VaR, Monte Carlo simulation, and
+  statistical backtesting. Do NOT use for qualitative investment interpretation,
+  portfolio diagnostics that can be handled conceptually, report writing, quote
+  refreshes, or general narrative market commentary.
+allowed-tools: Read Grep
+metadata:
+  argument-hint: "[VaR | optimization | regression | Monte Carlo | backtest]"
+  effort: "high"
+  user-invocable: "true"
+  upstream-primary-skill: "investment-lens"
+  post-invoke-check: "Return structured quant output for reintegration"
 ---
 
-# Quantitative Analysis Skill
+# Quant Analysis
 
-## Description
-Perform quantitative finance research including data analysis, portfolio optimization, risk modeling, and econometric analysis.
+## Purpose
 
-## Tools Used
-- `jupyter_execute` - Execute Python code for financial analysis (auto-switches to Jupyter)
-- `jupyter_notebook` - Manage analysis notebooks
-- `update_notebook` - Set up analysis cells in Jupyter
-- `update_latex` - Write finance paper content to LaTeX editor
-- `latex_compile` - Compile research papers (auto-switches to LaTeX editor)
-- `update_notes` - Write analysis summaries and findings
+Use this skill as the specialized quantitative engine for the broader investment workflow.
 
-## Capabilities
+This skill does not replace the main investment judgment layer. Its job is to run formal quantitative analysis and return structured results that can be interpreted by `investment-lens`.
 
-### Data Analysis
-- Time series analysis of financial returns
-- Cross-sectional regression (Fama-MacBeth, panel data)
-- Event studies and abnormal return analysis
-- Volatility modeling (GARCH family)
+## Do not use
 
-### Portfolio Optimization
-- Mean-variance optimization (Markowitz)
-- Black-Litterman model with views
-- Risk parity and equal risk contribution
-- Factor-based portfolio construction
+Do not use this skill for:
+- Basic qualitative stock analysis.
+- Narrative valuation framing.
+- General portfolio commentary without statistical requirements.
+- Report writing or investor communication.
+- Quote refreshes.
 
-### Risk Analysis
-- Value-at-Risk (VaR) and Conditional VaR
-- Stress testing and scenario analysis
-- Copula-based dependency modeling
-- Monte Carlo simulation
+## Trigger conditions
 
-## Usage Patterns
+Use this skill only when the task explicitly requires one or more of:
+- Portfolio optimization.
+- VaR or CVaR.
+- Monte Carlo simulation.
+- Risk decomposition.
+- Factor regressions.
+- Volatility modeling.
+- Time-series analysis.
+- Backtesting.
+- Statistical validation of a portfolio or security claim.
 
-### Analyze Returns
-When user says: "Analyze the performance of [asset/portfolio]"
-1. Load price data using pandas/yfinance
-2. Calculate returns, volatility, Sharpe ratio
-3. Plot cumulative returns and drawdowns
-4. Run statistical tests (normality, autocorrelation)
-5. Present findings with charts
+If the task can be answered by conceptual analysis, do not activate this skill.
 
-### Build a Model
-When user says: "Build a [pricing/risk/factor] model"
-1. Clarify model specification and data requirements
-2. Load and clean data
-3. Estimate model parameters
-4. Validate with out-of-sample testing
-5. Report results with diagnostics
+## Required input schema
 
-## Tool Examples
+Expect or construct the following fields:
+- `objective`
+- `tickers`
+- `portfolio_weights`
+- `base_currency`
+- `benchmark`
+- `lookback_period`
+- `risk_free_proxy`
+- `model_type`
+- `constraints`
+- `valid_as_of`
 
-### Load and analyze stock returns
-```python
-# via jupyter_execute
-import yfinance as yf
-import pandas as pd
-import numpy as np
+If required inputs are missing, ask for them or state the assumptions clearly.
 
-data = yf.download("AAPL", start="2023-01-01", end="2024-01-01")
-returns = data["Close"].pct_change().dropna()
-print(f"Mean: {returns.mean():.4f}, Vol: {returns.std():.4f}, Sharpe: {returns.mean()/returns.std()*np.sqrt(252):.2f}")
-```
+## Supported analysis modes
 
-### Validation checkpoints
-- Verify data has no missing values or extreme outliers before modeling
-- Check model residuals for autocorrelation after estimation
-- Confirm out-of-sample period has no look-ahead bias
+### Mode A — Risk analysis
+Use for:
+- Historical volatility.
+- Drawdown.
+- VaR and CVaR.
+- Stress framing.
+- Correlation and concentration diagnostics.
+
+### Mode B — Optimization
+Use for:
+- Mean-variance optimization.
+- Black-Litterman.
+- Risk parity.
+- Equal risk contribution.
+- Constraint-aware portfolio construction.
+
+### Mode C — Statistical modeling
+Use for:
+- Factor exposure analysis.
+- Rolling regression.
+- Event studies.
+- GARCH-family volatility modeling.
+- Econometric validation.
+
+### Mode D — Simulation and backtesting
+Use for:
+- Monte Carlo simulation.
+- Strategy comparison.
+- Parameter sensitivity tests.
+- Historical backtests with clearly stated limitations.
+
+## Execution rules
+
+Always:
+- State assumptions before results.
+- Use explicit lookback periods.
+- State data limitations.
+- Return structured outputs.
+- Distinguish descriptive statistics from predictive claims.
+
+Never:
+- Present model output as certainty.
+- Hide parameter choices.
+- Extrapolate beyond the model’s scope without warning.
+
+## Output schema
+
+Return results in this structure:
+
+- `analysis_type`
+- `objective`
+- `inputs_used`
+- `assumptions`
+- `summary_statistics`
+- `model_output`
+- `risk_findings`
+- `limitations`
+- `valid_as_of`
+
+Where useful, include:
+- `optimized_weights`
+- `var`
+- `cvar`
+- `beta`
+- `factor_exposures`
+- `drawdown`
+- `scenario_results`
+
+## Integration back to investment-lens
+
+When this skill is used as a sub-analysis engine:
+- Return conclusions in structured form.
+- Avoid final portfolio or investment recommendations unless explicitly requested.
+- Leave the final interpretive judgment to `investment-lens`.
+
+If a recommendation is unavoidable, phrase it as:
+- “Quantitative implication.”
+- “Model-based indication.”
+- “Statistical signal.”
+Not as a standalone final investment decision.
+
+## References
+
+Read when needed:
+- `references/input-schema.md`
+- `references/output-schema.md`
+- `references/model-selection.md`

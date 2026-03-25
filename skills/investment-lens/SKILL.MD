@@ -1,229 +1,201 @@
 ---
 name: investment-lens
 description: >
-  Qualitative and conceptual multi-asset investment analysis for individual stocks (AAPL, TSMC, 2330),
-  ETFs and indices (VOO, 0050, QQQ), cryptocurrencies (BTC, ETH), and
-  portfolio/allocation diagnostics. Applies ISO 10962:2021 CFI classification,
-  All-Seasons framework mapping, Pre-Mortem risk assessment, and 6-philosophy
-  routing. Triggers on: ticker analysis, portfolio review, allocation diagnosis,
-  qualitative valuation questions, rebalancing decisions. Does NOT trigger on: raw quote
-  update requests (use /update-quote), pure FX conversion,
-  personal CFA/retirement goal planning (use asset-allocation),
-  programmatic Python/Jupyter optimization (use quant-analysis),
-  Excel-based DCF models (use dcf-model), or non-investment queries.
-argument-hint: "[ticker | portfolio-csv | 'portfolio review']"
-effort: high
-user-invocable: true
-disable-model-invocation: false
-allowed-tools: Read, Grep, WebSearch
-hooks:
-  post-invoke:
-    - description: "Confirm bias-checklist.md was executed for every analysis"
+  Use this skill for qualitative and conceptual investment analysis of single stocks,
+  ETFs, indices, cryptocurrencies, portfolio diagnostics, rebalancing review, and
+  personal allocation guidance. Use when the user asks for ticker analysis, portfolio
+  review, All-Seasons mapping, concentration checks, qualitative valuation framing,
+  retirement allocation, or goal-based asset allocation. Do NOT use for raw quote
+  refreshes or value_date updates (use update-quote), or for Python/Jupyter-based
+  quantitative modeling, portfolio optimization, econometrics, Monte Carlo simulation,
+  or advanced statistical risk modeling (use quant-analysis).
+allowed-tools: Read Grep WebSearch
+metadata:
+  argument-hint: "[ticker | portfolio-csv | portfolio review | retirement allocation]"
+  effort: "high"
+  user-invocable: "true"
+  post-invoke-check: "Confirm bias and allocation checklist were applied"
 ---
 
-# Investment Lens v3.1 — Core Execution Framework
+# Investment Lens
 
-## STEP 0 — Data Integrity Gate (MANDATORY, non-skippable)
+## Purpose
 
-Before any analysis begins, execute the following checks in sequence. Do not proceed to Step 1 until all gates pass or the user explicitly acknowledges the risk.
+Use this skill as the primary investment-analysis hub for:
+- Single-stock analysis.
+- ETF, index, and crypto review.
+- Portfolio diagnostics and rebalancing.
+- Personal allocation and retirement-oriented asset allocation.
 
-**Gate 0-A: value_date Freshness Check**
+This skill is the main decision and interpretation layer. It is responsible for converting raw holdings, market context, and user objectives into an actionable investment view.
 
-Read the `value_date` field from any CSV input. Apply the staleness matrix:
+## Do not use
 
-| Days since value_date | Status | Required Action |
-|----------------------|--------|-----------------|
-| ≤ 1 trading day | ✅ Fresh | Proceed |
-| 2–3 trading days | 🟡 Stale | Notify user, offer to proceed |
-| 4–7 trading days | 🟠 Expired | Warn: "Recommend running `/update-quote` first. Proceed anyway?" |
-| > 7 trading days | 🔴 Critical | HARD BLOCK: Prepend all conclusions with `⚠️ BASED ON STALE DATA (>7 days). FOR REFERENCE ONLY.` |
+Do not use this skill for:
+- Quote refreshes, FX refreshes, or updating `value_date`; use `update-quote`.
+- Programmatic portfolio optimization, Monte Carlo simulation, GARCH, VaR/CVaR engines, factor regressions, or statistical backtesting; use `quant-analysis`.
+- Non-investment tasks.
 
-**CRITICAL CONSTRAINT**: This skill reads and analyses CSVs. It does NOT modify CSVs, update prices, or write back `value_date`. All quote refresh operations are exclusively handled by `/update-quote`.
+## Mode selection
 
-**Gate 0-B: CFI Code Conflict Resolution**
+Classify the task into one of these modes before analysis:
 
-When a holding's text "asset class" field conflicts with its CFI code, **CFI code wins**. Log the conflict as: `[CFI Override] Ticker X: text label '[Y]' overridden by CFI '[Z]' → mapped to All-Seasons category '[W]'`.
+### Mode A — Security analysis
+Use for:
+- Single stocks.
+- ETFs and indices.
+- Crypto assets.
+- Qualitative valuation and thesis review.
 
-**Gate 0-C: eToro Smart Portfolio Deconstruction**
+Load as needed:
+- `references/asset-classification.md`
+- `references/tech-earnings-deepdive.md`
+- `references/market-asset-analysis.md`
+- `references/investing-philosophies.md`
+- `references/investing-philosophies-ref.md`
+- `references/valuation-models.md`
+- `references/macro-liquidity.md`
+- `references/bias-checklist.md`
+- `references/market-bias-checklist.md`
 
-Before any All-Seasons mapping, deconstruct eToro portfolios:
-- **The-Chameleon** (`CIOGMU`): Split per latest monthly report — default: ~70% Equity (SPY5.L) + ~30% Gold (WGLD.L)
-- **Target2030-FT** (`CIOIMU` / `CIOGMU`): Apply 2026 glide path — default: ~25% Equity / ~75% Bonds. Flag Capital Guarantee status as `[UNCONFIRMED]` if not explicitly stated in input.
-- **Momentum-LS** (`CIOGLU`): Classify as Alternative/Low-Correlation. Net market exposure = unknown until monthly report; default to 0% directional exposure.
+### Mode B — Portfolio diagnostics
+Use for:
+- Portfolio review.
+- Rebalancing logic.
+- Concentration checks.
+- All-Seasons mapping.
+- Allocation drift analysis.
 
----
+Load as needed:
+- `references/asset-classification.md`
+- `references/all-seasons-portfolio.md`
+- `assets/portfolio-template.md`
+- `references/market-bias-checklist.md`
 
-## STEP 1 — Input Classification & Routing
+### Mode C — Personal allocation
+Use for:
+- Retirement allocation.
+- Goal-based allocation.
+- Risk-tolerance-based asset mix.
+- Withdrawal-awareness and time-horizon framing.
 
-Load `references/asset-classification.md` now. Use it to verify CFI codes and resolve ambiguous tickers.
+Load:
+- `references/personal-allocation.md`
+- `assets/allocation-template.md`
 
-Execute the routing decision tree:
+If the user gives incomplete personal constraints, request:
+- Time horizon.
+- Base currency.
+- Income stability.
+- Liquidity need.
+- Risk tolerance.
+- Existing holdings.
+- Target use of capital.
 
-```
-User Input
-│
-├─ Single stock ticker (e.g., NVDA, 2330, GOOG)
-│    ├─ Load: references/tech-earnings-deepdive.md
-│    ├─ Load: references/investing-philosophies.md
-│    ├─ Load: references/valuation-models.md
-│    ├─ IF macro is Key Force: Load references/macro-liquidity.md
-│    ├─ IF US deep-value analysis: Load references/us-value-investing.md
-│    └─ AFTER analysis: MANDATORY references/bias-checklist.md
-│
-├─ ETF / Index / Fund ticker (e.g., VOO, 0050, QQQ, 00720B)
-│    ├─ Load: references/market-asset-analysis.md
-│    ├─ Load: references/investing-philosophies-ref.md
-│    ├─ Load: references/valuation-models.md
-│    ├─ IF macro is Key Force: Load references/macro-liquidity.md
-│    └─ AFTER analysis: MANDATORY references/market-bias-checklist.md
-│
-├─ Crypto (BTC, ETH)
-│    ├─ Load: references/btc-bottom-model.md
-│    └─ AFTER analysis: MANDATORY references/bias-checklist.md
-│
-├─ Portfolio / All-Seasons / Retirement / Allocation (CSV or text description)
-│    ├─ Load: references/all-seasons-portfolio.md
-│    ├─ Load: references/asset-classification.md (already loaded at Step 0)
-│    ├─ IF input incomplete or ambiguous: Show assets/portfolio-template.md Format C
-│    └─ AFTER analysis: MANDATORY references/market-bias-checklist.md
-│
-└─ Ambiguous input
-     └─ Show: assets/portfolio-template.md Format C — ask user to clarify
-```
+## Step 0 — Data integrity gate
 
----
+Before analysis:
+1. Check whether holdings or portfolio inputs include `value_date`.
+2. If data is stale, warn clearly.
+3. If quotes need refresh, instruct use of `update-quote` before proceeding.
+4. If the user chooses to proceed on stale data, mark the analysis clearly as reference-only.
 
-## STEP 2 — Precision Financial Calculations (Anti-Hallucination Lock)
+This skill reads and interprets data. It does not modify files or refresh prices.
 
-For all quantitative outputs, apply the following locked formulas. Never approximate or paraphrase these calculations.
+## Step 1 — Input normalization
 
-**HHI Concentration Index** (for portfolio holdings):
+Normalize user input into one of these structures:
+- `security_request`
+- `portfolio_request`
+- `personal_allocation_request`
 
-$$\text{HHI} = \sum_{i=1}^{n} s_i^2$$
+Minimum fields:
+- Ticker or holdings list.
+- Base currency.
+- Valid-as-of date if available.
+- User objective.
+- Time horizon where relevant.
 
-where $$s_i$$ is the percentage weight of holding $$i$$ expressed as a decimal (e.g., 30% = 0.30). Output range: 0 to 1. Thresholds: <0.15 = diversified; 0.15–0.25 = moderate concentration; >0.25 = highly concentrated.
+If the request is ambiguous, ask clarifying questions before analysis.
 
-**Sharpe Ratio**:
+## Step 2 — Core analysis
 
-$$\text{Sharpe Ratio} = \frac{R_p - R_f}{\sigma_p}$$
+### For security analysis
+- Identify the relevant asset class and context.
+- Frame the thesis using the appropriate philosophy or market lens.
+- Separate thesis, counter-thesis, and key risks.
+- Use scenario framing for valuation-sensitive outputs.
 
-where $$R_p$$ = portfolio return, $$R_f$$ = risk-free rate (use Taiwan 1-year government bond yield as default for TWD portfolios; US 3-month T-bill for USD portfolios), $$\sigma_p$$ = annualised standard deviation of portfolio returns. Always state the $$R_f$$ assumption explicitly.
+### For portfolio diagnostics
+- Evaluate concentration, diversification, regime exposure, and drift.
+- Map holdings into portfolio buckets using CFI and portfolio rules.
+- Identify rebalance pressure, unintended bets, and exposure gaps.
 
-**Taiwan NHI Supplemental Premium** (二代健保補充保費):
+### For personal allocation
+- Translate user goals into asset-allocation logic.
+- Prioritize suitability, liquidity, time horizon, and survivability over return-chasing.
+- Distinguish between strategic allocation and tactical views.
+- Explain trade-offs clearly rather than pretending there is a single perfect allocation.
 
-$$\text{Premium} = (\text{Single Dividend} - NT\$20{,}000) \times 2.11\%$$
+## Step 3 — Quant handoff decision
 
-Only triggered when a single dividend payment exceeds NT$20,000. Zero if below threshold.
+Escalate to `quant-analysis` only if the task explicitly requires:
+- Mean-variance optimization.
+- Black-Litterman.
+- Risk parity or ERC.
+- VaR or CVaR modeling.
+- Monte Carlo simulation.
+- Factor modeling or regression.
+- Volatility modeling or econometrics.
+- Programmatic backtesting.
 
-**PEG Ratio**:
+When escalating, create a structured request with:
+- Objective.
+- Tickers or holdings.
+- Weights if available.
+- Benchmark.
+- Base currency.
+- Lookback period.
+- Risk-free proxy.
+- Required model type.
 
-$$\text{PEG} = \frac{P/E}{\text{EPS Growth Rate (\%)}}$$
+Then read:
+- `references/quant-handoff.md`
 
-**Reverse DCF** (Implied Growth Rate): Derive from current market cap, WACC assumption, and terminal value. Always state WACC and terminal growth rate assumptions explicitly.
+After receiving quantitative outputs, integrate them into the final interpretation. Do not let statistical output replace judgment automatically.
 
-**Dividend Tax Decision** (Taiwan):
+## Step 4 — Bias and risk discipline
 
-$$\text{Net After-Tax (Integration Method)} = D \times (1 - \text{Tax Rate}) + D \times 8.5\%$$
+Before finalizing:
+- Run the relevant bias checklist.
+- State key risks explicitly.
+- Define monitoring conditions.
+- When appropriate, define exactly three measurable kill conditions.
 
-$$\text{Net After-Tax (Separate 28\%)} = D \times (1 - 28\%)$$
+Minimum output:
+- Red flags.
+- Yellow flags.
+- Green confirmations.
 
-Compare both and recommend the lower-tax option based on user's stated marginal tax bracket.
+## Step 5 — Output rules
 
-**All-Seasons Deviation Score**:
+Every output must:
+- Lead with the recommendation or core judgment.
+- State confidence level.
+- State what the conclusion is valid as of.
+- Separate facts, assumptions, and interpretation.
+- Distinguish long-term allocation advice from short-term market views.
+- If personal allocation is discussed, state that the output is an analytical framework, not individualized regulated advice unless the user has provided the full required context.
 
-$$\text{Deviation}_i = w_i^{\text{actual}} - w_i^{\text{target}}$$
+## References
 
-Report for each of the 5 categories: Equity (30%), Long Bond (40%), Medium Bond (15%), Gold (7.5%), Commodities (7.5%).
+Core references:
+- `references/asset-classification.md`
+- `references/all-seasons-portfolio.md`
+- `references/valuation-models.md`
+- `references/personal-allocation.md`
+- `references/quant-handoff.md`
 
----
-
-## STEP 3 — Analysis Execution
-
-Execute the analysis framework loaded in Step 1. Apply the following universal output discipline:
-
-**Guidelines (MANDATORY — applies to all analysis modes):**
-
-1. **Lead with conclusion**: First sentence must be the actionable recommendation (Buy/Hold/Sell/Rebalance/Monitor), followed by confidence level (High/Medium/Low) and a one-sentence rationale.
-2. **Data citation**: Every quantitative claim must cite its source tier — Tier 1 (SEC/regulator), Tier 2 (Bloomberg/Morningstar/FRED), Tier 3 (company IR). Flag Tier 3 data as `[Self-reported]`.
-3. **Assumption lock**: For any DCF, Sharpe, or HHI calculation, state all assumptions in a `Assumptions:` block before the result.
-4. **No speculative ranges without bounds**: All price targets and growth estimates must include a bear case / base case / bull case structure. Never give a single-point estimate.
-5. **Time-stamp sensitivity**: Every conclusion must include `Valid as of: [value_date]`. If `value_date` is missing, use `Valid as of: [date of analysis session]`.
-6. **Philosophy conflict handling**: When two investment philosophies produce conflicting signals (e.g., Quality Compounder = Buy vs. Macro-Tactical = Sell), explicitly state the conflict, do not silently resolve it. Present both signals and let the user decide based on their holding horizon.
-7. **Kill Condition enforcement**: For every Pre-Mortem, define exactly 3 Kill Conditions with measurable thresholds. Example format: `Kill Condition A: If [metric] crosses [threshold] by [date], exit position. Rationale: [one sentence].`
-8. **eToro overseas income tracking**: When analysing eToro holdings, append the running overseas income tally: `Overseas Income YTD: NT$[X] / NT$7,500,000 threshold ([Y]% utilised)`.
-
----
-
-## STEP 4 — Anti-Bias Enforcement (Non-Skippable Final Gate)
-
-For individual stocks → Load and execute `references/bias-checklist.md` in full.
-For market/ETF/portfolio analysis → Load and execute `references/market-bias-checklist.md` in full.
-
-Output a structured checklist result:
-- 🔴 **Red Flags** (immediate risk signals requiring action)
-- 🟡 **Yellow Flags** (areas requiring monitoring)
-- ✅ **Green Confirmations** (actively verified positive factors)
-
-Minimum output: at least one item in each category. If a category is genuinely empty, state why explicitly (e.g., `✅ No red flags identified — [reason]`).
-
----
-
-## STEP 5 — Output Formatting
-
-Use the appropriate template based on analysis type:
-
-**For individual stocks**: Use the full report format from `references/tech-earnings-deepdive.md`
-**For ETFs/markets**: Use the report format from `references/market-asset-analysis.md`
-**For portfolios**: Use `assets/portfolio-template.md` as the output scaffold
-
-Every output must end with:
-
-```
----
-Analysis completed: [timestamp]
-value_date used: [value_date from CSV, or 'session date']
-Data freshness: [✅ Fresh / 🟡 Stale / 🟠 Expired / 🔴 Critical]
-Next review recommended: [date]
-To refresh quotes: /update-quote
----
-```
-
----
-
-## Supporting Files Index
-
-| File | Role | Load Trigger |
-|------|------|-------------|
-| `references/instruction.md` | Routing index & file manifest | Always available as fallback |
-| `references/asset-classification.md` | ISO 10962:2021 CFI master table | Step 0 (always) |
-| `references/tech-earnings-deepdive.md` | Individual stock deep-dive framework | Single stock input |
-| `references/market-asset-analysis.md` | ETF/Index/Market analysis framework | ETF or market input |
-| `references/all-seasons-portfolio.md` | All-Seasons portfolio diagnostics | Portfolio/allocation input |
-| `references/btc-bottom-model.md` | Bitcoin cycle bottom detection | BTC/ETH input |
-| `references/investing-philosophies.md` | 6-philosophy routing for stocks | Individual stock analysis |
-| `references/investing-philosophies-ref.md` | 6-philosophy routing for markets | ETF/portfolio analysis |
-| `references/valuation-models.md` | Multi-master valuation toolbox | Any valuation question |
-| `references/bias-checklist.md` | Anti-bias & Pre-Mortem for stocks | Final gate — stocks |
-| `references/market-bias-checklist.md` | Anti-bias & Pre-Mortem for markets | Final gate — markets/ETFs |
-| `references/macro-liquidity.md` | Macro liquidity monitoring | When Key Force = Macro |
-| `references/us-value-investing.md` | US value investing 4D scoring | US deep-value analysis |
-| `assets/portfolio-template.md` | Portfolio input format guide | Incomplete/ambiguous input |
-
----
-
-## Examples
-
-**Example — Correct Trigger (should invoke this skill):**
-- `/investment-lens NVDA`
-- `/investment-lens VOO`
-- `/investment-lens BTC`
-- `/investment-lens [paste CSV]`
-- "Analyse my portfolio allocation"
-- "Is TSMC overvalued?"
-- "What's the All-Seasons deviation for my holdings?"
-
-**Example — Should NOT invoke this skill (boundary enforcement):**
-- "Update the BTC price" → invoke `/update-quote`
-- "What's today's USD/TWD rate?" → invoke `/update-quote`
-- "Fix the value_date in my CSV" → invoke `/update-quote`
-- "What's the weather tomorrow?" → out of scope, decline politely
+Templates:
+- `assets/portfolio-template.md`
+- `assets/allocation-template.md`
