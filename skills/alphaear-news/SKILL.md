@@ -1,13 +1,13 @@
 ---
 name: alphaear-news
-description: Fetch hot finance news, unified trends, and prediction financial market data. Use when the user needs real-time financial news, trend reports from multiple finance sources (Weibo, Zhihu, WallstreetCN, etc.), or Polymarket finance market prediction data.
+description: Fetch hot finance news, unified trends, and prediction market data from global sources. Use when the user needs real-time financial news, trend reports from international and regional finance sources (Reuters, Bloomberg, FT, CNBC, Nikkei Asia, WSJ, etc.), or Polymarket finance prediction data. Regional sources (e.g. WallstreetCN, Nikkei Asia) may be included for geographic context.
 ---
 
 # AlphaEar News Skill
 
 ## Overview
 
-Fetch real-time hot news, generate unified trend reports, and retrieve Polymarket prediction data.
+Fetch real-time hot news from global finance sources, generate unified trend reports, and retrieve Polymarket prediction data.
 
 ## Capabilities
 
@@ -16,16 +16,16 @@ Fetch real-time hot news, generate unified trend reports, and retrieve Polymarke
 Use `scripts/news_tools.py` via `NewsNowTools`.
 
 -   **Fetch News**: `fetch_hot_news(source_id, count)`
-    -   See [sources.md](references/sources.md) for valid `source_id`s (e.g., `cls`, `weibo`).
+    -   See [sources.md](references/sources.md) for valid `source_id`s (e.g., `reuters`, `bloomberg`, `nikkei`).
 -   **Unified Report**: `get_unified_trends(sources)`
-    -   Aggregates top news from multiple sources.
+    -   Aggregates top news from multiple global sources.
 
 ### 2. Fetch Prediction Markets
 
 Use `scripts/news_tools.py` via `PolymarketTools`.
 
 -   **Market Summary**: `get_market_summary(limit)`
-    -   Returns a formatted report of active prediction markets.
+    -   Returns a formatted report of active global prediction markets.
 
 ## Dependencies
 
