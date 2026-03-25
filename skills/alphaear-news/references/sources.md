@@ -1,26 +1,38 @@
 # News Sources Reference
 
-## Supported News Sources
+## Global Financial Sources
 
 | Source ID | Name | Category | Description |
 |:----------|:-----|:---------|:------------|
-| `cls` | 财联社 | Finance | Real-time financial news, focus on A-shares and macro. |
-| `wallstreetcn` | 华尔街见闻 | Finance | Global markets, macroeconomics, and detailed analysis. |
-| `xueqiu` | 雪球热榜 | Finance | Community-driven stock discussions and hot topics. |
-| `weibo` | 微博热搜 | General | Trending social topics, good for public sentiment. |
-| `zhihu` | 知乎热榜 | General | In-depth discussions and Q&A on trending topics. |
-| `baidu` | 百度热搜 | General | General public search trends. |
-| `toutiao` | 今日头条 | General | Algorithmic news recommendations. |
-| `douyin` | 抖音热榜 | General | Short video trends (titles only). |
-| `thepaper` | 澎湃新闻 | General | Serious journalism and current affairs. |
-| `36kr` | 36氪 | Tech | Startup, venture capital, and tech industry news. |
-| `ithome` | IT之家 | Tech | Consumer electronics and tech gadgets. |
-| `v2ex` | V2EX | Tech | Developer community trends. |
-| `juejin` | 掘金 | Tech | Developer blogs and tutorials. |
-| `hackernews` | Hacker News | Tech | Global tech and startup news (English). |
+| `reuters` | Reuters | Finance | Global breaking news and financial wire. |
+| `bloomberg` | Bloomberg Markets | Finance | Global markets, macro, and corporate news. |
+| `ft` | Financial Times | Finance | In-depth global financial and economic analysis. |
+| `wsj` | Wall Street Journal | Finance | US and global markets, business, and policy. |
+| `cnbc` | CNBC | Finance | Real-time US and global market coverage. |
+| `seekingalpha` | Seeking Alpha | Finance | Community-driven equity research and analysis. |
+| `wallstreetcn` | 華爾街見聞 (WSC) | Finance | Global markets with Asia/Greater-China lens. |
+
+## Global Technology & General Sources
+
+| Source ID | Name | Category | Description |
+|:----------|:-----|:---------|:------------|
+| `hackernews` | Hacker News | Tech | Global tech, startups, and developer news. |
+| `techcrunch` | TechCrunch | Tech | Startup funding, tech industry, and VC news. |
+| `theverge` | The Verge | Tech | Consumer tech and digital culture. |
+| `economist` | The Economist | General | Long-form global economics and politics. |
+| `bbc_business` | BBC Business | General | International business and economic affairs. |
+
+## Asia-Pacific Regional Sources
+
+| Source ID | Name | Category | Description |
+|:----------|:-----|:---------|:------------|
+| `nikkei` | Nikkei Asia | Finance | Japan and Asia-Pacific markets and economics. |
+| `scmp` | South China Morning Post | General | Hong Kong, Greater China, and Asia news. |
+| `cls` | 財聯社 | Finance | Real-time A-share and PRC macro news (regional). |
+| `xueqiu` | 雪球熱榜 | Finance | Community-driven stock discussions, PRC focus (regional). |
 
 ## Polymarket
 
 - **Base URL**: `https://gamma-api.polymarket.com`
-- **Data**: Prediction markets (e.g., "Will Fed cut rates?").
+- **Data**: Global prediction markets (e.g., "Will Fed cut rates?", "Who wins the next election?").
 - **Usage**: Use `get_active_markets` to retrieve top active markets by volume.
