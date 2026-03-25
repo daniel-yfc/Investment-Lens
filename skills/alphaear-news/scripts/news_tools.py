@@ -9,29 +9,30 @@ from .database_manager import DatabaseManager
 from .content_extractor import ContentExtractor
 
 class NewsNowTools:
-    """热点新闻获取工具 - 接入 NewsNow API 与 Jina 内容提取"""
+    """全球熱點新聞取得工具 — 接入 NewsNow API 與 Jina 內容提取"""
     
     BASE_URL = "https://newsnow.busiyi.world"
     SOURCES = {
-        # 金融类
-        "cls": "财联社",
-        "wallstreetcn": "华尔街见闻",
-        "xueqiu": "雪球热榜",
-        # 综合/社交
-        "weibo": "微博热搜",
-        "zhihu": "知乎热榜",
-        "baidu": "百度热搜",
-        "toutiao": "今日头条",
-        "douyin": "抖音热榜",
-        "thepaper": "澎湃新闻",
-        # 科技类
-        "36kr": "36氪",
-        "ithome": "IT之家",
-        "v2ex": "V2EX",
-        "juejin": "掘金",
-        "hackernews": "Hacker News",
+        # 全球金融類
+        "reuters":      "Reuters",
+        "bloomberg":    "Bloomberg Markets",
+        "ft":           "Financial Times",
+        "wsj":          "Wall Street Journal",
+        "cnbc":         "CNBC",
+        "seekingalpha": "Seeking Alpha",
+        "wallstreetcn": "華爾街見聞",
+        # 全球科技／綜合類
+        "hackernews":   "Hacker News",
+        "techcrunch":   "TechCrunch",
+        "theverge":     "The Verge",
+        "economist":    "The Economist",
+        "bbc_business": "BBC Business",
+        # 亞太區域類
+        "nikkei":       "Nikkei Asia",
+        "scmp":         "South China Morning Post",
+        "cls":          "財聯社",
+        "xueqiu":       "雪球熱榜",
     }
-
 
     def __init__(self, db: DatabaseManager):
         self.db = db
@@ -40,20 +41,19 @@ class NewsNowTools:
             "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
         )
         self.extractor = ContentExtractor()
-        # Simple in-memory cache: source_id -> {"time": timestamp, "data": []}
+        # 簡易記憶體快取: source_id -> {"time": timestamp, "data": []}
         self._cache = {}
 
     def fetch_hot_news(self, source_id: str, count: int = 15, fetch_content: bool = False) -> List[Dict]:
         """
-        从指定新闻源获取热点新闻列表（支持5分钟缓存）。
+        從指定新聞源取得熱點新聞清單（支援 5 分鐘快取）。
         """
-        # 1. Check cache validity (5 minutes)
         cache_key = f"{source_id}_{count}"
         cached = self._cache.get(cache_key)
         now = time.time()
         
         if cached and (now - cached["time"] < 300):
-            logger.info(f"⚡ Using cached news for {source_id} (Age: {int(now - cached['time'])}s)")
+            logger.info(f"⚡ 使用快取新聞 {source_id}（已快取 {int(now - cached['time'])} 秒）")
             return cached["data"]
 
         try:
@@ -80,87 +80,84 @@ class NewsNowTools:
                         "meta_data": item.get("extra", {})
                     })
                 
-                # Update Cache
                 self._cache[cache_key] = {"time": now, "data": processed_items}
-                logger.info(f"✅ Fetched and cached news for {source_id}")
+                logger.info(f"✅ 已取得並快取 {source_id} 新聞")
                 
                 self.db.save_daily_news(processed_items)
                 return processed_items
             else:
-                logger.error(f"NewsNow API Error: {response.status_code}")
-                # Fallback to stale cache if available
+                logger.error(f"NewsNow API 錯誤：{response.status_code}")
                 if cached:
-                    logger.warning(f"⚠️ API failed, using stale cache for {source_id}")
+                    logger.warning(f"⚠️ API 失敗，使用過期快取 {source_id}")
                     return cached["data"]
                 return []
         except Timeout:
-            logger.error(f"Timeout fetching hot news from {source_id}")
+            logger.error(f"取得 {source_id} 新聞逾時")
             if cached:
-                logger.warning(f"⚠️ Timeout, using stale cache for {source_id}")
+                logger.warning(f"⚠️ 逾時，使用過期快取 {source_id}")
                 return cached["data"]
             return []
         except RequestException as e:
-            logger.error(f"Network error fetching hot news from {source_id}: {e}")
+            logger.error(f"取得 {source_id} 新聞發生網路錯誤：{e}")
             if cached:
-                 logger.warning(f"⚠️ Network check failed, using stale cache for {source_id}")
-                 return cached["data"]
+                logger.warning(f"⚠️ 網路失敗，使用過期快取 {source_id}")
+                return cached["data"]
             return []
         except json.JSONDecodeError:
-            logger.error(f"Failed to parse JSON response from NewsNow for {source_id}")
+            logger.error(f"解析 NewsNow {source_id} JSON 回應失敗")
             return []
         except Exception as e:
-            logger.error(f"Unexpected error fetching hot news from {source_id}: {e}")
+            logger.error(f"取得 {source_id} 新聞發生未預期錯誤：{e}")
             return []
 
     def fetch_news_content(self, url: str) -> Optional[str]:
         """
-        使用 Jina Reader 抓取指定 URL 的网页正文内容。
+        使用 Jina Reader 擷取指定 URL 的網頁正文內容。
         
         Args:
-            url: 需要抓取内容的完整网页 URL，必须以 http:// 或 https:// 开头。
+            url: 需要擷取內容的完整網頁 URL，必須以 http:// 或 https:// 開頭。
         
         Returns:
-            提取的网页正文内容 (Markdown 格式)，如果失败则返回 None。
+            擷取的網頁正文內容（Markdown 格式），失敗時回傳 None。
         """
         return self.extractor.extract_with_jina(url)
 
     def get_unified_trends(self, sources: Optional[List[str]] = None) -> str:
         """
-        获取多平台综合热点报告，自动聚合多个新闻源的热门内容。
+        取得多平台綜合熱點報告，自動彙整多個全球新聞源的熱門內容。
         
         Args:
-            sources: 要扫描的新闻源列表。可选值按类别:
-                **金融类**: "cls", "wallstreetcn", "xueqiu"
-                **综合类**: "weibo", "zhihu", "baidu", "toutiao", "douyin", "thepaper"
-                **科技类**: "36kr", "ithome", "v2ex", "juejin", "hackernews"
+            sources: 要掃描的新聞源清單。可選值按類別：
+                **全球金融類**: "reuters", "bloomberg", "ft", "wsj", "cnbc", "seekingalpha", "wallstreetcn"
+                **全球科技／綜合類**: "hackernews", "techcrunch", "theverge", "economist", "bbc_business"
+                **亞太區域類**: "nikkei", "scmp", "cls", "xueqiu"
         
         Returns:
-            格式化的 Markdown 热点汇总报告，包含各平台 Top 10 热点标题和链接。
+            格式化的 Markdown 熱點彙整報告，包含各平台 Top 10 熱點標題與連結。
         """
-        sources = sources or ["weibo", "zhihu", "wallstreetcn"]
+        sources = sources or ["reuters", "bloomberg", "hackernews"]
         all_news = []
         for src in sources:
             all_news.extend(self.fetch_hot_news(src))
             time.sleep(0.2)
         
         if not all_news:
-            return "❌ 未能获取到热点数据"
+            return "❌ 未能取得熱點資料"
             
-        report = f"# 实时全网热点汇总 ({datetime.now().strftime('%Y-%m-%d %H:%M')})\n\n"
+        report = f"# 即時全球熱點彙整 ({datetime.now().strftime('%Y-%m-%d %H:%M')})\n\n"
         for src in sources:
-
             src_name = self.SOURCES.get(src, src)
             report += f"### 🔥 {src_name}\n"
             src_news = [n for n in all_news if n['source'] == src]
             for n in src_news[:10]:
-                report += f"- {n['title']} ([链接]({n['url']}))\n"
+                report += f"- {n['title']} ([連結]({n['url']}))\n"
             report += "\n"
             
         return report
 
 
 class PolymarketTools:
-    """Polymarket 预测市场数据工具 - 获取热门预测市场反映公众情绪和预期"""
+    """Polymarket 全球預測市場資料工具 — 取得熱門預測市場以反映公眾情緒與預期"""
     
     BASE_URL = "https://gamma-api.polymarket.com"
     
@@ -170,21 +167,21 @@ class PolymarketTools:
     
     def get_active_markets(self, limit: int = 20) -> List[Dict]:
         """
-        获取活跃的预测市场，用于分析公众情绪和预期。
+        取得活躍的全球預測市場，用於分析公眾情緒與預期。
         
-        预测市场数据可以反映:
-        - 公众对重大事件的预期概率
-        - 市场情绪和风险偏好
-        - 热门话题的关注度
+        預測市場資料可反映：
+        - 公眾對重大事件的預期機率
+        - 市場情緒與風險偏好
+        - 熱門議題的關注度
         
         Args:
-            limit: 获取的市场数量，默认 20 个。
+            limit: 取得的市場數量，預設 20 個。
         
         Returns:
-            包含预测市场信息的列表，每个市场包含:
-            - question: 预测问题
-            - outcomes: 可能的结果
-            - outcomePrices: 各结果的概率价格
+            包含預測市場資訊的清單，每個市場包含：
+            - question: 預測問題
+            - outcomes: 可能的結果
+            - outcomePrices: 各結果的機率價格
             - volume: 交易量
         """
         try:
@@ -208,39 +205,39 @@ class PolymarketTools:
                         "volume": m.get("volume"),
                         "liquidity": m.get("liquidity"),
                     })
-                logger.info(f"✅ 获取 {len(result)} 个预测市场")
+                logger.info(f"✅ 取得 {len(result)} 個預測市場")
                 return result
             else:
-                logger.warning(f"⚠️ Polymarket API 返回 {response.status_code}")
+                logger.warning(f"⚠️ Polymarket API 回傳 {response.status_code}")
                 return []
         except Timeout:
-            logger.error("Timeout fetching Polymarket markets")
+            logger.error("取得 Polymarket 市場逾時")
             return []
         except RequestException as e:
-            logger.error(f"Network error fetching Polymarket markets: {e}")
+            logger.error(f"取得 Polymarket 市場發生網路錯誤：{e}")
             return []
         except json.JSONDecodeError:
-            logger.error("Failed to parse JSON response from Polymarket")
+            logger.error("解析 Polymarket JSON 回應失敗")
             return []
         except Exception as e:
-            logger.error(f"Unexpected error fetching Polymarket markets: {e}")
+            logger.error(f"取得 Polymarket 市場發生未預期錯誤：{e}")
             return []
     
     def get_market_summary(self, limit: int = 10) -> str:
         """
-        获取预测市场摘要报告，用于了解当前热门话题和公众预期。
+        取得預測市場摘要報告，用於了解當前全球熱門議題與公眾預期。
         
         Args:
-            limit: 获取的市场数量
+            limit: 取得的市場數量
             
         Returns:
-            格式化的预测市场报告
+            格式化的預測市場報告
         """
         markets = self.get_active_markets(limit)
         if not markets:
-            return "❌ 无法获取 Polymarket 数据"
+            return "❌ 無法取得 Polymarket 資料"
         
-        report = f"# 🔮 Polymarket 热门预测 ({datetime.now().strftime('%Y-%m-%d %H:%M')})\n\n"
+        report = f"# 🔮 Polymarket 全球熱門預測 ({datetime.now().strftime('%Y-%m-%d %H:%M')})\n\n"
         for i, m in enumerate(markets, 1):
             question = m.get("question", "Unknown")
             prices = m.get("outcomePrices", [])
@@ -248,9 +245,9 @@ class PolymarketTools:
             
             report += f"**{i}. {question}**\n"
             if prices:
-                report += f"   概率: {prices}\n"
+                report += f"   機率：{prices}\n"
             if volume:
-                report += f"   交易量: ${float(volume):,.0f}\n"
+                report += f"   交易量：${float(volume):,.0f}\n"
             report += "\n"
         
         return report
