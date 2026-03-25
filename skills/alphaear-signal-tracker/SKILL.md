@@ -9,9 +9,9 @@ description: Track finance investment signal evolution and update logic based on
 
 This skill provides logic to track and update investment signals. It assesses how new market information impacts existing signals (Strengthened, Weakened, Falsified, or Unchanged).
 
-## Capabilities
+> **Status**: Logic is currently embedded in `scripts/fin_agent.py` (`track_signal` method). A standalone `SignalTrackerUtility` class is planned for a future refactor. Until then, follow the interim workflow below.
 
-### 1. Track Signal Evolution
+## Capabilities
 
 ### 1. Track Signal Evolution (Agentic Workflow)
 
@@ -24,7 +24,7 @@ This skill provides logic to track and update investment signals. It assesses ho
 
 **Tools:**
 - Use `alphaear-search` and `alphaear-stock` skills to gather the necessary data.
-- Use `scripts/fin_agent.py` helper `_sanitize_signal_output` if needing to clean JSON.
+- Use `scripts/fin_agent.py` helper `_sanitize_signal_output` if needing to clean JSON output.
 
 **Key Logic:**
 
@@ -35,13 +35,32 @@ This skill provides logic to track and update investment signals. It assesses ho
     3.  Update confidence and intensity.
 -   **Output**: Updated Signal.
 
-**Example Usage (Conceptual):**
+**Interim Usage (until standalone utility is available):**
 
 ```python
-# This skill is currently a pattern extracted from FinAgent.
-# In a future refactor, it should be a standalone utility class.
-# For now, refer to `scripts/fin_agent.py`'s `track_signal` method implementation.
+# Reference implementation lives in fin_agent.py.
+# Import FinAgent and call track_signal directly:
+from scripts.fin_agent import FinAgent
+
+agent = FinAgent(db)
+updated_signal = agent.track_signal(existing_signal, new_info_text)
 ```
+
+**Future refactor target:**
+
+```python
+# Planned standalone interface (not yet implemented):
+from scripts.utils.signal_tracker import SignalTrackerUtility
+
+tracker = SignalTrackerUtility(db)
+updated_signal = tracker.track(existing_signal, new_info_text)
+```
+
+## Tech Debt
+
+- [ ] Extract `track_signal` from `FinAgent` into `scripts/utils/signal_tracker.py` as `SignalTrackerUtility`
+- [ ] Add unit tests for Strengthened / Weakened / Falsified classification
+- [ ] Remove dependency on `fin_agent.py` once standalone utility is stable
 
 ## Dependencies
 
