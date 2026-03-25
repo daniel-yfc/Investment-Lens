@@ -66,7 +66,7 @@ Which task would you like to start with?
 
 Load the relevant file before starting each task:
 
-| Task | Reference file (in `/references/initiating-coverage/`) |
+| Task | Reference file |
 |------|-------------------------------------------------------|
 | 1 | `task1-company-research.md` |
 | 2 | `task2-financial-modeling.md` |
@@ -74,7 +74,7 @@ Load the relevant file before starting each task:
 | 4 | `task4-chart-generation.md` |
 | 5 | `task5-report-assembly.md` |
 
-Also available: `/references/initiating-coverage/valuation-methodologies.md`
+Also available: `/references/valuation-methodologies.md`
 
 ---
 
