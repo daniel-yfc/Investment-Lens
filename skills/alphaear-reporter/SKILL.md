@@ -1,137 +1,121 @@
 ---
 name: alphaear-reporter
 description: >
-  Use this skill whenever completed market, company, portfolio, or signal analysis
-  needs to be turned into a structured output for humans. This includes research notes,
-  initiating coverage reports, thesis memos, investor briefing materials, and
-  presentation-ready summaries. Use it after analysis has already been performed by
-  investment-lens or other AlphaEar analysis skills. Do NOT use it as the primary
-  analysis engine when the task is to discover facts, generate new quantitative models,
-  refresh quotes, or perform raw market research.
-compatibility: No special runtime dependencies; requires completed analysis input from upstream skills
+  Convert completed investment analysis into structured human-readable output.
+  Use when analysis from investment-lens, quant-analysis, or AlphaEar signal
+  skills needs to be turned into a research note, initiating coverage report,
+  thesis memo, investor briefing, or presentation-ready summary. Also use
+  directly when the user requests an equity research initiation report for any
+  company — this skill owns the full 5-task initiating coverage workflow
+  (company research, financial modeling, valuation, chart generation, report
+  assembly). Do NOT use as the primary analysis engine for discovering facts,
+  generating quantitative models, or refreshing quotes.
+compatibility: No special runtime dependencies; requires completed analysis input from upstream skills (Modes A/C). Mode B requires xlsx, chart, docx skills.
 allowed-tools: Read Grep
 metadata:
-  argument-hint: "[research note | initiating coverage | investor brief]"
-  version: "1.0"
+  argument-hint: "[research note | initiating coverage | investor brief | company name]"
+  version: "2.0"
   language: "zh-tw"
   last-updated: "2026-03-26"
   effort: "medium"
   user-invocable: "true"
   upstream-primary-skill: "investment-lens"
-  post-invoke-check: "Confirm output matches audience and template"
+  post-invoke-check: "Confirm output matches audience and template; Mode B: confirm single-task mode"
 ---
 
 # AlphaEar Reporter
 
 ## Purpose
 
-Use this skill as the unified output and publication layer for the Investment-Lens / AlphaEar stack.
+Unified output and publication layer for the Investment-Lens / AlphaEar stack.
 
-This skill converts completed analysis into one of several finished formats:
-- Research note.
-- Initiating coverage report.
-- Thesis memo.
-- Investor briefing.
-- Management or stakeholder summary.
-- Materials package for downstream export.
+## Mode Selection
 
-## Do not use
+| Mode | Use for | Load |
+|------|---------|------|
+| **A — Research Note** | Short/medium research outputs, thesis updates, signal summaries, internal memos | `references/modes/mode-a-research-note.md` |
+| **B — Initiating Coverage** | First formal equity research write-up with 5-task workflow (company research → model → valuation → charts → report) | `references/modes/mode-b-initiating-coverage.md` |
+| **C — Investor Materials** | Investor briefings, board/committee summaries, one-pagers, presentation-ready narratives | `references/modes/mode-c-investor-materials.md` |
 
-Do not use this skill to:
-- Perform primary market analysis from scratch.
-- Refresh quotes.
-- Run statistical or quantitative modeling.
-- Replace `investment-lens`, `quant-analysis`, or raw signal-gathering skills.
+## Do Not Use
+
+- To perform primary market analysis from scratch → use `investment-lens` first.
+- To refresh prices → use `update-quote`.
+- To run statistical or quantitative modelling → use `quant-analysis`.
 
 If core analysis is missing, stop and request it first.
 
-## Required inputs
+## Required Inputs (all modes)
 
-Before writing, make sure you have:
-- The underlying analysis result.
-- A clear target audience.
-- The output format requested or implied.
-- A valid-as-of date.
-- Any required constraints such as tone, length, region, or compliance style.
+Before drafting, confirm:
+- Underlying analysis result or source material.
+- Target audience.
+- Output format requested or implied.
+- Valid-as-of date.
+- Any constraints: tone, length, region, compliance style.
 
-If these are missing, ask before drafting.
+If missing, ask before drafting.
 
-## Output modes
+---
 
-Choose one output mode:
+## Writing Rules (all modes)
 
-### Mode A — Research note
-Use for short/medium-form research outputs, internal memos, thesis updates, signal summaries.
-
-Load: `assets/report-templates/research-note.md`
-
-### Mode B — Initiating coverage
-Use for first formal write-ups with thesis, business overview, drivers, risks, valuation framing, and monitoring plan.
-
-Load:
-- `references/coverage-format.md`
-- `assets/report-templates/initiating-coverage.md`
-
-### Mode C — Investor materials
-Use for investor briefings, board/committee-facing summaries, one-pagers, presentation-ready narratives.
-
-Load:
-- `references/investor-materials-format.md`
-- `assets/report-templates/investor-brief.md`
-
-## Writing rules
-
-Always:
-- Preserve the substance of the source analysis.
+**Always:**
+- Preserve the substance of source analysis.
 - Tighten structure and readability.
-- Match the audience and tone.
+- Match audience and tone.
 - Separate fact, interpretation, and recommendation.
 - Make uncertainty visible.
 - Preserve dates, assumptions, and source sensitivity.
 
-Never:
-- Invent evidence not found in the source analysis.
+**Never:**
+- Invent evidence not found in source analysis.
 - Upgrade weak evidence into strong conviction.
 - Hide disagreement, scenario tension, or unresolved risks.
 
-## Transformation logic
+---
 
-### If the source is from `investment-lens`
-- Preserve the recommendation, confidence, thesis, risks, and kill conditions.
-- Convert internal framework language into readable prose where needed.
+## Transformation Logic
 
-### If the source is from AlphaEar signal skills
-- Summarize the signal chain.
-- State confidence and time horizon.
-- Distinguish observed signal from inferred conclusion.
+### Source from `investment-lens`
+Preserve recommendation, confidence, thesis, risks, kill conditions.
+Convert internal framework language to readable prose where needed.
 
-### If multiple analyses are provided
-- Merge only when they refer to the same asset, theme, or decision context.
-- Resolve duplication. Surface contradictions explicitly instead of flattening them.
+### Source from AlphaEar signal skills
+Summarise the signal chain. State confidence and time horizon.
+Distinguish observed signal from inferred conclusion.
 
-## Structure requirements
+### Source from `quant-analysis`
+Integrate statistical outputs as supporting evidence.
+Do not let statistics replace judgment automatically.
 
-### Research note
-Title → What changed → Core view → Evidence → Risks → Monitoring points
+### Multiple analyses provided
+Merge only when they refer to the same asset, theme, or decision context.
+Resolve duplication. Surface contradictions explicitly — never flatten them.
 
-### Initiating coverage
-Investment thesis → Business overview → Key drivers → Risks and counter-thesis → Valuation/framework view → Monitoring plan → Recommendation and confidence
+---
 
-### Investor materials
-Executive summary → What matters now → Supporting evidence → Risks → Next-step framing
+## Validation Checks (before finalising)
 
-## Validation checks
-
-Before finalizing:
 - Output format matches requested audience.
 - All recommendations supported by analysis.
-- Valid-as-of date is visible.
+- Valid-as-of date visible.
 - No unsupported data claim introduced.
-- Language is concise for the requested format.
+- Language concise for requested format.
+- Mode B: single-task mode enforced — confirm which task was just completed.
+
+---
 
 ## References
 
-Read when needed:
+Load mode-specific file at the start of each session. Do not load all at once.
+
+Mode files:
+- `references/modes/mode-a-research-note.md`
+- `references/modes/mode-b-initiating-coverage.md`
+- `references/modes/mode-c-investor-materials.md`
+
+Format references (load when needed):
 - `references/coverage-format.md`
 - `references/investor-materials-format.md`
 
