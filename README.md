@@ -30,6 +30,9 @@ Three core skills form an integrated analysis pipeline. Specialized tools feed i
 │   Mode B — Portfolio Diagnostics                        │
 │   Mode C — Personal Allocation (absorbs asset-alloc.)   │
 │   Mode D — Signal Monitoring (absorbs signal-tracker)   │
+│   ┄ ┄ ┄ ┄ ┄ ┄ ┄ ┄ ┄ ┄ ┄ ┄ ┄ ┄ ┄ ┄ ┄ ┄ ┄ ┄ ┄ ┄ ┄ ┄ ┄ ┄ ┄│
+│   scripts/ — Agentic Pipeline                           │
+│     fin_agent.py · ISQ schema · toolkits · utils        │
 └──────────────┬────────────────────────────────────────────┘
                │ quantitative handoff
                ▼
@@ -77,6 +80,7 @@ Three core skills form an integrated analysis pipeline. Specialized tools feed i
 | Skill | Role |
 |-------|------|
 | [`update-quote`](skills/update-quote/) | Refresh current prices, NAVs, and FX rates in portfolio CSV; recalculate TWD values and update `value_date` |
+| [`value-at-risk-calculator`](skills/value-at-risk-calculator/) | Standalone VaR and risk metrics: historical simulation, parametric, Monte Carlo, CVaR, stress testing, Basel III/IV backtesting |
 
 ### Institutional Research
 
@@ -92,6 +96,25 @@ Three core skills form an integrated analysis pipeline. Specialized tools feed i
 
 ---
 
+## investment-lens Agentic Pipeline
+
+`investment-lens` includes a Python-based agentic pipeline under `skills/investment-lens/scripts/`.
+This pipeline is used primarily by **Mode D (Signal Monitoring)** but is available to all modes.
+
+| Module | Path | Role |
+|--------|------|------|
+| Entry point | `scripts/fin_agent.py` | Orchestrates FinResearcher → FinAnalyst → Signal Tracking |
+| Prompt definitions | `references/PROMPTS.md` | FinResearcher, FinAnalyst, Signal Tracking prompts |
+| ISQ schema | `scripts/schema/isq_template.py` | `InvestmentSignal` JSON object structure |
+| Data models | `scripts/schema/models.py` | Supporting Pydantic models |
+| Toolkits | `scripts/tools/toolkits.py` | Price lookup, news fetch, web search |
+| Database manager | `scripts/utils/database_manager.py` | Local signal DB read/write |
+| Hybrid search | `scripts/utils/hybrid_search.py` | Combined local + web search |
+| LLM router | `scripts/utils/llm/router.py` | Model selection and capability routing |
+| Predictor | `scripts/utils/predictor/` | Kronos time-series forecasting (kline, evaluation, model) |
+
+---
+
 ## Skill Boundaries
 
 | Task | Use | Not |
@@ -101,6 +124,7 @@ Three core skills form an integrated analysis pipeline. Specialized tools feed i
 | Portfolio diagnosis (All-Seasons framework) | `investment-lens` Mode B | `quant-analysis` |
 | Monitoring existing investment signals | `investment-lens` Mode D | — |
 | Programmatic VaR, optimisation, factor, GARCH | `quant-analysis` | `investment-lens` |
+| Standalone VaR / CVaR / Basel backtesting | `value-at-risk-calculator` | `quant-analysis` |
 | Research notes and investment reports | `alphaear-reporter` | `investment-lens` |
 | Institutional initiating coverage (5-task) | `alphaear-reporter` Mode B | — |
 | Raw historical OHLCV price series | `alphaear-stock` | `update-quote` |
@@ -130,7 +154,8 @@ your-project/
         ├── investment-lens/
         │   ├── SKILL.md
         │   ├── assets/
-        │   └── references/
+        │   ├── references/
+        │   └── scripts/
         ├── quant-analysis/
         ├── alphaear-reporter/
         └── ... (other skills)
@@ -156,6 +181,9 @@ Claude Code will auto-discover and load skills. Example prompts:
 # Quantitative risk
 Calculate 1-year VaR at 95% for my portfolio  → quant-analysis
 
+# Standalone VaR with Basel backtesting
+Run historical simulation VaR with Kupiec test → value-at-risk-calculator
+
 # Initiating coverage
 幫我寫一份 TSMC 的首次涂蓋報告         → alphaear-reporter Mode B
 
@@ -179,12 +207,15 @@ Each skill follows the [Agent Skills open standard](https://agentskills.io/):
 skills/<skill-name>/
 ├── SKILL.md          # Scope, trigger conditions, workflow, output format
 ├── assets/           # Static resources agents use directly (templates, schemas)
-└── references/       # Documentation agents read before deciding how to act
+├── references/       # Documentation agents read before deciding how to act
+└── scripts/          # Python pipeline (investment-lens only)
 ```
 
 **`assets/`** — Templates, schemas, lookup tables. Agent uses content directly.
 
 **`references/`** — Frameworks, guides, procedural rules. Agent reads and applies judgment.
+
+**`scripts/`** — Python agentic pipeline (currently `investment-lens`). Entry point: `fin_agent.py`.
 
 ---
 

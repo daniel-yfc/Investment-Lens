@@ -19,17 +19,20 @@
 ```
 ┌───────────────────────────────────────────────────────────┐
 │  alphaear-news      alphaear-search     alphaear-stock   │
-│  (撷取新聞入庫)  (查詢本地 DB)   (OHLCV 數据)    │
+│  (撷取新聞入庫)   (查詢本地 DB)    (OHLCV 數據)     │
 │  alphaear-sentiment   alphaear-deepear-lite              │
 └────────────────────────────┬─────────────────────────────┘
-                           │ 數据供料
+                           │ 數據供料
                            ▼
 ┌───────────────────────────────────────────────────────────┐
 │                    investment-lens                       │
-│   模式 A — 個股 / ETF / 加密貨分析                  │
+│   模式 A — 個股 / ETF / 加密貨幣分析               │
 │   模式 B — 投資組合診斷與再平衡                    │
 │   模式 C — 個人配置與退休規劃                      │
 │   模式 D — 訊號監控與狀態更新                      │
+│   ┄ ┄ ┄ ┄ ┄ ┄ ┄ ┄ ┄ ┄ ┄ ┄ ┄ ┄ ┄ ┄ ┄ ┄ ┄ ┄ ┄ ┄ ┄ ┄ ┄ ┄ ┄│
+│   scripts/ — Agentic Pipeline                           │
+│     fin_agent.py · ISQ schema · toolkits · utils        │
 └──────────────┬────────────────────────────────────────────┘
                │ 量化交棒
                ▼
@@ -43,7 +46,7 @@
 ┌───────────────────────────────────────────────────────────┐
 │                   alphaear-reporter                      │
 │   模式 A — 研究筆記                                   │
-│   模式 B — 首次涂蓋報告（5 任務工作流）                │
+│   模式 B — 首次涵蓋報告（5 任務工作流）               │
 │   模式 C — 投資人材料與簡報                         │
 └───────────────────────────────────────────────────────────┘
 ```
@@ -55,10 +58,10 @@
 ### 核心 Skills
 
 | Skill | 角色 | 模式 |
-|-------|------|-------|
-| [`investment-lens`](skills/investment-lens/) | 主分析機核 | A: 個股分析、B: 投資組合診斷、C: 個人配置、D: 訊號監控 |
+|-------|------|------|
+| [`investment-lens`](skills/investment-lens/) | 主分析核心 | A: 個股分析、B: 投資組合診斷、C: 個人配置、D: 訊號監控 |
 | [`quant-analysis`](skills/quant-analysis/) | 量化引擎 | VaR、最佳化、因子分析、GARCH、Monte Carlo、回測 |
-| [`alphaear-reporter`](skills/alphaear-reporter/) | 輸出層 | A: 研究筆記、B: 首次涂蓋（5 任務）、C: 投資人材料 |
+| [`alphaear-reporter`](skills/alphaear-reporter/) | 輸出層 | A: 研究筆記、B: 首次涵蓋（5 任務）、C: 投資人材料 |
 
 ### AlphaEar 市場情報系統
 
@@ -70,25 +73,45 @@
 | [`alphaear-sentiment`](skills/alphaear-sentiment/) | 財經文本市場情緒分析（FinBERT / LLM） |
 | [`alphaear-stock`](skills/alphaear-stock/) | 取得全球交易所原始歷史股價（OHLCV），經由 yfinance |
 | [`alphaear-predictor`](skills/alphaear-predictor/) | 使用 Kronos 進行市場時間序列預測 |
-| [`alphaear-logic-visualizer`](skills/alphaear-logic-visualizer/) | 建立傳導鏈路視覚化邏輯圖（Draw.io XML） |
+| [`alphaear-logic-visualizer`](skills/alphaear-logic-visualizer/) | 建立傳導鏈路視覺化邏輯圖（Draw.io XML） |
 
 ### 投資組合管理
 
 | Skill | 功能 |
 |-------|------|
-| [`update-quote`](skills/update-quote/) | 刷新投資組合 CSV 中的即時報價、基金淨値與匯率，重算台幣市値並更新 `value_date` |
+| [`update-quote`](skills/update-quote/) | 刷新投資組合 CSV 中的即時報價、基金淨值與匯率，重算台幣市值並更新 `value_date` |
+| [`value-at-risk-calculator`](skills/value-at-risk-calculator/) | 獨立 VaR 風險計量：歷史模擬、參數法、Monte Carlo、CVaR、壓力測試、Basel III/IV 回測驗證 |
 
 ### 機構級公司研究
 
 | Skill | 功能 |
 |-------|------|
-| [`datapack-builder`](skills/datapack-builder/) | 從 CIM、SEC 申報萍取資料，建構符合投資委員會標準的 Excel 數据包 |
+| [`datapack-builder`](skills/datapack-builder/) | 從 CIM、SEC 申報萃取資料，建構符合投資委員會標準的 Excel 數據包 |
 
 ### 開發工具
 
 | Skill | 功能 |
 |-------|------|
 | [`skill-creator`](skills/skill-creator/) | 建立與更新 Agent Skills — 設計、建構與打包新技能 |
+
+---
+
+## investment-lens Agentic Pipeline
+
+`investment-lens` 包含一組 Python agentic pipeline，位於 `skills/investment-lens/scripts/`。
+主要由**模式 D（訊號監控）**使用，但所有模式皆可調用。
+
+| 模組 | 路徑 | 功能 |
+|------|------|------|
+| 入口腳本 | `scripts/fin_agent.py` | 協調 FinResearcher → FinAnalyst → Signal Tracking 流程 |
+| Prompt 定義 | `references/PROMPTS.md` | FinResearcher、FinAnalyst、訊號追蹤三組 prompt |
+| ISQ Schema | `scripts/schema/isq_template.py` | `InvestmentSignal` JSON 物件結構定義 |
+| 資料模型 | `scripts/schema/models.py` | 配套 Pydantic 模型 |
+| 工具集 | `scripts/tools/toolkits.py` | 報價查詢、新聞撷取、網路搜尋 |
+| 資料庫管理 | `scripts/utils/database_manager.py` | 本地訊號 DB 讀寫 |
+| 混合搜尋 | `scripts/utils/hybrid_search.py` | 本地 + 網路混合搜尋 |
+| LLM 路由 | `scripts/utils/llm/router.py` | 模型選擇與能力路由 |
+| 預測器 | `scripts/utils/predictor/` | Kronos 時間序列預測（K 線生成、評估、模型） |
 
 ---
 
@@ -101,10 +124,11 @@
 | 投資組合診斷（全天候框架） | `investment-lens` 模式 B | `quant-analysis` |
 | 監控現有投資訊號狀態 | `investment-lens` 模式 D | — |
 | 程式化 VaR、最佳化、因子、GARCH | `quant-analysis` | `investment-lens` |
+| 獨立 VaR / CVaR / Basel 回測驗證 | `value-at-risk-calculator` | `quant-analysis` |
 | 研究筆記與投資報告 | `alphaear-reporter` | `investment-lens` |
-| 機構級首次涂蓋報告（5 任務） | `alphaear-reporter` 模式 B | — |
+| 機構級首次涵蓋報告（5 任務） | `alphaear-reporter` 模式 B | — |
 | 原始歷史股價資料（OHLCV） | `alphaear-stock` | `update-quote` |
-| 刷新投資組吃 CSV 報價 | `update-quote` | `alphaear-stock` |
+| 刷新投資組合 CSV 報價 | `update-quote` | `alphaear-stock` |
 | 撷取即時財經新聞（寫入 DB） | `alphaear-news` | `alphaear-search` |
 | 查詢本地已存新聞 | `alphaear-search` `engine='local'` | `alphaear-news` |
 
@@ -130,7 +154,8 @@ your-project/
         ├── investment-lens/
         │   ├── SKILL.md
         │   ├── assets/
-        │   └── references/
+        │   ├── references/
+        │   └── scripts/
         ├── quant-analysis/
         ├── alphaear-reporter/
         └── ...（其他 skills）
@@ -145,7 +170,7 @@ your-project/
 幫我診斷一下這個投資組合的全天候配置    → investment-lens 模式 B
 
 # 個股分析
-分析台積電目前的估値是否合理             → investment-lens 模式 A
+分析台積電目前的估值是否合理             → investment-lens 模式 A
 
 # 個人配置規劃
 我 45 歲，想規劃退休後的提領策略         → investment-lens 模式 C
@@ -156,8 +181,11 @@ your-project/
 # 量化風險分析
 計算這個投資組合的 1 年期 95% VaR       → quant-analysis
 
-# 首次涂蓋報告
-幫我寫一份 TSMC 的首次涂蓋報告         → alphaear-reporter 模式 B
+# 獨立 VaR + Basel 回測
+執行歷史模擬 VaR 並做 Kupiec 檢定        → value-at-risk-calculator
+
+# 首次涵蓋報告
+幫我寫一份 TSMC 的首次涵蓋報告         → alphaear-reporter 模式 B
 
 # 研究筆記
 幫我寫一份研究筆記                        → alphaear-reporter 模式 A
@@ -165,7 +193,7 @@ your-project/
 # 更新報價
 更新報價                                     → update-quote
 
-# 歷史股價數据
+# 歷史股價數據
 幫我抓取台積電過去半年的原始歷史股價   → alphaear-stock
 ```
 
@@ -179,12 +207,15 @@ your-project/
 skills/<skill-name>/
 ├── SKILL.md          # 範圍、觸發條件、工作流程、輸出格式
 ├── assets/           # Agent 直接使用的靜態資源（模板、Schema）
-└── references/       # Agent 讀取後再判斷如何行動的文件
+├── references/       # Agent 讀取後再判斷如何行動的文件
+└── scripts/          # Python pipeline（目前僅 investment-lens 包含）
 ```
 
 **`assets/`** — 模板、Schema、查找表。Agent 直接套用內容，不需要判斷。
 
 **`references/`** — 框架、指南、程序規則。Agent 讀取後依情境做決策。
+
+**`scripts/`** — Python agentic pipeline（目前為 `investment-lens`）。入口：`fin_agent.py`。
 
 ---
 
