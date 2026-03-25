@@ -1,67 +1,46 @@
 ---
 name: alphaear-signal-tracker
 description: >
-  Track finance investment signal evolution and update logic based on new market
-  information. Use when monitoring finance signals and determining if they are
-  Strengthened, Weakened, Falsified, or Unchanged. Do NOT invoke directly for
-  new signal generation — use investment-lens for initial analysis first.
-compatibility: Requires agno (Agent framework), sqlite3 (built-in), DatabaseManager initialized
-allowed-tools: Read Bash(python *)
+  DEPRECATED — signal tracking functionality merged into investment-lens (Mode D).
+  Use investment-lens for monitoring existing investment signals, assessing whether
+  new market information strengthens, weakens, or falsifies a prior signal, and
+  updating signal status (Strengthened / Weakened / Falsified / Unchanged).
+  Do NOT invoke this skill directly.
+compatibility: Deprecated — logic now invoked via investment-lens Mode D
+allowed-tools: Read
 metadata:
-  argument-hint: "[existing signal + new info | signal ID]"
-  version: "1.0"
+  status: "deprecated"
+  replaced-by: "investment-lens"
+  replacement-mode: "Mode D — Signal Monitoring"
+  version: "2.0"
   language: "zh-tw"
   last-updated: "2026-03-26"
-  effort: "medium"
   user-invocable: "false"
   upstream-primary-skill: "investment-lens"
 ---
 
-# AlphaEar Signal Tracker Skill
+# AlphaEar Signal Tracker — DEPRECATED
 
-## Overview
+> **This skill has been merged into `investment-lens` (Mode D).**
+> Do not invoke directly. Use `investment-lens` instead.
 
-Track and update investment signals. Assesses how new market information impacts existing signals: Strengthened, Weakened, Falsified, or Unchanged.
+## Migration Guide
 
-> **Status**: Logic is currently embedded in `scripts/fin_agent.py` (`track_signal` method). A standalone `SignalTrackerUtility` class is planned for a future refactor.
-
-## Capabilities
-
-### 1. Track Signal Evolution (Agentic Workflow)
-
-Use the prompts in `references/PROMPTS.md`.
-
-**Workflow:**
-1. **Research**: Use **FinResearcher Prompt** to gather facts/price for a signal.
-2. **Analyze**: Use **FinAnalyst Prompt** to generate the initial `InvestmentSignal`.
-3. **Track**: Use **Signal Tracking Prompt** to assess evolution (Strengthened/Weakened/Falsified) based on new info.
-
-**Tools:**
-- Use `alphaear-search` and `alphaear-stock` skills to gather data.
-- Use `scripts/fin_agent.py` helper `_sanitize_signal_output` to clean JSON output.
-
-**Interim Usage (until standalone utility is available):**
-```python
-from scripts.fin_agent import FinAgent
-agent = FinAgent(db)
-updated_signal = agent.track_signal(existing_signal, new_info_text)
+```
+User: Has anything changed for my TSMC thesis?
+→ investment-lens activates
+→ Detects existing signal + new information → Mode D
+→ Loads references/modes/mode-d-signal-monitoring.md
+→ Runs Strengthened / Weakened / Falsified / Unchanged classification
 ```
 
-**Future refactor target:**
-```python
-from scripts.utils.signal_tracker import SignalTrackerUtility
-tracker = SignalTrackerUtility(db)
-updated_signal = tracker.track(existing_signal, new_info_text)
-```
+## Tech Debt (carried forward to investment-lens)
 
-## Tech Debt
-
-- [ ] Extract `track_signal` from `FinAgent` into `scripts/utils/signal_tracker.py` as `SignalTrackerUtility`
-- [ ] Add unit tests for Strengthened / Weakened / Falsified classification
+- [ ] Extract `track_signal` from `scripts/fin_agent.py` into
+      `investment-lens/scripts/signal_tracker.py` as `SignalTrackerUtility`
+- [ ] Add unit tests for signal classification logic
 - [ ] Remove dependency on `fin_agent.py` once standalone utility is stable
 
-## Dependencies
+## References (still readable for migration reference)
 
-- `agno` (Agent framework)
-- `sqlite3` (built-in)
-- Ensure `DatabaseManager` is initialized correctly.
+- `references/PROMPTS.md` — FinResearcher / FinAnalyst / Signal Tracking prompts

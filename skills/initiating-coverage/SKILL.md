@@ -1,99 +1,45 @@
 ---
 name: initiating-coverage
 description: >
-  Create institutional-quality equity research initiation reports through a 5-task
-  workflow. Tasks must be executed individually with verified prerequisites:
-  (1) company research, (2) financial modeling, (3) valuation analysis,
-  (4) chart generation, (5) final report assembly. Each task produces specific
-  deliverables (markdown docs, Excel models, charts, or DOCX reports).
-  Tasks 3–5 have dependencies on earlier tasks.
-compatibility: Requires xlsx skill (Tasks 2–3), chart skill (Task 4), docx skill (Task 5); internet access for company research
-allowed-tools: Read Write Grep WebSearch Bash
+  DEPRECATED — functionality fully merged into alphaear-reporter (Mode B).
+  Use alphaear-reporter when creating institutional equity research initiation
+  reports. All 5-task workflow logic (company research, financial modeling,
+  valuation, chart generation, report assembly) is now accessible via
+  alphaear-reporter Mode B. Do NOT invoke this skill directly.
+compatibility: Deprecated — no runtime dependencies required
+allowed-tools: Read
 metadata:
-  argument-hint: "[company name | ticker | task number 1–5]"
-  version: "1.0"
+  status: "deprecated"
+  replaced-by: "alphaear-reporter"
+  replacement-mode: "Mode B — Initiating Coverage"
+  version: "2.0"
   language: "zh-tw"
   last-updated: "2026-03-26"
-  effort: "high"
-  user-invocable: "true"
-  post-invoke-check: "Confirm single-task mode — never chain tasks automatically"
+  user-invocable: "false"
 ---
 
-# Initiating Coverage
+# Initiating Coverage — DEPRECATED
 
-Create institutional-quality equity research initiation reports through a structured 5-task workflow. Each task must be executed separately with verified inputs.
+> **This skill has been merged into `alphaear-reporter` (Mode B).**
+> Do not invoke directly. Use `alphaear-reporter` instead.
 
-**Default Font**: Times New Roman throughout all documents (unless user specifies otherwise).
+## Migration Guide
 
----
-
-## ⚠️ CRITICAL: One Task at a Time
-
-**THIS SKILL OPERATES IN SINGLE-TASK MODE ONLY.**
-
-When user requests the full pipeline or all tasks together:
+All prior functionality is preserved under `alphaear-reporter` Mode B:
 
 ```
-I can help you create an equity research initiation report for [Company].
-This involves 5 separate tasks that must be completed individually:
-
-1. Company Research — Research business, management, industry
-2. Financial Modeling — Build projection model
-3. Valuation Analysis — DCF and comparable companies
-4. Chart Generation — Create 25–35 charts
-5. Report Assembly — Compile final report
-
-Which task would you like to start with?
+User: Create an initiating coverage report for [Company]
+→ alphaear-reporter activates
+→ Detects initiating coverage request
+→ Loads Mode B instructions from references/modes/mode-b-initiating-coverage.md
+→ Executes 5-task workflow (single-task mode enforced)
 ```
 
-**Rules:**
-- ✅ Execute exactly ONE task per user request
-- ✅ Always verify prerequisites before starting
-- ✅ Deliver task outputs and confirm completion
-- ✅ Wait for user to explicitly request the next task
-- ❌ Never chain multiple tasks automatically
-- ❌ Never assume user wants to proceed to next task
-- ❌ Never execute Tasks 3–5 without verifying required inputs exist
+## Reference files (still valid, now read via alphaear-reporter)
 
-### Deliverables Policy: NO SHORTCUTS
-
-| Task | Deliverable | Nothing else |
-|------|------------|-------------|
-| Task 1 | Research document (`.md`) | ❌ No summaries |
-| Task 2 | Financial model (`.xlsx`) | ❌ No extras |
-| Task 3 | Valuation analysis (`.md`) + Excel tabs | ❌ No extras |
-| Task 4 | Charts zip file (`.zip`) | ❌ No extras |
-| Task 5 | Final report (`.docx`) | ❌ No extras |
-
----
-
-## Task Overview
-
-| Task | Input Required | Output |
-|------|---------------|--------|
-| 1. Company Research | Company name/ticker | `[Company]_Research.md` |
-| 2. Financial Modeling | Task 1 `.md` | `[Company]_Model.xlsx` |
-| 3. Valuation Analysis | Tasks 1 `.md` + Task 2 `.xlsx` | `[Company]_Valuation.md` + Excel tabs |
-| 4. Chart Generation | Tasks 1 `.md` + Task 2 `.xlsx` + Task 3 `.md` | `[Company]_Charts.zip` |
-| 5. Report Assembly | Tasks 1–4 outputs | `[Company]_InitiatingCoverage.docx` |
-
-For full task instructions, load the relevant reference file before starting:
 - `references/task1-company-research.md`
 - `references/task2-financial-modeling.md`
-- `references/task3-valuation-analysis.md`
+- `references/task3-valuation.md`
 - `references/task4-chart-generation.md`
 - `references/task5-report-assembly.md`
-
----
-
-## File Organization
-
-Store all outputs in:
-```
-outputs/[Company]/
-├── [Company]_Research.md
-├── [Company]_Model.xlsx
-├── [Company]_Valuation.md
-├── [Company]_Charts.zip
-└── [Company]_InitiatingCoverage.docx
-```
+- `references/valuation-methodologies.md`
