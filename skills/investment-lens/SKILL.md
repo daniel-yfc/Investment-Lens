@@ -1,24 +1,22 @@
 ---
 name: investment-lens
 description: >
-  Qualitative and conceptual multi-asset investment analysis for individual stocks (AAPL, TSMC, 2330),
-  ETFs and indices (VOO, 0050, QQQ), cryptocurrencies (BTC, ETH), and
-  portfolio/allocation diagnostics. Applies ISO 10962:2021 CFI classification,
-  All-Seasons framework mapping, Pre-Mortem risk assessment, and 6-philosophy
-  routing. Triggers on: ticker analysis, portfolio review, allocation diagnosis,
-  qualitative valuation questions, rebalancing decisions. Does NOT trigger on: raw quote
-  update requests (use /update-quote), pure FX conversion,
-  personal CFA/retirement goal planning (use asset-allocation),
-  programmatic Python/Jupyter optimization (use quant-analysis),
-  Excel-based DCF models (use dcf-model), or non-investment queries.
-argument-hint: "[ticker | portfolio-csv | 'portfolio review']"
-effort: high
-user-invocable: true
-disable-model-invocation: false
-allowed-tools: Read, Grep, WebSearch
-hooks:
-  post-invoke:
-    - description: "Confirm bias-checklist.md was executed for every analysis"
+  Qualitative and conceptual multi-asset investment analysis for individual stocks
+  (AAPL, TSMC, 2330), ETFs and indices (VOO, 0050, QQQ), cryptocurrencies (BTC, ETH),
+  and portfolio/allocation diagnostics. Applies ISO 10962:2021 CFI classification,
+  All-Seasons framework mapping, Pre-Mortem risk assessment, and 6-philosophy routing.
+  Use when the user asks for ticker analysis, portfolio review, allocation diagnosis,
+  qualitative valuation questions, or rebalancing decisions. Do NOT use for raw quote
+  update requests (use update-quote), pure FX conversion, personal retirement planning
+  (use asset-allocation), programmatic Python/Jupyter optimization (use quant-analysis),
+  Excel-based DCF modeling (use dcf-model), or non-investment queries.
+allowed-tools: Read Grep WebSearch
+metadata:
+  argument-hint: "[ticker | portfolio-csv | 'portfolio review']"
+  effort: "high"
+  user-invocable: "true"
+  disable-model-invocation: "false"
+  post-invoke-check: "Confirm bias-checklist.md was executed for every analysis"
 ---
 
 # Investment Lens v3.1 — Core Execution Framework
