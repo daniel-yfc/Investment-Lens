@@ -9,10 +9,10 @@ description: >
   reporting. Do NOT use for simple financial calculations or working with
   already-completed data packs.
 compatibility: Requires xlsx skill, internet or MCP server access for SEC EDGAR / public filings
-allowed-tools: Read Write Grep Bash WebSearch
+allowed-tools: Read Write Grep Bash(python*) Bash(curl*) WebSearch
 metadata:
   argument-hint: "[CIM | SEC filing | company name | 'build datapack']"
-  version: "1.0"
+  version: "1.1"
   language: "zh-tw"
   last-updated: "2026-03-26"
   effort: "high"
@@ -26,9 +26,18 @@ Build professional, standardized financial data packs for private equity, invest
 
 **Important:** Use the `xlsx` skill for all Excel file creation and manipulation throughout this workflow.
 
+## Gotchas
+
+- **Balance sheet must balance.** `Total Assets = Total Liabilities + Equity`. Verify this before delivery. Unbalanced sheets are a hard rejection at any IC.
+- SEC EDGAR EDGAR full-text search (`efts.sec.gov`) returns 10 results max per query. Paginate if needed to find the correct filing.
+- CIM financial tables often use non-standard EBITDA adjustments without labelling them. Load `references/normalization.md` before extracting any EBITDA figure.
+- `riskfolio-lib` and `scipy` are NOT available in this skill’s scope. For quantitative modelling, hand off to `quant-analysis`.
+- Excel formulas must use `=` prefix. Hard-coded numbers in formula cells are a QC failure — all calculations must be traceable.
+- Color scheme (blue inputs / black formulas / green cross-sheet links) must be applied consistently. Inconsistent colouring breaks the IC review convention.
+
 ## Critical Success Factors
 
-Every data pack must meet these standards. Failure on any point makes the deliverable unusable.
+Every data pack must meet these standards:
 
 - **Data Accuracy**: Trace every number to source; use formula-based calculations only; verify balance sheet balances.
 - **Format Compliance**: Currency ($) for financial data; number format for operational metrics; percentages for rates.
@@ -37,7 +46,7 @@ Every data pack must meet these standards. Failure on any point makes the delive
 
 ## Workflow Overview
 
-Execute phases in order. See `references/workflow.md` for full step-by-step detail.
+Execute phases in order. Load `references/workflow.md` for full step-by-step detail.
 
 | Phase | Description |
 |-------|-------------|
@@ -60,7 +69,6 @@ Execute phases in order. See `references/workflow.md` for full step-by-step deta
 
 ## Standard 8-Tab Structure
 
-Use unless explicitly instructed otherwise:
 1. Executive Summary
 2. Historical Financials (Income Statement)
 3. Balance Sheet
@@ -72,12 +80,12 @@ Use unless explicitly instructed otherwise:
 
 ## Color Scheme
 
-**Layer 1 — Font Colors (mandatory from xlsx skill):**
+**Layer 1 — Font Colors (mandatory):**
 - Blue `(0,0,255)`: All hardcoded inputs
 - Black `(0,0,0)`: All formulas and calculations
 - Green `(0,128,0)`: Links to other sheets
 
-**Layer 2 — Fill Colors (optional, apply if user requests):**
+**Layer 2 — Fill Colors (apply if user requests):**
 - Section headers: Dark blue `(68,114,196)` + white text
 - Sub-headers: Light blue `(217,225,242)` + black text
 - Input cells: Light green `(226,239,218)` + blue text

@@ -10,10 +10,10 @@ description: >
   fetching new live news (use alphaear-news to ingest first, then
   engine='local' here to retrieve). Do NOT use Baidu engine — removed.
 compatibility: Requires duckduckgo-search, requests, scripts/database_manager.py, scripts/hybrid_search.py
-allowed-tools: Read Bash(python *)
+allowed-tools: Read Bash(python*)
 metadata:
   argument-hint: "[search query | 'local: ...' | engine: jina | ddg | local]"
-  version: "2.0"
+  version: "2.1"
   language: "zh-tw"
   last-updated: "2026-03-26"
   effort: "low"
@@ -32,11 +32,8 @@ Two distinct functions under one skill:
 | Local retrieval | `local` | `daily_news` SQLite DB | Need to query content already ingested by `alphaear-news` |
 
 **Critical distinction:**
-- `engine='local'` is a **read-only query** against the local DB. It only returns
-  content that `alphaear-news` has already fetched and stored. If the DB is empty
-  or stale, run `alphaear-news` first.
-- Web engines (`jina`, `ddg`) fetch **live internet content** and do not write to
-  the local DB.
+- `engine='local'` is a **read-only query** against the local DB. It only returns content that `alphaear-news` has already fetched and stored. If the DB is empty or stale, run `alphaear-news` first.
+- Web engines (`jina`, `ddg`) fetch **live internet content** and do not write to the local DB.
 
 ## Do Not Use
 
@@ -56,10 +53,18 @@ Use `scripts/search_tools.py` via `SearchTools`:
 For local retrieval only:
 - `scripts/hybrid_search.py` — BM25 + semantic hybrid search over `daily_news` DB.
 
-## Smart Cache (web engines)
+## Smart Cache (Web Engines)
 
 Before fetching live, check if a recent cached result is reusable.
 Use the **Search Cache Relevance Prompt** in `references/PROMPTS.md`.
+
+## Gotchas
+
+- `engine='local'` returns empty results if `alphaear-news` has not run yet. Always check DB freshness before reporting “no results found”.
+- `jina` reader can time out on heavy pages (PDFs, large financial portals). Fall back to `ddg` if Jina returns error or empty.
+- `aggregate_search` doubles API calls. Use only when a single engine is insufficient.
+- The local DB is an SQLite file. Concurrent writes from `alphaear-news` and concurrent reads from this skill can cause `database is locked` errors. Retry once with a 500 ms delay before raising.
+- BM25 + semantic hybrid search requires embedding model to be loaded. First call is slow (~2–5 s). Subsequent calls use cached embeddings.
 
 ## Dependencies
 
