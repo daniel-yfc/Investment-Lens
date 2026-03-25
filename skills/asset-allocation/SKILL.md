@@ -60,13 +60,18 @@ See reference files for:
 
 ## Execution Phase
 
-When user is ready to buy, ask their preferred platform:
-- **支付宝/微信** - 基金操作
-- **天天基金** - 专业基金平台
-- **证券账户** - ETF/股票/REITs
-- **银行App** - 国债/理财
+When user is ready to execute, **first ask the user their country/region and preferred brokerage or platform**. Then load the appropriate section from `purchase-guide.md` to provide step-by-step instructions.
 
-Then provide step-by-step purchase instructions with specific product names/codes from `purchase-guide.md`
+Common platforms by region (for reference — always confirm with user):
+
+| Region | Platform Examples | Asset Types |
+|--------|------------------|-------------|
+| **Taiwan** | 永豐金, 富邦證券, 國泰證券, 中信銀行 App | ETF, 基金, 台債, REITs |
+| **US / Global** | Interactive Brokers, Schwab, Fidelity, Vanguard | ETF, Stocks, Bonds, Mutual Funds |
+| **Mainland China** | 支付宝, 天天基金, 招商銀行 App | 公募基金, A股ETF, 國債 |
+| **Hong Kong** | Futu (富途), Tiger Brokers, HSBC HK | HK/US ETF, MPF |
+
+> **Note**: Platform availability varies. Always verify that listed products are accessible on the user's chosen platform before recommending. Load `purchase-guide.md` for detailed product codes and step-by-step instructions specific to the confirmed platform.
 
 ## Report Structure
 
