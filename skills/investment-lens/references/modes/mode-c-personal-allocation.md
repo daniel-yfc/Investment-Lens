@@ -21,11 +21,11 @@ This mode absorbs all content from the deprecated `asset-allocation` skill.
 | Reference | When to load |
 |-----------|--------------|
 | `references/personal-allocation.md` | Always — core framework for Mode C |
-| `asset-allocation/references/product-selection.md` | Fund/ETF selection criteria |
-| `asset-allocation/references/rebalancing-protocol.md` | Rebalancing rules |
-| `asset-allocation/references/macro-framework.md` | Macro analysis framework |
-| `asset-allocation/references/behavioral-biases.md` | Behavioural finance biases |
-| `asset-allocation/references/purchase-guide.md` | Platform-specific execution guide |
+| `references/product-selection.md` | Fund/ETF selection criteria |
+| `references/rebalancing-protocol.md` | Rebalancing rules |
+| `references/macro-framework.md` | Macro analysis framework |
+| `references/behavioral-biases.md` | Behavioural finance biases |
+| `references/purchase-guide.md` | Platform-specific execution guide |
 | `assets/allocation-template.md` | Output template |
 
 ---
@@ -125,7 +125,5 @@ then load the appropriate section from `asset-allocation/references/purchase-gui
 
 Every Mode C output must include:
 
-> *This output is an analytical framework based on the CFA IPS methodology and
-> general educational guidance. It is not individualised regulated financial advice.
-> Investment involves risk. Past performance does not predict future results.
-> Consult a licensed financial advisor before making allocation decisions.*
+> *This output is an analysis per CFA IPS methodology and shall not constitute a financial advice.
+> Investment involves risk. Consult before making decisions.*
