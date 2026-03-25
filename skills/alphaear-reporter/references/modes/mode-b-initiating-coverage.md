@@ -74,10 +74,7 @@ Load the relevant file before starting each task:
 | 4 | `task4-chart-generation.md` |
 | 5 | `task5-report-assembly.md` |
 
-Also available: `initiating-coverage/references/valuation-methodologies.md`
-
-> These reference files live in the deprecated `initiating-coverage/references/`
-> directory. The content is still valid and should be loaded by path.
+Also available: `/references/initiating-coverage/valuation-methodologies.md`
 
 ---
 
