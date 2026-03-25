@@ -1,6 +1,23 @@
 ---
 name: asset-allocation
-description: Professional personal investment advisory skill based on CFA framework. From financial diagnosis to portfolio rebalancing for individuals. Use when: users ask about personal wealth management, retirement planning, goal-based asset allocation, or personal risk assessment. Covers: personal financial profile, goal-based planning, portfolio construction for individuals. Do NOT use for general market analysis, stock valuation, or algorithmic portfolio optimization.
+description: >
+  Professional personal investment advisory skill based on CFA framework. From
+  financial diagnosis to portfolio rebalancing for individuals. Use when users ask
+  about personal wealth management, retirement planning, goal-based asset allocation,
+  or personal risk assessment. Covers personal financial profile, goal-based planning,
+  and portfolio construction for individuals. Do NOT use for general market analysis,
+  stock valuation, or algorithmic portfolio optimization — use investment-lens or
+  quant-analysis instead.
+compatibility: No special runtime dependencies; reads references/ files as needed
+allowed-tools: Read Grep WebSearch
+metadata:
+  argument-hint: "[personal portfolio | retirement | risk tolerance | rebalance]"
+  version: "1.0"
+  language: "zh-tw"
+  last-updated: "2026-03-26"
+  effort: "high"
+  user-invocable: "true"
+  post-invoke-check: "Confirm IPS report includes all 12 sections and disclaimer"
 ---
 
 # Asset Allocation Advisor
@@ -20,49 +37,49 @@ When user asks about investment/wealth topics:
 
 ## Core Methodology
 
-- **CFA IPS Framework** - RRTTLLU principles
-- **Merrill Lynch Investment Clock** - Macro timing
-- **Modern Portfolio Theory** - Mean-variance optimization
-- **Behavioral Finance** - Cognitive bias identification
+- **CFA IPS Framework** — RRTTLLU principles
+- **Merrill Lynch Investment Clock** — Macro timing
+- **Modern Portfolio Theory** — Mean-variance optimization
+- **Behavioral Finance** — Cognitive bias identification
 
 ## Risk Assessment
 
 | Level | Type | Max Drawdown |
 |-------|------|-------------|
 | 1 | Conservative | <5% |
-| 2 | Stable | 5%-10% |
-| 3 | Balanced | 10%-20% |
-| 4 | Aggressive | 20%-35% |
+| 2 | Stable | 5%–10% |
+| 3 | Balanced | 10%–20% |
+| 4 | Aggressive | 20%–35% |
 | 5 | Very Aggressive | >35% |
 
 ## Asset Allocation Models
 
-**Conservative (Level 1)** - Target: 3%-4.5%
+**Conservative (Level 1)** — Target: 3%–4.5%
 - Cash: 35% | Bonds: 40% | Hybrid: 15% | Equity: 8% | Gold: 2%
 
-**Stable (Level 2)** - Target: 4%-6.5%
+**Stable (Level 2)** — Target: 4%–6.5%
 - Cash: 20% | Bonds: 30% | Hybrid: 20% | Domestic Equity: 18% | Overseas: 7% | Gold: 5%
 
-**Balanced (Level 3)** - Target: 6%-10%
+**Balanced (Level 3)** — Target: 6%–10%
 - Cash: 10% | Bonds: 20% | Hybrid: 20% | Domestic: 35% | Overseas: 10% | Gold: 5%
 
-**Aggressive (Level 4)** - Target: 9%-18%
+**Aggressive (Level 4)** — Target: 9%–18%
 - Cash: 5% | Bonds: 10% | Hybrid: 15% | Domestic: 45% | Overseas: 18% | Gold: 7%
 
 ## Detailed References
 
-See reference files for:
-- `product-selection.md` - Fund/ETF selection criteria
-- `rebalancing-protocol.md` - Rebalancing rules
-- `macro-framework.md` - Macro analysis framework
-- `behavioral-biases.md` - Behavioral finance biases
-- `purchase-guide.md` - Detailed purchase instructions for all product types
+Load as needed:
+- `references/product-selection.md` — Fund/ETF selection criteria
+- `references/rebalancing-protocol.md` — Rebalancing rules
+- `references/macro-framework.md` — Macro analysis framework
+- `references/behavioral-biases.md` — Behavioral finance biases
+- `references/purchase-guide.md` — Step-by-step purchase instructions by platform
 
 ## Execution Phase
 
-When user is ready to execute, **first ask the user their country/region and preferred brokerage or platform**. Then load the appropriate section from `purchase-guide.md` to provide step-by-step instructions.
+When user is ready to execute, **ask for their country/region and preferred platform first**, then load the appropriate section from `references/purchase-guide.md`.
 
-Common platforms by region (for reference — always confirm with user):
+Common platforms by region (always confirm with user before recommending):
 
 | Region | Platform Examples | Asset Types |
 |--------|------------------|-------------|
@@ -70,8 +87,6 @@ Common platforms by region (for reference — always confirm with user):
 | **US / Global** | Interactive Brokers, Schwab, Fidelity, Vanguard | ETF, Stocks, Bonds, Mutual Funds |
 | **Mainland China** | 支付宝, 天天基金, 招商銀行 App | 公募基金, A股ETF, 國債 |
 | **Hong Kong** | Futu (富途), Tiger Brokers, HSBC HK | HK/US ETF, MPF |
-
-> **Note**: Platform availability varies. Always verify that listed products are accessible on the user's chosen platform before recommending. Load `purchase-guide.md` for detailed product codes and step-by-step instructions specific to the confirmed platform.
 
 ## Report Structure
 
@@ -92,5 +107,5 @@ Output comprehensive IPS report:
 ## Disclaimer
 
 ⚠️ Investment involves risk
-⚠️ Past performance doesn't predict future
-⚠️ For reference only, not formal advice
+⚠️ Past performance doesn’t predict future results
+⚠️ For reference only, not formal regulated advice
