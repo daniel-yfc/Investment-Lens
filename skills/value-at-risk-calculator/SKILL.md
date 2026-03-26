@@ -1,14 +1,20 @@
 ---
 name: value-at-risk-calculator
-description: Calculate Value at Risk (VaR) and related risk metrics for financial and operational risk assessment. Use when the user requires historical simulation VaR, parametric VaR, Monte Carlo VaR, CVaR/Expected Shortfall, stress testing, or backtesting. Do NOT use for qualitative investment interpretation or portfolio rebalancing advice — use investment-lens or quant-analysis instead.
-compatibility: Requires Python 3.9+, scipy, numpy, arch, riskfolio-lib
-allowed-tools: Read Write Glob Grep Bash
+description: Calculate Value at Risk (VaR) and risk metrics (Historical, Parametric,
+  Monte Carlo, CVaR, stress testing, backtesting).
+allowed-tools:
+- Read
+- Write
+- Glob
+- Grep
+- Bash
 metadata:
   specialization: decision-intelligence
   domain: business
   category: risk
   priority: medium
-  tools-libraries: "scipy.stats, numpy, arch, riskfolio-lib"
+  tools-libraries: scipy.stats, numpy, arch, riskfolio-lib
+  compatibility: Requires Python 3.9+, scipy, numpy, arch, riskfolio-lib
 ---
 
 # Value at Risk Calculator

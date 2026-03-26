@@ -1,0 +1,62 @@
+[
+  {
+    "type": "function",
+    "function": {
+      "name": "skill_creator_package_skill",
+      "description": "Execute the package_skill.py script for the skill-creator skill.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "args": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Command line arguments to pass to the script."
+          }
+        },
+        "required": []
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "skill_creator_quick_validate",
+      "description": "Execute the quick_validate.py script for the skill-creator skill.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "args": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Command line arguments to pass to the script."
+          }
+        },
+        "required": []
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "skill_creator_init_skill",
+      "description": "Execute the init_skill.py script for the skill-creator skill.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "args": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Command line arguments to pass to the script."
+          }
+        },
+        "required": []
+      }
+    }
+  }
+]

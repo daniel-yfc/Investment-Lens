@@ -1,24 +1,19 @@
 ---
 name: alphaear-news
-description: >
-  Fetch and ingest live financial news from global sources into the local
-  database. Use when the user needs real-time financial news headlines or
-  trend reports (Reuters, Bloomberg, FT, CNBC, Nikkei Asia, WSJ, etc.),
-  or Polymarket prediction market data. This skill WRITES to the local
-  daily_news database — content ingested here becomes queryable via
-  alphaear-search (engine='local'). Do NOT use for sentiment analysis
-  (use alphaear-sentiment) or structured stock price data (use alphaear-stock).
-  Do NOT use to query already-stored content — use alphaear-search instead.
-compatibility: Requires requests, loguru, internet access to news APIs, scripts/database_manager.py
-allowed-tools: Read Bash(python *)
+description: Fetch and ingest live financial news from global sources into the local
+  database.
+allowed-tools:
+- Read
+- Bash
 metadata:
-  argument-hint: "[news fetch | trend report | Polymarket | source_id]"
-  version: "2.0"
-  language: "zh-tw"
-  last-updated: "2026-03-26"
-  effort: "low"
-  user-invocable: "true"
-  downstream-skill: "alphaear-search (engine='local')"
+  argument-hint: '[news fetch | trend report | Polymarket | source_id]'
+  version: '2.0'
+  language: zh-tw
+  last-updated: '2026-03-26'
+  effort: low
+  user-invocable: 'true'
+  downstream-skill: alphaear-search (engine='local')
+  compatibility: Requires requests, loguru, internet access to news APIs, scripts/database_manager.py
 ---
 
 # AlphaEar News Skill

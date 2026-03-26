@@ -1,21 +1,20 @@
 ---
 name: alphaear-logic-visualizer
-description: >
-  Create finance logic diagrams (Draw.io XML) to explain complex investment
-  transmission chains or finance logic flows. Use when the user needs a visual
-  representation of a signal chain, macro linkage, or decision tree. Do NOT use
-  for data fetching, quantitative modeling, or report writing — use alphaear-search
-  or alphaear-reporter instead.
-compatibility: Requires standard Python library only (no external packages)
-allowed-tools: Read Write Bash(python*)
+description: Create finance logic diagrams (Draw.io XML) to explain complex investment
+  transmission chains or finance logic flows.
+allowed-tools:
+- Read
+- Write
+- Bash
 metadata:
-  argument-hint: "[transmission chain | logic flow | Draw.io diagram]"
-  version: "1.1"
-  language: "zh-tw"
-  last-updated: "2026-03-26"
-  effort: "medium"
-  user-invocable: "true"
-  upstream-primary-skill: "investment-lens"
+  argument-hint: '[transmission chain | logic flow | Draw.io diagram]'
+  version: '1.1'
+  language: zh-tw
+  last-updated: '2026-03-26'
+  effort: medium
+  user-invocable: 'true'
+  upstream-primary-skill: investment-lens
+  compatibility: Requires standard Python library only (no external packages)
 ---
 
 # AlphaEar Logic Visualizer Skill

@@ -1,0 +1,22 @@
+[
+  {
+    "type": "function",
+    "function": {
+      "name": "alphaear_deepear_lite_deepear_lite",
+      "description": "Execute the deepear_lite.py script for the alphaear-deepear-lite skill.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "args": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Command line arguments to pass to the script."
+          }
+        },
+        "required": []
+      }
+    }
+  }
+]

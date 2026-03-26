@@ -1,20 +1,19 @@
 ---
 name: alphaear-sentiment
-description: >
-  Analyze financial text sentiment using FinBERT (local) or LLM (agentic). Use when
-  the user needs to determine the sentiment (positive/negative/neutral) and score of
-  financial news, earnings releases, or market commentary. Supports both high-speed
-  batch processing via FinBERT and higher-accuracy reasoning via LLM. Do NOT use for
-  price retrieval or quantitative modeling — use alphaear-stock or quant-analysis instead.
-compatibility: Requires Python 3.9+, torch, transformers (for FinBERT local mode), sqlite3 (built-in), DatabaseManager initialized
-allowed-tools: Read Bash(python*)
+description: Analyze financial text sentiment using FinBERT or LLM. Returns positive/negative/neutral
+  scoring of financial news, earnings, or commentary.
+allowed-tools:
+- Read
+- Bash
 metadata:
-  argument-hint: "[financial text | news item | batch sentiment]"
-  version: "1.1"
-  language: "zh-tw"
-  last-updated: "2026-03-26"
-  effort: "medium"
-  user-invocable: "true"
+  argument-hint: '[financial text | news item | batch sentiment]'
+  version: '1.1'
+  language: zh-tw
+  last-updated: '2026-03-26'
+  effort: medium
+  user-invocable: 'true'
+  compatibility: Requires Python 3.9+, torch, transformers (for FinBERT local mode),
+    sqlite3 (built-in), DatabaseManager initialized
 ---
 
 # AlphaEar Sentiment Skill
