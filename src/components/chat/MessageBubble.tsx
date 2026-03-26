@@ -4,6 +4,7 @@ import React from 'react'
 import { cn } from '@/lib/utils'
 import { UIMessage } from '@/store/chat'
 import { AnalysisResultCard } from '@/components/generative/AnalysisResultCard'
+import { AnalysisResultCardProps } from '@/types/skill.types'
 
 interface MessageBubbleProps {
   message: UIMessage
@@ -36,7 +37,7 @@ export function MessageBubble({ message }: MessageBubbleProps) {
             </div>
 
             {message.toolCalls?.map((tc, idx) => {
-              const args = tc.arguments as Record<string, unknown>
+              const args = tc.arguments as { type: string; component: string; props: AnalysisResultCardProps }
               if (args.type === 'tool_result' && args.component === 'AnalysisResultCard') {
                  return <div key={idx} className="mt-2 w-full max-w-2xl"><AnalysisResultCard {...args.props} /></div>
               }
