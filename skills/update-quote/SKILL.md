@@ -1,23 +1,19 @@
 ---
 name: update-quote
-description: >
-  Refreshes current market prices, NAVs, and exchange rates in a portfolio CSV,
-  then recalculates TWD values and updates the value_date field. Use when the
-  user says 'refresh prices', 'update quotes', '更新報價', or when investment-lens
-  flags stale data. Supports Taiwan stocks/ETFs (.TW via Yahoo Finance), US/EU/AU
-  equities (Yahoo Finance), cryptocurrencies (CoinGecko), and exchange rates
-  (Bank of Taiwan). Outputs a refreshed CSV only — does NOT perform investment
-  analysis. Do NOT use to retrieve historical OHLCV series for analysis —
-  use alphaear-stock for that. Domestic Taiwan funds and eToro Smart Portfolios
-  require manual confirmation; this skill will prompt for those values.
-compatibility: Requires curl, python3, internet access to Yahoo Finance, CoinGecko API, and rate.bot.com.tw
-allowed-tools: Bash(curl *) Bash(python *) Read Write
+description: Refreshes current market prices, NAVs, and exchange rates in a portfolio
+  CSV, recalculating values. Do NOT use for raw historical OHLCV data (use alphaear-stock).
+allowed-tools:
+- Bash
+- Read
+- Write
 metadata:
-  argument-hint: "[CSV content | ticker symbol | 'FX only']"
-  disable-model-invocation: "true"
-  version: "1.1"
-  last-updated: "2026-03-26"
-  effort: "medium"
+  argument-hint: '[CSV content | ticker symbol | ''FX only'']'
+  disable-model-invocation: 'true'
+  version: '1.1'
+  last-updated: '2026-03-26'
+  effort: medium
+  compatibility: Requires curl, python3, internet access to Yahoo Finance, CoinGecko
+    API, and rate.bot.com.tw
 ---
 
 # Update-Quote Skill v1.1 — Price Refresh Execution

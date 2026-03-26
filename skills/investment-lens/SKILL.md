@@ -1,29 +1,27 @@
 ---
 name: investment-lens
-description: >
-  Use this skill for qualitative and conceptual investment analysis of single
-  stocks, ETFs, indices, and cryptocurrencies; portfolio diagnostics and
-  rebalancing review; personal/retirement allocation (CFA IPS framework);
-  and monitoring existing investment signals against new market information.
-  Use when the user asks for ticker analysis, portfolio review, All-Seasons
-  mapping, concentration checks, qualitative valuation, retirement allocation,
-  goal-based allocation, or signal status updates. Do NOT use for raw quote
-  refreshes or value_date updates (use update-quote). Do NOT use for Python
-  quantitative modelling, portfolio optimisation, Monte Carlo, VaR/CVaR, or
-  factor regressions (use quant-analysis). Do NOT use for output formatting
-  into research notes or reports (use alphaear-reporter).
-compatibility: >
-  Requires network access to financial data APIs.
-  No local runtime dependencies beyond standard agent environment.
-allowed-tools: Read Grep WebSearch Bash(python:*)
+description: Primary qualitative investment analysis hub. Use for analyzing single
+  stocks/ETFs, portfolio diagnostics, retirement allocation, and signal monitoring.
+  Do NOT use for quantitative modeling (use quant-analysis), quote refreshes (use
+  update-quote), or report generation (use alphaear-reporter).
+allowed-tools:
+- Read
+- Grep
+- WebSearch
+- Bash
 metadata:
-  argument-hint: "[ticker | portfolio-csv | retirement allocation | signal update]"
-  version: "2.1"
-  language: "zh-tw"
-  last-updated: "2026-03-26"
-  effort: "high"
-  user-invocable: "true"
-  post-invoke-check: "Confirm bias checklist applied; Mode C: IPS disclaimer present; Mode D: classification justified"
+  argument-hint: '[ticker | portfolio-csv | retirement allocation | signal update]'
+  version: '2.1'
+  language: zh-tw
+  last-updated: '2026-03-26'
+  effort: high
+  user-invocable: 'true'
+  post-invoke-check: 'Confirm bias checklist applied; Mode C: IPS disclaimer present;
+    Mode D: classification justified'
+  compatibility: 'Requires network access to financial data APIs. No local runtime
+    dependencies beyond standard agent environment.
+
+    '
 ---
 
 # Investment Lens
@@ -154,3 +152,10 @@ Always available regardless of mode:
 Templates:
 - `assets/portfolio-template.md`
 - `assets/allocation-template.md`
+
+## Reference Loading Instructions
+
+**CRITICAL CONTEXT WARNING:** This skill contains large reference files. To prevent context window overflow, **DO NOT load all references upfront**. Only load the specific reference file when actively executing the step that requires it.
+- `asset-classification.md`: Load ONLY when specifically performing tasks related to this file.
+- `market-asset-analysis.md`: Load ONLY when specifically performing tasks related to this file.
+- `all-seasons-portfolio.md`: Load ONLY when specifically performing tasks related to this file.

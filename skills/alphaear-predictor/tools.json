@@ -1,0 +1,62 @@
+[
+  {
+    "type": "function",
+    "function": {
+      "name": "alphaear_predictor_forecast_agent",
+      "description": "Execute the forecast_agent.py script for the alphaear-predictor skill.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "args": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Command line arguments to pass to the script."
+          }
+        },
+        "required": []
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "alphaear_predictor_json_utils",
+      "description": "Execute the json_utils.py script for the alphaear-predictor skill.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "args": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Command line arguments to pass to the script."
+          }
+        },
+        "required": []
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "alphaear_predictor_kronos_predictor",
+      "description": "Execute the kronos_predictor.py script for the alphaear-predictor skill.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "args": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Command line arguments to pass to the script."
+          }
+        },
+        "required": []
+      }
+    }
+  }
+]

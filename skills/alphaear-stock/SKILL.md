@@ -1,24 +1,18 @@
 ---
 name: alphaear-stock
-description: >
-  Retrieve raw historical OHLCV price data for global stocks and ETFs via
-  yfinance. Use only when the task explicitly requires a historical price
-  series (open, high, low, close, volume) for analysis, charting, backtesting,
-  or quantitative modelling inputs. Supports all major exchanges via Yahoo
-  Finance ticker suffixes (US plain, Taiwan .TW/.TWO, HK .HK, Japan .T,
-  Korea .KS, Singapore .SI, Europe .L/.DE/.PA, etc.).
-  Do NOT use to refresh current portfolio prices or update value_date in a CSV
-  — use update-quote for that. Do NOT use for qualitative investment analysis
-  or buy/sell/hold judgment — use investment-lens for that.
-compatibility: Requires pandas, yfinance, scripts/database_manager.py
-allowed-tools: Read Bash(python*)
+description: Retrieve raw historical OHLCV price data for global stocks and ETFs via
+  yfinance. Used as input for analysis or quantitative modelling.
+allowed-tools:
+- Read
+- Bash
 metadata:
-  argument-hint: "[ticker | 'price AAPL 2024-01-01 2024-12-31' | '2330.TW']"
-  version: "2.1"
-  language: "zh-tw"
-  last-updated: "2026-03-26"
-  effort: "low"
-  user-invocable: "true"
+  argument-hint: '[ticker | ''price AAPL 2024-01-01 2024-12-31'' | ''2330.TW'']'
+  version: '2.1'
+  language: zh-tw
+  last-updated: '2026-03-26'
+  effort: low
+  user-invocable: 'true'
+  compatibility: Requires pandas, yfinance, scripts/database_manager.py
 ---
 
 # AlphaEar Stock Skill

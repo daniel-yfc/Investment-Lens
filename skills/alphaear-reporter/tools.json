@@ -1,0 +1,42 @@
+[
+  {
+    "type": "function",
+    "function": {
+      "name": "alphaear_reporter_report_agent",
+      "description": "Execute the report_agent.py script for the alphaear-reporter skill.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "args": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Command line arguments to pass to the script."
+          }
+        },
+        "required": []
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "alphaear_reporter_visualizer",
+      "description": "Execute the visualizer.py script for the alphaear-reporter skill.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "args": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Command line arguments to pass to the script."
+          }
+        },
+        "required": []
+      }
+    }
+  }
+]

@@ -1,24 +1,22 @@
 ---
 name: quant-analysis
-description: >
-  Use this skill only when the user, or investment-lens, explicitly requires
-  Python/Jupyter-based quantitative finance analysis. This includes portfolio
-  optimization, econometric modeling, factor analysis, volatility modeling, risk
-  estimation, Value-at-Risk, Conditional VaR, Monte Carlo simulation, and
-  statistical backtesting. Do NOT use for qualitative investment interpretation,
-  portfolio diagnostics that can be handled conceptually, report writing, quote
-  refreshes, or general narrative market commentary.
-compatibility: Requires Python 3.9+, pandas, numpy, scipy, statsmodels, arch, riskfolio-lib; Jupyter notebook environment recommended
-allowed-tools: Read Grep Bash(python*) Bash(jupyter*)
+description: Quantitative finance analysis engine. Use for portfolio optimization,
+  econometric modeling, volatility modeling, Monte Carlo, and statistical backtesting.
+allowed-tools:
+- Read
+- Grep
+- Bash
 metadata:
-  argument-hint: "[VaR | optimization | regression | Monte Carlo | backtest]"
-  version: "1.1"
-  language: "zh-tw"
-  last-updated: "2026-03-26"
-  effort: "high"
-  user-invocable: "true"
-  upstream-primary-skill: "investment-lens"
-  post-invoke-check: "Return structured quant output for reintegration into investment-lens"
+  argument-hint: '[VaR | optimization | regression | Monte Carlo | backtest]'
+  version: '1.1'
+  language: zh-tw
+  last-updated: '2026-03-26'
+  effort: high
+  user-invocable: 'true'
+  upstream-primary-skill: investment-lens
+  post-invoke-check: Return structured quant output for reintegration into investment-lens
+  compatibility: Requires Python 3.9+, pandas, numpy, scipy, statsmodels, arch, riskfolio-lib;
+    Jupyter notebook environment recommended
 ---
 
 # Quant Analysis
