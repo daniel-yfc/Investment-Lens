@@ -1,55 +1,84 @@
-import { FormEvent, useRef, useEffect } from 'react';
-import { Button } from '../ui/button';
-import { Input } from '../ui/input';
-import { SendHorizonal, StopCircle } from 'lucide-react';
+import { useRef, useEffect } from 'react';
+import { SendHorizontal } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface ChatInputProps {
   input: string;
+  handleInputChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
+  handleSubmit: (e: React.FormEvent<HTMLFormElement>) => void;
   isLoading: boolean;
-  onInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  onSubmit: (e: FormEvent<HTMLFormElement>) => void;
-  onStop: () => void;
+  stop: () => void;
 }
 
-export function ChatInput({ input, isLoading, onInputChange, onSubmit, onStop }: ChatInputProps) {
-  const inputRef = useRef<HTMLInputElement>(null);
+export function ChatInput({ input, handleInputChange, handleSubmit, isLoading, stop }: ChatInputProps) {
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
-    if (!isLoading) {
-      inputRef.current?.focus();
+    if (textareaRef.current) {
+      // Auto-resize textarea
+      textareaRef.current.style.height = 'auto';
+      textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 200)}px`;
     }
-  }, [isLoading]);
+  }, [input]);
+
+  const onKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      if (input.trim() && !isLoading) {
+         // Create a synthetic event
+         const formEvent = new Event('submit', { cancelable: true }) as unknown as React.FormEvent<HTMLFormElement>;
+         handleSubmit(formEvent);
+      }
+    }
+  };
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 p-4 bg-background border-t">
-      <div className="max-w-3xl mx-auto w-full">
-        <form
-          onSubmit={onSubmit}
-          className="relative flex items-center w-full shadow-sm"
-        >
-          <Input
-            ref={inputRef}
-            type="text"
-            placeholder="Ask about a security, portfolio, or signal..."
+    <div className="p-4 bg-background/80 backdrop-blur-md border-t border-border z-10 sticky bottom-0 w-full">
+      <div className="max-w-3xl mx-auto relative group">
+        <form onSubmit={handleSubmit} className="relative flex items-end w-full group-focus-within:ring-2 group-focus-within:ring-primary/50 rounded-2xl">
+          <textarea
+            ref={textareaRef}
+            name="message"
+            placeholder="請輸入股票代碼或投資問題..."
             value={input}
-            onChange={onInputChange}
-            className="pr-12 py-6 text-base"
+            onChange={handleInputChange}
+            onKeyDown={onKeyDown}
             disabled={isLoading}
+            className="w-full resize-none min-h-[56px] py-4 pl-4 pr-16 bg-muted/50 border border-muted-foreground/20 rounded-2xl focus:outline-none focus:ring-0 text-sm sm:text-base scrollbar-thin scrollbar-thumb-muted-foreground/20 dark:scrollbar-thumb-muted"
+            rows={1}
           />
-          <div className="absolute right-2 flex items-center">
+          <div className="absolute right-2 bottom-2">
             {isLoading ? (
-              <Button type="button" size="icon" variant="ghost" onClick={onStop} className="h-8 w-8 text-destructive">
-                <StopCircle className="h-5 w-5" />
-                <span className="sr-only">Stop Generating</span>
-              </Button>
+              <button
+                type="button"
+                onClick={stop}
+                className="p-2 rounded-xl bg-muted text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors focus:outline-none focus:ring-2 focus:ring-destructive/50"
+                title="Stop generating"
+              >
+                <div className="w-5 h-5 flex items-center justify-center">
+                    <span className="w-3 h-3 bg-current rounded-[2px]" />
+                </div>
+              </button>
             ) : (
-              <Button type="submit" size="icon" disabled={!input.trim()} className="h-8 w-8">
-                <SendHorizonal className="h-4 w-4" />
-                <span className="sr-only">Send Message</span>
-              </Button>
+              <button
+                type="submit"
+                disabled={!input.trim()}
+                className={cn(
+                  "p-2 rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary/50",
+                  input.trim()
+                    ? "bg-primary text-primary-foreground hover:bg-primary/90 shadow-md"
+                    : "bg-muted text-muted-foreground cursor-not-allowed"
+                )}
+                title="Send message"
+              >
+                <SendHorizontal className="w-5 h-5" />
+              </button>
             )}
           </div>
         </form>
+      </div>
+      <div className="text-center text-xs text-muted-foreground mt-3 pb-1 max-w-3xl mx-auto">
+        AlphaEar 提供的分析結果僅供參考，不構成投資建議。
       </div>
     </div>
   );

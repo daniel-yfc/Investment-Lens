@@ -1,102 +1,150 @@
-import { useState } from 'react';
-import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+"use client";
 
-interface AnalysisResultCardProps {
-  result: {
-    ticker: string;
-    rating: 'Buy' | 'Hold' | 'Sell' | 'Neutral';
-    l1Summary: string;
-    l2Details: string;
-    l3DeepDive: string;
-  };
-  language?: 'zh-TW' | 'en';
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { ChevronDown, ChevronUp, AlertTriangle, TrendingUp, TrendingDown, Minus } from "lucide-react";
+import { cn } from "@/lib/utils";
+
+export type Rating = "Buy" | "Hold" | "Sell" | "Neutral";
+
+export interface AnalysisData {
+  symbol: string;
+  rating: Rating;
+  confidence: number;
+  thesis: string;
+  fullAnalysis: string;
+  risks: string[];
+  killConditions: string[];
 }
 
-export function AnalysisResultCard({ result, language = 'zh-TW' }: AnalysisResultCardProps) {
-  const [level, setLevel] = useState<1 | 2 | 3>(1);
+interface AnalysisResultCardProps {
+  data: AnalysisData;
+  className?: string;
+  onViewDetails?: (symbol: string) => void;
+}
 
-  const getBadgeVariant = (rating: string): 'default' | 'secondary' | 'destructive' | 'outline' => {
-    switch (rating.toLowerCase()) {
-      case 'buy': return 'default';
-      case 'hold': return 'secondary';
-      case 'sell': return 'destructive';
-      default: return 'outline';
-    }
-  };
+const ratingConfig = {
+  Buy: {
+    color: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20",
+    icon: TrendingUp,
+    label: "買入 (Buy)",
+  },
+  Hold: {
+    color: "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20",
+    icon: Minus,
+    label: "持有 (Hold)",
+  },
+  Sell: {
+    color: "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20",
+    icon: TrendingDown,
+    label: "賣出 (Sell)",
+  },
+  Neutral: {
+    color: "bg-slate-500/10 text-slate-600 dark:text-slate-400 border-slate-500/20",
+    icon: Minus,
+    label: "中立 (Neutral)",
+  },
+};
 
-  const getTranslation = (key: string) => {
-    const translations = {
-      'zh-TW': {
-        summary: '摘要',
-        details: '詳情',
-        deepDive: '深度分析',
-        showMore: '展開更多',
-        showLess: '收起',
-      },
-      'en': {
-        summary: 'Summary',
-        details: 'Details',
-        deepDive: 'Deep Dive',
-        showMore: 'Show More',
-        showLess: 'Show Less',
-      }
-    };
-    return translations[language][key as keyof typeof translations['zh-TW']];
-  };
-
-  const nextLevel = () => setLevel(prev => (prev < 3 ? prev + 1 : prev) as 1 | 2 | 3);
-  const resetLevel = () => setLevel(1);
+export function AnalysisResultCard({ data, className, onViewDetails }: AnalysisResultCardProps) {
+  const [expanded, setExpanded] = useState(false);
+  const config = ratingConfig[data.rating];
+  const Icon = config.icon;
 
   return (
-    <Card className="w-full max-w-2xl my-4 transition-all duration-300 transform-gpu overflow-hidden">
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-xl font-bold">{result.ticker}</CardTitle>
-        <Badge variant={getBadgeVariant(result.rating)}>{result.rating}</Badge>
-      </CardHeader>
-
-      <CardContent>
-        {/* L1 Summary: Always visible */}
-        <div className="space-y-4">
-          <div>
-            <h4 className="font-semibold text-sm text-muted-foreground">{getTranslation('summary')}</h4>
-            <p className="text-sm mt-1">{result.l1Summary}</p>
+    <div className={cn("rounded-xl border bg-card text-card-foreground shadow-sm overflow-hidden", className)}>
+      {/* L1: Default View (Summary) */}
+      <div
+        className="p-5 cursor-pointer hover:bg-muted/50 transition-colors"
+        onClick={() => setExpanded(!expanded)}
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setExpanded(!expanded) }}
+      >
+        <div className="flex items-start justify-between gap-4">
+          <div className="space-y-1.5 flex-1">
+            <div className="flex items-center gap-2">
+              <h3 className="font-bold text-lg">{data.symbol}</h3>
+              <div className={cn("flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full border", config.color)}>
+                <Icon className="w-3 h-3" />
+                {config.label}
+              </div>
+            </div>
+            <div className="text-sm font-medium">
+              信心度 (Confidence): <span className={cn(
+                data.confidence >= 80 ? "text-emerald-500" : data.confidence >= 60 ? "text-amber-500" : "text-rose-500"
+              )}>{data.confidence}%</span>
+            </div>
+            <p className="text-sm text-muted-foreground mt-2 line-clamp-2">
+              {data.thesis}
+            </p>
           </div>
-
-          {/* L2 Details */}
-          <div
-            className={`transition-all duration-300 ease-in-out origin-top overflow-hidden ${
-              level >= 2 ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
-            }`}
-          >
-            <h4 className="font-semibold text-sm text-muted-foreground pt-4 border-t">{getTranslation('details')}</h4>
-            <p className="text-sm mt-1">{result.l2Details}</p>
-          </div>
-
-          {/* L3 Deep Dive */}
-          <div
-            className={`transition-all duration-500 ease-in-out origin-top overflow-hidden ${
-              level === 3 ? 'max-h-screen opacity-100' : 'max-h-0 opacity-0'
-            }`}
-          >
-            <h4 className="font-semibold text-sm text-muted-foreground pt-4 border-t">{getTranslation('deepDive')}</h4>
-            <p className="text-sm mt-1">{result.l3DeepDive}</p>
+          <div className="shrink-0 text-muted-foreground mt-1">
+            {expanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
           </div>
         </div>
-      </CardContent>
+      </div>
 
-      <CardFooter className="pt-0 justify-end">
-        {level < 3 ? (
-          <Button variant="ghost" size="sm" onClick={nextLevel}>
-            {getTranslation('showMore')}
-          </Button>
-        ) : (
-          <Button variant="ghost" size="sm" onClick={resetLevel}>
-            {getTranslation('showLess')}
-          </Button>
+      {/* L2: Expanded View (Details without Layout Shift CLS using framer-motion) */}
+      <AnimatePresence initial={false}>
+        {expanded && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.3, ease: "easeInOut" }}
+            className="overflow-hidden border-t"
+          >
+            <div className="p-5 space-y-6 bg-muted/20">
+
+              <div className="space-y-2">
+                <h4 className="text-sm font-semibold">完整分析 (Analysis)</h4>
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  {data.fullAnalysis}
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2 p-3 rounded-lg bg-rose-500/5 border border-rose-500/10">
+                  <h4 className="text-sm font-semibold text-rose-600 dark:text-rose-400 flex items-center gap-1.5">
+                    <AlertTriangle className="w-4 h-4" />
+                    風險提示 (Risks)
+                  </h4>
+                  <ul className="text-sm text-muted-foreground list-disc list-inside space-y-1">
+                    {data.risks.map((risk, i) => (
+                      <li key={i}>{risk}</li>
+                    ))}
+                  </ul>
+                </div>
+
+                <div className="space-y-2 p-3 rounded-lg bg-amber-500/5 border border-amber-500/10">
+                  <h4 className="text-sm font-semibold text-amber-600 dark:text-amber-400">
+                    停損條件 (Kill Conditions)
+                  </h4>
+                  <ul className="text-sm text-muted-foreground list-disc list-inside space-y-1">
+                    {data.killConditions.map((condition, i) => (
+                      <li key={i}>{condition}</li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+
+              {/* L3: Action to view deep dive */}
+              <div className="pt-2 flex justify-end">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onViewDetails?.(data.symbol);
+                  }}
+                  className="text-sm font-medium bg-primary text-primary-foreground px-4 py-2 rounded-md hover:bg-primary/90 transition-colors"
+                >
+                  查看詳細數據與圖表 (View Details)
+                </button>
+              </div>
+            </div>
+          </motion.div>
         )}
-      </CardFooter>
-    </Card>
+      </AnimatePresence>
+    </div>
   );
 }
