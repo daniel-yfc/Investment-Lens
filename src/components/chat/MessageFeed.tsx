@@ -1,62 +1,54 @@
-import { useEffect, useRef } from 'react';
-import { type Message } from '@ai-sdk/ui-utils';
-import { MessageBubble } from './MessageBubble';
-import { AnimatePresence, motion } from 'framer-motion';
+'use client'
+
+import React, { useRef, useEffect } from 'react'
+import { UIMessage } from '@/store/chat'
+import { MessageBubble } from './MessageBubble'
+import { SkillProgressTracker } from '@/components/generative/SkillProgressTracker'
+import { SkillStep } from '@/types/skill.types'
+import { useTranslate } from '@/hooks/useTranslate'
 
 interface MessageFeedProps {
-  messages: Message[];
-  isLoading: boolean;
-  error: Error | undefined;
-  reload: () => void;
+  messages: UIMessage[]
+  isStreaming: boolean
+  activeSkills?: string[]
 }
 
-export function MessageFeed({ messages, isLoading, error, reload }: MessageFeedProps) {
-  const bottomRef = useRef<HTMLDivElement>(null);
+export function MessageFeed({ messages, isStreaming, activeSkills = [] }: MessageFeedProps) {
+  const bottomRef = useRef<HTMLDivElement>(null)
+  const { t } = useTranslate()
 
+  // Auto scroll
   useEffect(() => {
-    if (bottomRef.current) {
-      // Smooth scroll to bottom when messages change
-      bottomRef.current.scrollIntoView({ behavior: 'smooth' });
-    }
-  }, [messages]);
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [messages, isStreaming, activeSkills])
+
+  // Mock steps for demonstration based on active skills tracked in state
+  const skillSteps: SkillStep[] = activeSkills.map(s => ({
+    skill: s,
+    label: `${t.chat.analyzing.replace('分析程序', s)}...`,
+    status: isStreaming ? 'running' : 'done'
+  }))
 
   return (
-    <div className="flex-1 overflow-y-auto px-4 py-6 scroll-smooth">
-      <div className="max-w-3xl mx-auto space-y-4">
-        <AnimatePresence initial={false}>
-          {messages.map((m, index) => (
-            <motion.div
-              key={m.id}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              transition={{ duration: 0.2 }}
-            >
-              <MessageBubble
-                message={m}
-                isGenerating={isLoading && index === messages.length - 1}
-              />
-            </motion.div>
-          ))}
-        </AnimatePresence>
-
-        {error && (
-          <div className="p-4 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-sm flex justify-between items-center mb-4 mx-4 md:mx-6">
-            <div>
-              <span className="font-semibold mr-2">[⚠️ 回應不完整]</span>
-              {error.message || '連線中斷'}
-            </div>
-            <button
-              onClick={reload}
-              className="px-3 py-1.5 bg-background border rounded-md hover:bg-muted font-medium"
-            >
-              重試
-            </button>
+    <div className="flex-1 overflow-y-auto px-4 py-6">
+      <div className="max-w-4xl mx-auto space-y-4">
+        {messages.length === 0 ? (
+          <div className="h-full flex flex-col items-center justify-center text-zinc-500 py-20">
+            <h2 className="text-xl font-medium text-zinc-300 mb-2">{t.chat.welcome}</h2>
+            <p>{t.chat.welcomeSub}</p>
           </div>
+        ) : (
+          messages.map((msg, i) => (
+            <MessageBubble key={msg.id || i} message={msg} />
+          ))
         )}
 
-        <div ref={bottomRef} className="h-4" />
+        {skillSteps.length > 0 && (
+          <SkillProgressTracker steps={skillSteps} currentSkill={activeSkills[activeSkills.length - 1]} />
+        )}
+
+        <div ref={bottomRef} className="h-1" />
       </div>
     </div>
-  );
+  )
 }

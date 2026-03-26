@@ -6,7 +6,7 @@ const MAX_RETRIES = 3;
 const INITIAL_BACKOFF_MS = 1000;
 
 export function useStreamingChat() {
-  const { messages: storeMessages, isLoading: storeLoading, setLoading } = useChatStore();
+  const { messages: storeMessages, isStreaming: storeLoading, setStreaming } = useChatStore();
   const retryCountRef = useRef(0);
   const [hasInterruptionError, setHasInterruptionError] = useState(false);
 
@@ -22,12 +22,12 @@ export function useStreamingChat() {
       }
     },
     onFinish: () => {
-      setLoading(false);
+      setStreaming(false);
     },
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onError: (err: any) => {
       console.error('Chat stream interrupted:', err);
-      setLoading(false);
+      setStreaming(false);
       setHasInterruptionError(true);
       handleStreamWithFallback();
     }
@@ -75,13 +75,13 @@ export function useStreamingChat() {
     console.log(`Retrying connection in ${backoffMs}ms... (Attempt ${retryCountRef.current}/${MAX_RETRIES})`);
 
     setTimeout(() => {
-      setLoading(true);
+      setStreaming(true);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       reload().catch((reloadErr: any) => {
          console.error('Retry failed:', reloadErr);
       });
     }, backoffMs);
-  }, [reload, setLoading, setMessages]);
+  }, [reload, setStreaming, setMessages]);
 
   const handleSubmit = useCallback(
     (e?: React.FormEvent<HTMLFormElement>) => {
@@ -90,24 +90,24 @@ export function useStreamingChat() {
 
       setHasInterruptionError(false);
       retryCountRef.current = 0;
-      setLoading(true);
+      setStreaming(true);
 
       try {
         originalHandleSubmit(e);
       } catch (submitErr) {
          console.error('Submit error:', submitErr);
-         setLoading(false);
+         setStreaming(false);
       }
     },
-    [input, storeLoading, setLoading, originalHandleSubmit]
+    [input, storeLoading, setStreaming, originalHandleSubmit]
   );
 
   const handleManualRetry = useCallback(() => {
      setHasInterruptionError(false);
      retryCountRef.current = 0;
-     setLoading(true);
+     setStreaming(true);
      reload();
-  }, [reload, setLoading]);
+  }, [reload, setStreaming]);
 
   return {
     messages,
