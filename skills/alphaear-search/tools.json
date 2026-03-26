@@ -1,0 +1,102 @@
+[
+  {
+    "type": "function",
+    "function": {
+      "name": "alphaear_search_hybrid_search",
+      "description": "Execute the hybrid_search.py script for the alphaear-search skill.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "args": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Command line arguments to pass to the script."
+          }
+        },
+        "required": []
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "alphaear_search_search_tools",
+      "description": "Execute the search_tools.py script for the alphaear-search skill.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "args": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Command line arguments to pass to the script."
+          }
+        },
+        "required": []
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "alphaear_search_content_extractor",
+      "description": "Execute the content_extractor.py script for the alphaear-search skill.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "args": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Command line arguments to pass to the script."
+          }
+        },
+        "required": []
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "alphaear_search_database_manager",
+      "description": "Execute the database_manager.py script for the alphaear-search skill.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "args": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Command line arguments to pass to the script."
+          }
+        },
+        "required": []
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "alphaear_search_sentiment_tools",
+      "description": "Execute the sentiment_tools.py script for the alphaear-search skill.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "args": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Command line arguments to pass to the script."
+          }
+        },
+        "required": []
+      }
+    }
+  }
+]

@@ -115,6 +115,13 @@ This pipeline is used primarily by **Mode D (Signal Monitoring)** but is availab
 
 ---
 
+
+## Integration & Tooling
+
+To provide strong typing, reliable tool calling, and full compatibility with Claude Desktop and other agent frameworks, this repository includes:
+- **Model Context Protocol (MCP)**: Run `python mcp_server.py` to start a standard MCP server that formally exposes all Python scripts within these skills as native tools.
+- **Native JSON Schemas**: Each skill containing executable scripts includes a `tools.json` file defining the exact OpenAI/Claude function calling schemas.
+
 ## Skill Boundaries
 
 | Task | Use | Not |

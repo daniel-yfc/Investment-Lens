@@ -1,20 +1,18 @@
 ---
 name: alphaear-deepear-lite
-description: >
-  Fetch the latest financial signals and transmission-chain analyses from DeepEar Lite.
-  Use when the user needs immediate insights into financial market trends, stock
-  performance factors, and reasoning from the DeepEar Lite dashboard. Do NOT use
-  for sentiment scoring, quantitative modeling, or portfolio analysis — use
-  alphaear-sentiment or investment-lens instead.
-compatibility: Requires requests, loguru, internet access to https://deepear.vercel.app
-allowed-tools: Read Bash(python*)
+description: Fetch the latest financial signals and transmission-chain analyses from
+  DeepEar Lite.
+allowed-tools:
+- Read
+- Bash
 metadata:
-  argument-hint: "[signal fetch | market trend | DeepEar]"
-  version: "1.1"
-  language: "zh-tw"
-  last-updated: "2026-03-26"
-  effort: "low"
-  user-invocable: "true"
+  argument-hint: '[signal fetch | market trend | DeepEar]'
+  version: '1.1'
+  language: zh-tw
+  last-updated: '2026-03-26'
+  effort: low
+  user-invocable: 'true'
+  compatibility: Requires requests, loguru, internet access to https://deepear.vercel.app
 ---
 
 # DeepEar Lite Skill

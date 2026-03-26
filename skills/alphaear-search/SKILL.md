@@ -1,23 +1,20 @@
 ---
 name: alphaear-search
-description: >
-  Web search and local RAG retrieval for finance context. Use when the user
-  needs to search the web for finance information (DuckDuckGo or Jina reader)
-  OR retrieve previously fetched finance content from the local document store
-  (engine='local'). The local engine queries content already ingested by
-  alphaear-news — it does NOT fetch new content from the internet.
-  Do NOT use for structured stock price data (use alphaear-stock) or for
-  fetching new live news (use alphaear-news to ingest first, then
-  engine='local' here to retrieve). Do NOT use Baidu engine — removed.
-compatibility: Requires duckduckgo-search, requests, scripts/database_manager.py, scripts/hybrid_search.py
-allowed-tools: Read Bash(python*)
+description: Web search and local RAG retrieval for finance context. Queries DuckDuckGo,
+  Jina, or local news DB. Do NOT use for fetching new live news (use alphaear-news)
+  or structured stock price data.
+allowed-tools:
+- Read
+- Bash
 metadata:
-  argument-hint: "[search query | 'local: ...' | engine: jina | ddg | local]"
-  version: "2.1"
-  language: "zh-tw"
-  last-updated: "2026-03-26"
-  effort: "low"
-  user-invocable: "true"
+  argument-hint: '[search query | ''local: ...'' | engine: jina | ddg | local]'
+  version: '2.1'
+  language: zh-tw
+  last-updated: '2026-03-26'
+  effort: low
+  user-invocable: 'true'
+  compatibility: Requires duckduckgo-search, requests, scripts/database_manager.py,
+    scripts/hybrid_search.py
 ---
 
 # AlphaEar Search Skill

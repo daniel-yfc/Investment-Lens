@@ -1,26 +1,25 @@
 ---
 name: alphaear-reporter
-description: >
-  Convert completed investment analysis into structured human-readable output.
-  Use when analysis from investment-lens, quant-analysis, or AlphaEar signal
-  skills needs to be turned into a research note, initiating coverage report,
-  thesis memo, investor briefing, or presentation-ready summary. Also use
-  directly when the user requests an equity research initiation report for any
-  company — this skill owns the full 5-task initiating coverage workflow
-  (company research, financial modeling, valuation, chart generation, report
-  assembly). Do NOT use as the primary analysis engine for discovering facts,
-  generating quantitative models, or refreshing quotes.
-compatibility: Modes A/C require no runtime dependencies. Mode B requires xlsx, chart, docx skills.
-allowed-tools: Read Grep Bash(python*)
+description: Convert completed investment analysis into structured human-readable
+  output (research notes, initiating coverage reports, thesis memos). Owns the full
+  5-task initiating coverage workflow.
+allowed-tools:
+- Read
+- Grep
+- Bash
 metadata:
-  argument-hint: "[research note | initiating coverage | investor brief | company name]"
-  version: "2.1"
-  language: "zh-tw"
-  last-updated: "2026-03-26"
-  effort: "medium"
-  user-invocable: "true"
-  upstream-primary-skill: "investment-lens"
-  post-invoke-check: "Confirm output matches audience and template; Mode B: confirm single-task mode"
+  argument-hint: '[research note | initiating coverage | investor brief | company
+    name]'
+  version: '2.1'
+  language: zh-tw
+  last-updated: '2026-03-26'
+  effort: medium
+  user-invocable: 'true'
+  upstream-primary-skill: investment-lens
+  post-invoke-check: 'Confirm output matches audience and template; Mode B: confirm
+    single-task mode'
+  compatibility: Modes A/C require no runtime dependencies. Mode B requires xlsx,
+    chart, docx skills.
 ---
 
 # AlphaEar Reporter
@@ -111,6 +110,10 @@ Resolve duplication. Surface contradictions explicitly — never flatten them.
 - [ ] Mode B: single-task mode enforced — confirm which task was just completed.
 
 ---
+
+## Reference Loading Instructions
+
+**CRITICAL CONTEXT WARNING:** This skill contains extremely large reference files (e.g., task5-report-assembly.md is 53K chars). To prevent context window overflow, **DO NOT load all references upfront**. Only load the specific reference file when actively executing the step that requires it.
 
 ## References
 

@@ -1,21 +1,21 @@
 ---
 name: alphaear-predictor
-description: >
-  Market prediction skill using the Kronos time-series model. Use when the user
-  needs finance market time-series forecasting or news-aware market price
-  adjustments. Do NOT use for qualitative investment analysis or portfolio
-  recommendations — use investment-lens instead. Requires Kronos model weights
-  or internet access to download Hugging Face base checkpoint on first run.
-compatibility: Requires Python 3.9+, torch, transformers, sentence-transformers, pandas, numpy, scikit-learn, DatabaseManager initialized
-allowed-tools: Read Write Bash(python*)
+description: Market prediction skill using the Kronos time-series model for forecasting
+  or news-aware market price adjustments.
+allowed-tools:
+- Read
+- Write
+- Bash
 metadata:
-  argument-hint: "[ticker | forecast horizon | 'adjust forecast']"
-  version: "1.1"
-  language: "zh-tw"
-  last-updated: "2026-03-26"
-  effort: "high"
-  user-invocable: "true"
-  upstream-primary-skill: "investment-lens"
+  argument-hint: '[ticker | forecast horizon | ''adjust forecast'']'
+  version: '1.1'
+  language: zh-tw
+  last-updated: '2026-03-26'
+  effort: high
+  user-invocable: 'true'
+  upstream-primary-skill: investment-lens
+  compatibility: Requires Python 3.9+, torch, transformers, sentence-transformers,
+    pandas, numpy, scikit-learn, DatabaseManager initialized
 ---
 
 # AlphaEar Predictor Skill

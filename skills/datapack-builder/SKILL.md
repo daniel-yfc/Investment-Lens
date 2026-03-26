@@ -1,23 +1,23 @@
 ---
 name: datapack-builder
-description: >
-  Build professional financial services data packs from CIMs, offering memorandums,
-  SEC filings, web search, or MCP servers. Extract, normalize, and standardize
-  financial data into investment committee-ready Excel workbooks with consistent
-  structure, proper formatting, and documented assumptions. Use for M&A due diligence,
-  private equity analysis, investment committee materials, and standardizing financial
-  reporting. Do NOT use for simple financial calculations or working with
-  already-completed data packs.
-compatibility: Requires xlsx skill, internet or MCP server access for SEC EDGAR / public filings
-allowed-tools: Read Write Grep Bash(python*) Bash(curl*) WebSearch
+description: Build professional financial services data packs from CIMs, SEC filings,
+  or web search into investment committee-ready Excel workbooks.
+allowed-tools:
+- Read
+- Write
+- Grep
+- Bash
+- WebSearch
 metadata:
-  argument-hint: "[CIM | SEC filing | company name | 'build datapack']"
-  version: "1.1"
-  language: "zh-tw"
-  last-updated: "2026-03-26"
-  effort: "high"
-  user-invocable: "true"
-  post-invoke-check: "Confirm final delivery checklist passed before output"
+  argument-hint: '[CIM | SEC filing | company name | ''build datapack'']'
+  version: '1.1'
+  language: zh-tw
+  last-updated: '2026-03-26'
+  effort: high
+  user-invocable: 'true'
+  post-invoke-check: Confirm final delivery checklist passed before output
+  compatibility: Requires xlsx skill, internet or MCP server access for SEC EDGAR
+    / public filings
 ---
 
 # Financial Data Pack Builder
