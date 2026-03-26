@@ -1,87 +1,62 @@
-import { UIMessage } from '@ai-sdk/react';
-import { AnalysisResultCard } from '../analysis/AnalysisResultCard';
-import { ScrollArea } from '../ui/scroll-area';
-import { Button } from '../ui/button';
-import { AlertCircle } from 'lucide-react';
+import { useEffect, useRef } from 'react';
+import { type Message } from '@ai-sdk/ui-utils';
+import { MessageBubble } from './MessageBubble';
+import { AnimatePresence, motion } from 'framer-motion';
 
 interface MessageFeedProps {
-  messages: UIMessage[];
+  messages: Message[];
   isLoading: boolean;
-  hasInterruptionError: boolean;
-  onManualRetry: () => void;
+  error: Error | undefined;
+  reload: () => void;
 }
 
-export function MessageFeed({ messages, isLoading, hasInterruptionError, onManualRetry }: MessageFeedProps) {
+export function MessageFeed({ messages, isLoading, error, reload }: MessageFeedProps) {
+  const bottomRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (bottomRef.current) {
+      // Smooth scroll to bottom when messages change
+      bottomRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [messages]);
+
   return (
-    <ScrollArea className="flex-1 w-full px-4 py-6">
-      <div className="flex flex-col gap-6 max-w-3xl mx-auto w-full pb-32">
-        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-        {messages.map((message: any) => (
-          <div
-            key={message.id}
-            className={`flex w-full ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
-          >
-            <div
-              className={`max-w-[80%] rounded-lg p-4 ${
-                message.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-muted'
-              }`}
+    <div className="flex-1 overflow-y-auto px-4 py-6 scroll-smooth">
+      <div className="max-w-3xl mx-auto space-y-4">
+        <AnimatePresence initial={false}>
+          {messages.map((m, index) => (
+            <motion.div
+              key={m.id}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.2 }}
             >
-              <div className="whitespace-pre-wrap">{message.content}</div>
+              <MessageBubble
+                message={m}
+                isGenerating={isLoading && index === messages.length - 1}
+              />
+            </motion.div>
+          ))}
+        </AnimatePresence>
 
-              {/* Tool Invocations Rendering */}
-              {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-              {message.toolInvocations?.map((toolInvocation: any) => {
-                const { toolName, toolCallId, state } = toolInvocation;
-
-                if (state === 'result') {
-                  const { result } = toolInvocation;
-                  if (toolName === 'analyze_security') {
-                    return (
-                      <div key={toolCallId} className="mt-4">
-                        <AnalysisResultCard result={result} />
-                      </div>
-                    );
-                  }
-
-                  if (toolName === 'update_quote') {
-                    return (
-                      <div key={toolCallId} className="mt-4 p-4 rounded-md border bg-background text-foreground text-sm">
-                        ✅ Portfolio quotes updated. New base value: {result.newTotalValueBase} {result.currencyBase}
-                      </div>
-                    );
-                  }
-                } else {
-                  return (
-                    <div key={toolCallId} className="mt-4 p-4 rounded-md border bg-background/50 text-muted-foreground text-sm italic">
-                      Running {toolName}...
-                    </div>
-                  );
-                }
-              })}
+        {error && (
+          <div className="p-4 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-sm flex justify-between items-center mb-4 mx-4 md:mx-6">
+            <div>
+              <span className="font-semibold mr-2">[⚠️ 回應不完整]</span>
+              {error.message || '連線中斷'}
             </div>
-          </div>
-        ))}
-
-        {isLoading && (
-          <div className="flex justify-start">
-            <div className="max-w-[80%] rounded-lg p-4 bg-muted animate-pulse text-muted-foreground">
-              Thinking...
-            </div>
+            <button
+              onClick={reload}
+              className="px-3 py-1.5 bg-background border rounded-md hover:bg-muted font-medium"
+            >
+              重試
+            </button>
           </div>
         )}
 
-        {hasInterruptionError && (
-          <div className="flex justify-center mt-4">
-            <div className="flex items-center gap-2 p-3 bg-destructive/10 text-destructive rounded-lg border border-destructive/20">
-              <AlertCircle className="h-4 w-4" />
-              <span className="text-sm">Connection interrupted.</span>
-              <Button size="sm" variant="outline" className="ml-2 h-7" onClick={onManualRetry}>
-                重試
-              </Button>
-            </div>
-          </div>
-        )}
+        <div ref={bottomRef} className="h-4" />
       </div>
-    </ScrollArea>
+    </div>
   );
 }
