@@ -38,16 +38,20 @@ function generateId() {
   return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15)
 }
 
-function appendToLastAssistantMessage(messages: UIMessage[], content: string): UIMessage[] {
+function appendToLastAssistantMessage(messages: UIMessage[], update: Partial<UIMessage>): UIMessage[] {
   if (messages.length === 0) return messages
   const lastMessage = messages[messages.length - 1]
   if (lastMessage.role !== 'assistant') {
-      return [...messages, { id: generateId(), role: 'assistant', content, createdAt: new Date() }]
+      return [...messages, { id: generateId(), role: 'assistant', content: '', createdAt: new Date(), ...update }]
   }
 
   return messages.map((m, i) => {
     if (i === messages.length - 1) {
-      return { ...m, content: m.content + content }
+      return {
+        ...m,
+        content: update.content ? m.content + update.content : m.content,
+        toolCalls: update.toolCalls ? [...(m.toolCalls || []), ...update.toolCalls] : m.toolCalls
+      }
     }
     return m
   })
@@ -75,11 +79,11 @@ export const useChatStore = create<ChatState>()(
             isStreaming: true,
             streamError: null,
             retryCount: 0,
-            activeSkills: [] // Reset active skills on new message
+            activeSkills: []
         }))
 
         try {
-            // This is handled in the UI/hook for now to stream text
+            // Stream handled by hook
             const response = await fetch('/api/v1/chat/stream', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -89,8 +93,6 @@ export const useChatStore = create<ChatState>()(
             if (!response.ok) {
                 throw new Error(await response.text())
             }
-
-            // Fallback for full SSE is implemented via custom hooks
         } catch (error) {
             set({ streamError: error as Error, isStreaming: false })
         }
@@ -98,15 +100,22 @@ export const useChatStore = create<ChatState>()(
       appendChunk: (chunk: StreamChunk) => {
         if (chunk.type === 'text') {
           set((s) => {
-              // Create an assistant message if the last one isn't assistant
               const lastIsAssistant = s.messages.length > 0 && s.messages[s.messages.length - 1].role === 'assistant';
               if (!lastIsAssistant) {
                  return { messages: [...s.messages, { id: generateId(), role: 'assistant', content: chunk.content, createdAt: new Date() }] }
               }
-              return { messages: appendToLastAssistantMessage(s.messages, chunk.content) }
+              return { messages: appendToLastAssistantMessage(s.messages, { content: chunk.content }) }
+          })
+        } else if (chunk.type === 'tool_result') {
+          set((s) => {
+             const newToolCall: ToolCall = {
+                 id: generateId(),
+                 name: chunk.component,
+                 arguments: { type: 'tool_result', component: chunk.component, props: chunk.props }
+             }
+             return { messages: appendToLastAssistantMessage(s.messages, { toolCalls: [newToolCall] }) }
           })
         } else if (chunk.type === 'tool_call') {
-          // Track active skills
           set((s) => {
             const newSkills = [...s.activeSkills]
             if (!newSkills.includes(chunk.skill)) {
@@ -114,8 +123,6 @@ export const useChatStore = create<ChatState>()(
             }
             return { activeSkills: newSkills }
           })
-        } else if (chunk.type === 'skill_progress') {
-           // We might handle more fine-grained updates here later
         } else if (chunk.type === 'error') {
           set({ streamError: new Error(chunk.message), isStreaming: false })
         } else if (chunk.type === 'done') {
@@ -135,7 +142,6 @@ export const useChatStore = create<ChatState>()(
         }
       },
       loadConversation: async (id: string) => {
-        // Implement load logic
       },
     })),
     { name: 'chat-store' }
