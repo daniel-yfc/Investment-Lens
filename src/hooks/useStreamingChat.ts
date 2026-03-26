@@ -1,0 +1,125 @@
+import { useChat } from '@ai-sdk/react';
+import { useChatStore } from '@/store/chat';
+import { useCallback, useRef, useState } from 'react';
+
+const MAX_RETRIES = 3;
+const INITIAL_BACKOFF_MS = 1000;
+
+export function useStreamingChat() {
+  const { messages: storeMessages, isLoading: storeLoading, setLoading } = useChatStore();
+  const retryCountRef = useRef(0);
+  const [hasInterruptionError, setHasInterruptionError] = useState(false);
+
+  const chatHelpers = useChat({
+    api: '/api/v1/chat/stream',
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    initialMessages: storeMessages as any[],
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    onResponse: (response: any) => {
+      if (response.ok) {
+        retryCountRef.current = 0;
+        setHasInterruptionError(false);
+      }
+    },
+    onFinish: () => {
+      setLoading(false);
+    },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    onError: (err: any) => {
+      console.error('Chat stream interrupted:', err);
+      setLoading(false);
+      setHasInterruptionError(true);
+      handleStreamWithFallback();
+    }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } as any);
+
+  const {
+    messages,
+    input,
+    handleInputChange,
+    handleSubmit: originalHandleSubmit,
+    isLoading: aiIsLoading,
+    error,
+    reload,
+    stop,
+    append,
+    setMessages
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } = chatHelpers as any;
+
+  const handleStreamWithFallback = useCallback(() => {
+    if (retryCountRef.current >= MAX_RETRIES) {
+      console.warn('Max retries reached. Stream interruption fallback failed.');
+      // FA-04: Show [⚠️ 回應不完整] marker on the last assistant message
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      setMessages((prev: any[]) => {
+        const lastMsg = prev[prev.length - 1];
+        if (lastMsg && lastMsg.role === 'assistant') {
+          return [
+            ...prev.slice(0, -1),
+            {
+               ...lastMsg,
+               content: lastMsg.content + '\n\n[⚠️ 回應不完整]',
+            }
+          ];
+        }
+        return prev;
+      });
+      return;
+    }
+
+    const backoffMs = INITIAL_BACKOFF_MS * Math.pow(2, retryCountRef.current);
+    retryCountRef.current += 1;
+
+    console.log(`Retrying connection in ${backoffMs}ms... (Attempt ${retryCountRef.current}/${MAX_RETRIES})`);
+
+    setTimeout(() => {
+      setLoading(true);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      reload().catch((reloadErr: any) => {
+         console.error('Retry failed:', reloadErr);
+      });
+    }, backoffMs);
+  }, [reload, setLoading, setMessages]);
+
+  const handleSubmit = useCallback(
+    (e?: React.FormEvent<HTMLFormElement>) => {
+      e?.preventDefault();
+      if (!input.trim() || storeLoading) return;
+
+      setHasInterruptionError(false);
+      retryCountRef.current = 0;
+      setLoading(true);
+
+      try {
+        originalHandleSubmit(e);
+      } catch (submitErr) {
+         console.error('Submit error:', submitErr);
+         setLoading(false);
+      }
+    },
+    [input, storeLoading, setLoading, originalHandleSubmit]
+  );
+
+  const handleManualRetry = useCallback(() => {
+     setHasInterruptionError(false);
+     retryCountRef.current = 0;
+     setLoading(true);
+     reload();
+  }, [reload, setLoading]);
+
+  return {
+    messages,
+    input,
+    handleInputChange,
+    handleSubmit,
+    isLoading: aiIsLoading || storeLoading,
+    error,
+    hasInterruptionError,
+    handleManualRetry,
+    stop,
+    append,
+    setMessages
+  };
+}
