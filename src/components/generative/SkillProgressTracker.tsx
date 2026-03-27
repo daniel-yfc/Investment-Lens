@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
+import { Check, Loader2, Link, X } from "lucide-react";
 
 export type SkillStatus = 'pending' | 'running' | 'done' | 'error';
 
@@ -70,6 +71,9 @@ export function SkillProgressTracker({ steps, currentSkill, isCollapsible = true
 
   if (steps.length === 0) return null;
 
+  // P4 Enhancement: Visual cue when multiple skills are chained
+  const hasMultipleSkills = Array.from(new Set(steps.map(s => s.skill))).length > 1;
+
   return (
     <div className={cn("rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden dark:border-slate-800 dark:bg-slate-900", className)}>
       <div
@@ -93,10 +97,16 @@ export function SkillProgressTracker({ steps, currentSkill, isCollapsible = true
             </svg>
           </div>
           <div>
-            <h3 className="text-sm font-medium text-slate-900 dark:text-slate-100">
+            <h3 className="text-sm font-medium text-slate-900 dark:text-slate-100 flex items-center gap-2">
               {allDone
                 ? (errorCount > 0 ? `Completed with ${errorCount} error${errorCount > 1 ? 's' : ''}` : "Analysis Complete")
                 : "Agent Thinking..."}
+              {hasMultipleSkills && !allDone && (
+               <span className="flex items-center gap-1 text-xs text-indigo-500 bg-indigo-500/10 px-2 py-0.5 rounded-full border border-indigo-500/20">
+                 <Link className="h-3 w-3" />
+                 Chain Active
+               </span>
+              )}
             </h3>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
               {steps.filter(s => s.status === 'done').length} / {steps.length} steps

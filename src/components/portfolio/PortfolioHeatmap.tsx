@@ -142,7 +142,7 @@ export function PortfolioHeatmap({ holdings, metric = 'changePercent', className
           stroke="#fff"
           fill="#8884d8"
           isAnimationActive={false} // Turn off animation for better performance with many items (PE-04)
-          content={(props) => <CustomizedContent {...props} metric={metric} />}
+          content={<CustomizedContent metric={metric} /> as any}
         >
           <Tooltip content={(props: any) => <CustomTooltip {...props} metric={metric} />} />
         </Treemap>
