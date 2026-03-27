@@ -1,0 +1,310 @@
+"use client";
+
+import { useState, useRef, useEffect, useCallback } from "react";
+import { cn } from "@/lib/utils";
+
+export type NodeType = "source" | "amplifier" | "risk" | "outcome";
+
+export interface SignalNode {
+  id: string;
+  label: string;
+  type: NodeType;
+  strength: number; // 0-1
+  data?: Record<string, unknown>;
+  x?: number;
+  y?: number;
+}
+
+export interface SignalEdge {
+  id: string;
+  source: string;
+  target: string;
+  label?: string;
+  animated?: boolean;
+  strength?: number; // 0-1
+}
+
+interface SignalChainGraphProps {
+  nodes: SignalNode[];
+  edges: SignalEdge[];
+  readonly?: boolean;
+  height?: number;
+  className?: string;
+}
+
+const NODE_W = 140;
+const NODE_H = 56;
+const NODE_RX = 8;
+
+const TYPE_COLORS: Record<NodeType, { bg: string; border: string; dot: string; text: string }> = {
+  source:    { bg: "#1a2a3f", border: "#4a90d9", dot: "#5ba3e8", text: "#93c5fd" },
+  amplifier: { bg: "#1e1a3f", border: "#7c5cbf", dot: "#9370db", text: "#c4b5fd" },
+  risk:      { bg: "#2d2500", border: "#c9a800", dot: "#e8c300", text: "#fde68a" },
+  outcome:   { bg: "#0d2a1a", border: "#2e9e60", dot: "#34b56e", text: "#6ee7b7" },
+};
+
+const TYPE_LABELS: Record<NodeType, string> = {
+  source: "SRC", amplifier: "AMP", risk: "RSK", outcome: "OUT",
+};
+
+function getEdgePath(
+  nodes: SignalNode[],
+  from: string,
+  to: string
+): { d: string; midX: number; midY: number } | null {
+  const src = nodes.find((n) => n.id === from);
+  const dst = nodes.find((n) => n.id === to);
+  if (!src || !dst) return null;
+
+  const x1 = (src.x ?? 0) + NODE_W;
+  const y1 = (src.y ?? 0) + NODE_H / 2;
+  const x2 = dst.x ?? 0;
+  const y2 = (dst.y ?? 0) + NODE_H / 2;
+
+  const cx1 = x1 + Math.abs(x2 - x1) * 0.45;
+  const cx2 = x2 - Math.abs(x2 - x1) * 0.45;
+
+  return {
+    d: `M ${x1} ${y1} C ${cx1} ${y1}, ${cx2} ${y2}, ${x2} ${y2}`,
+    midX: (x1 + x2) / 2,
+    midY: (y1 + y2) / 2,
+  };
+}
+
+export function SignalChainGraph({ nodes: initialNodes, edges, readonly = false, height = 340, className = "" }: SignalChainGraphProps) {
+  const [nodes, setNodes] = useState(() => {
+    // initialize x, y if not provided (simple horizontal layout)
+    return initialNodes.map((n, i) => ({
+      ...n,
+      x: n.x ?? i * 200 + 20,
+      y: n.y ?? height / 2 - NODE_H / 2
+    }));
+  });
+
+  // Using standard pattern instead of set in effect
+  const [prevInitialNodes, setPrevInitialNodes] = useState(initialNodes);
+  if (initialNodes !== prevInitialNodes) {
+    setPrevInitialNodes(initialNodes);
+    setNodes(prevNodes => {
+      return initialNodes.map(inNode => {
+        const existing = prevNodes.find(n => n.id === inNode.id);
+        return {
+          ...inNode,
+          x: existing?.x ?? inNode.x ?? 0,
+          y: existing?.y ?? inNode.y ?? 0
+        };
+      });
+    });
+  }
+
+  const [selected, setSelected] = useState<string | null>(null);
+  const [dragging, setDragging] = useState<string | null>(null);
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const svgRef = useRef<SVGSVGElement>(null);
+
+  const viewW = 820;
+  const viewH = height;
+
+  const handleMouseDown = useCallback(
+    (e: React.MouseEvent, id: string) => {
+      e.stopPropagation();
+      setSelected(id);
+      if (readonly) return;
+      const node = nodes.find((n) => n.id === id)!;
+      const svgRect = svgRef.current!.getBoundingClientRect();
+      setDragOffset({
+        x: (e.clientX - svgRect.left) * (viewW / svgRect.width) - (node.x ?? 0),
+        y: (e.clientY - svgRect.top) * (viewH / svgRect.height) - (node.y ?? 0),
+      });
+      setDragging(id);
+    },
+    [nodes, readonly, viewW, viewH]
+  );
+
+  const handleMouseMove = useCallback(
+    (e: MouseEvent) => {
+      if (!dragging || !svgRef.current || readonly) return;
+      const svgRect = svgRef.current.getBoundingClientRect();
+      const nx = Math.max(0, Math.min(viewW - NODE_W, (e.clientX - svgRect.left) * (viewW / svgRect.width) - dragOffset.x));
+      const ny = Math.max(0, Math.min(viewH - NODE_H, (e.clientY - svgRect.top) * (viewH / svgRect.height) - dragOffset.y));
+      setNodes((prev) => prev.map((n) => (n.id === dragging ? { ...n, x: nx, y: ny } : n)));
+    },
+    [dragging, dragOffset, readonly, viewW, viewH]
+  );
+
+  const handleMouseUp = useCallback(() => setDragging(null), []);
+
+  useEffect(() => {
+    window.addEventListener("mousemove", handleMouseMove);
+    window.addEventListener("mouseup", handleMouseUp);
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mouseup", handleMouseUp);
+    };
+  }, [handleMouseMove, handleMouseUp]);
+
+  const selectedNode = nodes.find((n) => n.id === selected);
+
+  return (
+    <div className={cn("flex flex-col gap-4", className)}>
+      {/* Graph canvas */}
+      <div className="relative rounded-xl border border-slate-200 bg-white overflow-hidden dark:border-slate-700 dark:bg-slate-900">
+        {/* Dot-grid background */}
+        <svg className="absolute inset-0 w-full h-full opacity-10 pointer-events-none" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <pattern id="dot-grid" x="0" y="0" width="24" height="24" patternUnits="userSpaceOnUse">
+              <circle cx="1" cy="1" r="1" fill="#94a3b8" />
+            </pattern>
+          </defs>
+          <rect width="100%" height="100%" fill="url(#dot-grid)" />
+        </svg>
+
+        {/* Toolbar */}
+        <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 dark:border-slate-700 relative z-10 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm">
+          <div className="flex items-center gap-2">
+            <span className="h-2 w-2 rounded-full bg-indigo-500 animate-pulse" />
+            <span className="text-xs font-mono font-semibold text-slate-700 dark:text-slate-300 tracking-widest uppercase">
+              Signal Chain
+            </span>
+          </div>
+          <div className="flex gap-3">
+            {(["source", "amplifier", "risk", "outcome"] as NodeType[]).map((t) => (
+              <span key={t} className="flex items-center gap-1 text-[10px] font-mono uppercase tracking-wider" style={{ color: TYPE_COLORS[t].text }}>
+                <span className="h-1.5 w-1.5 rounded-full" style={{ background: TYPE_COLORS[t].dot }} />
+                {TYPE_LABELS[t]}
+              </span>
+            ))}
+          </div>
+        </div>
+
+        {/* SVG Graph */}
+        <svg
+          ref={svgRef}
+          viewBox={`0 0 ${viewW} ${viewH}`}
+          className="w-full select-none"
+          style={{ height: viewH, cursor: dragging ? "grabbing" : readonly ? "default" : "grab" }}
+          onClick={() => setSelected(null)}
+        >
+          <defs>
+            <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto">
+              <path d="M0,0 L0,6 L8,3 z" fill="#6366f1" opacity="0.5" />
+            </marker>
+            <marker id="arrow-active" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto">
+              <path d="M0,0 L0,6 L8,3 z" fill="#818cf8" />
+            </marker>
+            <filter id="glow">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+            </filter>
+          </defs>
+
+          {/* Edges */}
+          {edges.map((edge) => {
+            const path = getEdgePath(nodes, edge.source, edge.target);
+            if (!path) return null;
+            const isActive = edge.animated ?? true;
+            return (
+              <g key={edge.id}>
+                <path
+                  d={path.d}
+                  fill="none"
+                  stroke={isActive ? "#818cf8" : "#4b5563"}
+                  strokeWidth={(isActive ? 1.8 : 1.2) * (edge.strength ? edge.strength * 2 + 0.5 : 1)}
+                  strokeDasharray={isActive ? undefined : "5 4"}
+                  markerEnd={isActive ? "url(#arrow-active)" : "url(#arrow)"}
+                  opacity={isActive ? 0.85 : 0.45}
+                  filter={isActive ? "url(#glow)" : undefined}
+                />
+                {edge.label && (
+                  <text x={path.midX} y={path.midY - 6} textAnchor="middle" fontSize={9} fill="#a5b4fc" fontFamily="monospace" opacity={0.8}>
+                    {edge.label}
+                  </text>
+                )}
+              </g>
+            );
+          })}
+
+          {/* Nodes */}
+          {nodes.map((node) => {
+            const colors = TYPE_COLORS[node.type];
+            const isSelected = selected === node.id;
+
+            // Size scaled by strength
+            const scale = node.strength ? 0.8 + node.strength * 0.4 : 1;
+            const width = NODE_W * scale;
+            const height = NODE_H * scale;
+
+            return (
+              <g
+                key={node.id}
+                transform={`translate(${node.x ?? 0}, ${node.y ?? 0})`}
+                onMouseDown={(e) => handleMouseDown(e, node.id)}
+                style={{ cursor: readonly ? "default" : dragging === node.id ? "grabbing" : "grab" }}
+              >
+                {isSelected && (
+                  <rect x={-3} y={-3} width={width + 6} height={height + 6} rx={NODE_RX + 2}
+                    fill="none" stroke={colors.border} strokeWidth={1.5} opacity={0.5} filter="url(#glow)"
+                  />
+                )}
+                <rect width={width} height={height} rx={NODE_RX}
+                  fill={colors.bg} stroke={colors.border} strokeWidth={isSelected ? 1.5 : 1} opacity={isSelected ? 1 : 0.9}
+                />
+                <rect x={0} y={height * 0.15} width={3} height={height * 0.7} rx={1.5} fill={colors.dot} />
+                <text x={14} y={height * 0.35} fontSize={8 * scale} fontFamily="monospace" fontWeight="700" fill={colors.text} letterSpacing="1.5" opacity={0.75}>
+                  {TYPE_LABELS[node.type]}
+                </text>
+                <text x={14} y={height * 0.65} fontSize={13 * scale} fontFamily="sans-serif" fontWeight="600" fill="#f1f5f9">
+                  {node.label}
+                </text>
+
+                <circle cx={0} cy={height / 2} r={4 * scale} fill={colors.dot} stroke={colors.bg} strokeWidth={1.5} />
+                <circle cx={width} cy={height / 2} r={4 * scale} fill={colors.dot} stroke={colors.bg} strokeWidth={1.5} />
+              </g>
+            );
+          })}
+        </svg>
+      </div>
+
+      {/* Inspector panel */}
+      <div className="rounded-xl border border-slate-200 bg-white p-4 min-h-[80px] dark:border-slate-700 dark:bg-slate-900">
+        {selectedNode ? (
+          <div className="flex gap-6 items-start">
+            <div>
+              <p className="text-[10px] font-mono uppercase tracking-widest text-slate-400 mb-1">Node</p>
+              <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">{selectedNode.label}</p>
+              <span
+                className="inline-block mt-1 text-[9px] font-mono uppercase tracking-wider px-2 py-0.5 rounded-full"
+                style={{ background: TYPE_COLORS[selectedNode.type].bg, color: TYPE_COLORS[selectedNode.type].text, border: `1px solid ${TYPE_COLORS[selectedNode.type].border}` }}
+              >
+                {selectedNode.type}
+              </span>
+            </div>
+            {selectedNode.data && Object.keys(selectedNode.data).length > 0 && (
+              <div className="flex-1 grid grid-cols-2 sm:grid-cols-3 gap-x-8 gap-y-2">
+                {Object.entries(selectedNode.data).map(([k, v]) => (
+                  <div key={k}>
+                    <p className="text-[10px] font-mono text-slate-400 uppercase tracking-wider">{k}</p>
+                    <p className="text-xs font-mono text-slate-700 dark:text-slate-200">{String(v)}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+            <div>
+              <p className="text-[10px] font-mono uppercase tracking-widest text-slate-400 mb-1">Position</p>
+              <p className="text-xs font-mono text-slate-700 dark:text-slate-200">
+                x: {Math.round(selectedNode.x ?? 0)}, y: {Math.round(selectedNode.y ?? 0)}
+              </p>
+            </div>
+          </div>
+        ) : (
+          <div className="flex items-center gap-2 text-slate-400">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
+            </svg>
+            <span className="text-xs font-mono">Click a node to inspect. {readonly ? "" : "Drag nodes to rearrange."}</span>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
