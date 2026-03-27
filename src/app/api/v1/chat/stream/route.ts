@@ -4,10 +4,10 @@ import { auth } from '@/auth';
 import { NextResponse } from 'next/server';
 import { chatRateLimiter } from '@/lib/utils/rate-limiter';
 import { z } from 'zod';
-import { exec } from 'child_process';
+import { execFile } from 'child_process';
 import { promisify } from 'util';
 
-const execAsync = promisify(exec);
+const execFileAsync = promisify(execFile);
 
 export const runtime = 'nodejs';
 
@@ -62,7 +62,11 @@ export async function POST(req: Request) {
           }),
           execute: async ({ ticker, mode }: { ticker: string; mode: string }) => {
             try {
-              const { stdout } = await execAsync(`python3 skills/alphaear-reporter/scripts/report_agent.py --ticker ${ticker} --mode ${mode}`);
+              const { stdout } = await execFileAsync('python3', [
+                'skills/alphaear-reporter/scripts/report_agent.py',
+                '--ticker', ticker,
+                '--mode', mode
+              ]);
               return stdout;
             } catch (error: any) {
               console.error('Error executing alphaear-reporter:', error);
@@ -77,7 +81,10 @@ export async function POST(req: Request) {
           }),
           execute: async ({ ticker }: { ticker: string }) => {
             try {
-              const { stdout } = await execAsync(`python3 skills/alphaear-reporter/scripts/visualizer.py --ticker ${ticker}`);
+              const { stdout } = await execFileAsync('python3', [
+                'skills/alphaear-reporter/scripts/visualizer.py',
+                '--ticker', ticker
+              ]);
               return stdout;
             } catch (error: any) {
               console.error('Error executing visualizer:', error);
