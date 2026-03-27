@@ -64,9 +64,10 @@ export async function POST(req: Request) {
             try {
               const { stdout } = await execAsync(`python3 skills/alphaear-reporter/scripts/report_agent.py --ticker ${ticker} --mode ${mode}`);
               return stdout;
-            } catch (error: any) {
+            } catch (error: unknown) {
               console.error('Error executing alphaear-reporter:', error);
-              return `Error: ${error.message || 'Unknown error occurred'}`;
+              const message = error instanceof Error ? error.message : 'Unknown error occurred';
+              return `Error: ${message}`;
             }
           },
         }),
@@ -79,9 +80,10 @@ export async function POST(req: Request) {
             try {
               const { stdout } = await execAsync(`python3 skills/alphaear-reporter/scripts/visualizer.py --ticker ${ticker}`);
               return stdout;
-            } catch (error: any) {
+            } catch (error: unknown) {
               console.error('Error executing visualizer:', error);
-              return `Error: ${error.message || 'Unknown error occurred'}`;
+              const message = error instanceof Error ? error.message : 'Unknown error occurred';
+              return `Error: ${message}`;
             }
           },
         }),
