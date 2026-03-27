@@ -1,0 +1,26 @@
+cat << 'PATCH' > treemap.patch
+<<<<<<< SEARCH
+        <Treemap
+          width={800} // responsive container handles this
+          height={400} // responsive container handles this
+          data={chartData}
+          dataKey="size"
+          stroke="#fff"
+          fill="#8884d8"
+          isAnimationActive={false} // Turn off animation for better performance with many items (PE-04)
+          content={(props) => <CustomizedContent {...props} metric={metric} />}
+        >
+=======
+        <Treemap
+          width={800} // responsive container handles this
+          height={400} // responsive container handles this
+          data={chartData}
+          dataKey="size"
+          stroke="#fff"
+          fill="#8884d8"
+          isAnimationActive={false} // Turn off animation for better performance with many items (PE-04)
+          content={<CustomizedContent metric={metric} />}
+        >
+>>>>>>> REPLACE
+PATCH
+patch -p0 < treemap.patch
