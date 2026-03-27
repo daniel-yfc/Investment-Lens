@@ -1,26 +1,14 @@
 
-> web-app@0.1.0 dev
-> next dev
+> investment-lens-web@0.1.0 dev
+> next dev --turbopack
 
-▲ Next.js 16.2.1 (Turbopack)
-- Local:         http://localhost:3000
-- Network:       http://192.168.0.2:3000
-✓ Ready in 612ms
-Attention: Next.js now collects completely anonymous telemetry regarding usage.
-This information is used to shape Next.js' roadmap and prioritize features.
-You can learn more, including how to opt-out if you'd not like to participate in this anonymous program, by visiting the following URL:
-https://nextjs.org/telemetry
+ ⚠ Port 3000 is in use, trying 3001 instead.
+  ▲ Next.js 15.0.1 (Turbopack)
+  - Local:        http://localhost:3001
+  - Environments: .env.local
 
-
-○ Compiling / ...
- GET / 200 in 7.2s (next.js: 6.8s, application-code: 446ms)
- POST /api/v1/chat/stream 200 in 5.9s
- GET / 200 in 87ms (next.js: 12ms, application-code: 75ms)
- POST /api/v1/chat/stream 200 in 3.3s
- GET / 200 in 1665ms (next.js: 1099ms, application-code: 565ms)
- GET / 200 in 59ms (next.js: 5ms, application-code: 54ms)
- GET / 200 in 58ms (next.js: 6ms, application-code: 52ms)
- POST /api/v1/chat/stream 200 in 2.9s
-○ Compiling /portfolio ...
- GET /portfolio 200 in 4.1s (next.js: 3.8s, application-code: 234ms)
- POST /api/v1/skills/update-quote/invoke 200 in 4.2s (next.js: 2.6s, application-code: 1564ms)
+ ✓ Starting...
+ ✓ Compiled in 849ms
+ ✓ Ready in 2.2s
+   Reload env: .env.local
+[?25h
