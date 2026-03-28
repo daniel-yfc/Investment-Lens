@@ -15,7 +15,7 @@ export function StreamingTextBlock({ content, isGenerating, className }: Streami
   const remarkPlugins = useMemo(() => [remarkGfm], []);
 
   return (
-    <div className={cn("prose prose-sm md:prose-base dark:prose-invert max-w-none break-words", className)}>
+    <div className={cn("prose prose-sm md:prose-base dark:prose-invert max-w-none break-words min-h-[24px]", className)}>
       <ReactMarkdown
         remarkPlugins={remarkPlugins}
         components={{

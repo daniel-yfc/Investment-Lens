@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import { Check, Loader2, X, ChevronDown, ChevronUp, Link } from 'lucide-react'
 import { SkillProgressTrackerProps, SkillStatus } from '@/types/skill.types'
 
@@ -22,10 +22,17 @@ export function SkillProgressTracker({ steps, currentSkill, isCollapsible = true
     }
   }, [allFinished, isCollapsible])
 
-  if (steps.length === 0) return null
-
   // P4 Enhancement: Visual cue when multiple skills are chained
-  const hasMultipleSkills = Array.from(new Set(steps.map(s => s.skill))).length > 1
+  const hasMultipleSkills = useMemo(() => {
+    if (steps.length <= 1) return false
+    const firstSkill = steps[0].skill
+    for (let i = 1; i < steps.length; i++) {
+      if (steps[i].skill !== firstSkill) return true
+    }
+    return false
+  }, [steps])
+
+  if (steps.length === 0) return null
 
   return (
     <div className="w-full rounded-xl border border-zinc-800 bg-zinc-900/50 p-4 mb-4" data-testid="skill-progress-tracker">
