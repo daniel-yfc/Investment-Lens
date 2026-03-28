@@ -70,13 +70,16 @@ def get_model(model_provider: str, model_id: str, **kwargs):
         # Allow callers to override role_map via kwargs, otherwise use default
         role_map = kwargs.pop("role_map", default_role_map)
         
+        # Extract enable_thinking from kwargs or env, default to False
+        enable_thinking = kwargs.pop("enable_thinking", os.getenv("ZAI_ENABLE_THINKING", "false").lower() == "true")
+
         return OpenAIChat(
             id=model_id,
             base_url="https://api.z.ai/api/paas/v4",
             api_key=api_key,
             timeout=60,
             role_map=role_map,
-            extra_body={"enable_thinking": False}, # TODO: one more setting for thinking
+            extra_body={"enable_thinking": enable_thinking},
             **kwargs
         )
     
@@ -100,15 +103,17 @@ def get_model(model_provider: str, model_id: str, **kwargs):
         # Allow callers to override role_map via kwargs, otherwise use default
         role_map = kwargs.pop("role_map", default_role_map)
 
+        # Extract enable_thinking from kwargs or env, default to False
+        enable_thinking = kwargs.pop("enable_thinking", os.getenv("UST_ENABLE_THINKING", "false").lower() == "true")
+
         return OpenAIChat(
             id=model_id,
             api_key=api_key,
             base_url=os.getenv("UST_URL"),
             role_map=role_map,
-            extra_body={"enable_thinking": False}, # TODO: one more setting for thinking
+            extra_body={"enable_thinking": enable_thinking},
             **kwargs
         )
     
     else:
         raise ValueError(f"Unknown model provider: {model_provider}")
-
