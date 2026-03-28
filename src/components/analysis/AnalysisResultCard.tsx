@@ -52,7 +52,7 @@ export function AnalysisResultCard({ data, className, onViewDetails }: AnalysisR
   const Icon = config.icon;
 
   return (
-    <div className={cn("rounded-xl border bg-card text-card-foreground shadow-sm overflow-hidden", className)}>
+    <div className={cn("rounded-xl border bg-card text-card-foreground shadow-sm overflow-hidden min-h-[320px]", className)}>
       {/* L1: Default View (Summary) */}
       <div
         className="p-5 cursor-pointer hover:bg-muted/50 transition-colors"
