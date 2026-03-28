@@ -1,1 +1,0 @@
-sed -i 's/className={cn("rounded-xl border bg-card text-card-foreground shadow-sm overflow-hidden", className)}/className={cn("rounded-xl border bg-card text-card-foreground shadow-sm overflow-hidden min-h-[320px]", className)}/g' src/components/analysis/AnalysisResultCard.tsx
