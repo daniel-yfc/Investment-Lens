@@ -43,3 +43,11 @@ next-env.d.ts
 # dev server logs (auto-generated, not for version control)
 dev_server.log
 *.log
+
+# playwright test artifacts (auto-generated)
+playwright-report/
+test-results/
+
+# patch & shell scripts (temp, not for version control)
+*.patch
+*.sh
