@@ -1,22 +1,6 @@
 ---
 name: quant-analysis
-description: Quantitative finance analysis engine. Use for portfolio optimization,
-  econometric modeling, volatility modeling, Monte Carlo, and statistical backtesting.
-allowed-tools:
-- Read
-- Grep
-- Bash
-metadata:
-  argument-hint: '[VaR | optimization | regression | Monte Carlo | backtest]'
-  version: '1.1'
-  language: zh-tw
-  last-updated: '2026-03-26'
-  effort: high
-  user-invocable: 'true'
-  upstream-primary-skill: investment-lens
-  post-invoke-check: Return structured quant output for reintegration into investment-lens
-  compatibility: Requires Python 3.9+, pandas, numpy, scipy, statsmodels, arch, riskfolio-lib;
-    Jupyter notebook environment recommended
+description: Use this skill when the task explicitly requires formal quantitative finance methods: VaR, CVaR, portfolio optimisation (mean-variance, Black-Litterman, risk parity), Monte Carlo simulation, backtesting, factor regression, GARCH volatility modelling, or statistical validation. Do NOT use for qualitative commentary, narrative valuation, report writing, or basic portfolio review without statistical requirements. This skill is a sub-engine that returns structured results for reintegration into investment-lens.
 ---
 
 # Quant Analysis
@@ -98,7 +82,7 @@ When used as sub-analysis engine:
 - Return conclusions in structured form with `reintegration_note`.
 - Avoid final portfolio/investment recommendations unless explicitly requested.
 - Leave interpretive judgment to `investment-lens`.
-- Phrase implications as: “Quantitative implication.” / “Model-based indication.” / “Statistical signal.”
+- Phrase implications as: "Quantitative implication." / "Model-based indication." / "Statistical signal."
 
 ## References
 
