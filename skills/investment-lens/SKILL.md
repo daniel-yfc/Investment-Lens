@@ -1,27 +1,6 @@
 ---
 name: investment-lens
-description: Primary qualitative investment analysis hub. Use for analyzing single
-  stocks/ETFs, portfolio diagnostics, retirement allocation, and signal monitoring.
-  Do NOT use for quantitative modeling (use quant-analysis), quote refreshes (use
-  update-quote), or report generation (use alphaear-reporter).
-allowed-tools:
-- Read
-- Grep
-- WebSearch
-- Bash
-metadata:
-  argument-hint: '[ticker | portfolio-csv | retirement allocation | signal update]'
-  version: '2.1'
-  language: zh-tw
-  last-updated: '2026-03-26'
-  effort: high
-  user-invocable: 'true'
-  post-invoke-check: 'Confirm bias checklist applied; Mode C: IPS disclaimer present;
-    Mode D: classification justified'
-  compatibility: 'Requires network access to financial data APIs. No local runtime
-    dependencies beyond standard agent environment.
-
-    '
+description: Use this skill when the task requires qualitative investment analysis for a single stock, ETF, index, or crypto asset; portfolio diagnostics and rebalancing; personal retirement or goal-based allocation; or monitoring and classifying existing investment signals. Do NOT use for quantitative modelling (use quant-analysis), price/quote refreshes (use update-quote), or formatting completed analysis into reports (use alphaear-reporter).
 ---
 
 # Investment Lens
@@ -78,7 +57,7 @@ See `scripts/SCRIPTS.md` for full script index and usage.
 - `scripts/` uses relative imports (`from .utils.database_manager import ...`). Run from the `scripts/` directory or set `PYTHONPATH` accordingly.
 - The `sanitize_signal_output` method in `FinUtils` drops tickers it cannot verify against the local DB. If the DB is empty, all impact tickers will be stripped. Populate DB with `alphaear-news` first.
 - Mode C output must always include the IPS disclaimer. Do not omit even if user requests brevity.
-- Mode D “Unchanged” is a valid classification; do not default to “Weakened” when evidence is thin.
+- Mode D "Unchanged" is a valid classification; do not default to "Weakened" when evidence is thin.
 
 ---
 
