@@ -1,18 +1,6 @@
 ---
 name: alphaear-stock
-description: Retrieve raw historical OHLCV price data for global stocks and ETFs via
-  yfinance. Used as input for analysis or quantitative modelling.
-allowed-tools:
-- Read
-- Bash
-metadata:
-  argument-hint: '[ticker | ''price AAPL 2024-01-01 2024-12-31'' | ''2330.TW'']'
-  version: '2.1'
-  language: zh-tw
-  last-updated: '2026-03-26'
-  effort: low
-  user-invocable: 'true'
-  compatibility: Requires pandas, yfinance, scripts/database_manager.py
+description: Use this skill when raw historical OHLCV price data for a stock or ETF is needed for analysis, validation, or downstream quantitative modelling. Use it for date-ranged price retrieval for any globally listed equity or ETF. Do not use it for refreshing portfolio CSV prices (use update-quote), for live news (use alphaear-news), or for investment interpretation (use investment-lens).
 ---
 
 # AlphaEar Stock Skill
@@ -36,7 +24,7 @@ Data is cached locally in SQLite to avoid redundant fetches.
 ## Ticker Format
 
 | Market | Format | Example |
-|--------|--------|---------|
+|--------|--------|---------| 
 | US equities | Plain | `AAPL`, `TSLA` |
 | Taiwan (TWSE) | `.TW` | `2330.TW` |
 | Taiwan (OTC) | `.TWO` | `6443.TWO` |
@@ -57,6 +45,10 @@ Use `scripts/stock_tools.py` via `StockTools`:
 - `get_stock_price(ticker, start_date, end_date)` — returns DataFrame.
   - Ticker must include exchange suffix for non-US markets.
   - Date format: `'YYYY-MM-DD'`. Defaults: 90 days to today.
+
+## Available Scripts
+
+- `scripts/stock_tools.py` — main entry point via `StockTools` class. Non-interactive; pass all arguments as parameters.
 
 ## Gotchas
 
