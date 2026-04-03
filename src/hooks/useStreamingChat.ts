@@ -6,7 +6,7 @@ const MAX_RETRIES = 3;
 const INITIAL_BACKOFF_MS = 1000;
 
 export function useStreamingChat() {
-  const { messages: storeMessages, isStreaming: storeLoading, setStreaming } = useChatStore();
+  const { messages: storeMessages, isStreaming: storeLoading, setStreaming, activeSkills } = useChatStore();
   const retryCountRef = useRef(0);
   const [hasInterruptionError, setHasInterruptionError] = useState(false);
 
@@ -109,12 +109,34 @@ export function useStreamingChat() {
      reload();
   }, [reload, setStreaming]);
 
+  const sendMessage = useCallback(
+    async (content: string) => {
+      if (!content.trim() || storeLoading) return;
+      setHasInterruptionError(false);
+      retryCountRef.current = 0;
+      setStreaming(true);
+      try {
+        await append({
+          role: 'user',
+          content,
+        });
+      } catch (err) {
+        console.error('Send message error:', err);
+        setStreaming(false);
+      }
+    },
+    [append, storeLoading, setStreaming]
+  );
+
   return {
     messages,
     input,
     handleInputChange,
     handleSubmit,
     isLoading: aiIsLoading || storeLoading,
+    isStreaming: aiIsLoading || storeLoading,
+    sendMessage,
+    activeSkills,
     error,
     hasInterruptionError,
     handleManualRetry,
