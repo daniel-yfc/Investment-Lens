@@ -6,7 +6,12 @@ const MAX_RETRIES = 3;
 const INITIAL_BACKOFF_MS = 1000;
 
 export function useStreamingChat() {
-  const { messages: storeMessages, isStreaming: storeLoading, setStreaming } = useChatStore();
+  const {
+    messages: storeMessages,
+    isStreaming: storeLoading,
+    setStreaming,
+    activeSkills
+  } = useChatStore();
   const retryCountRef = useRef(0);
   const [hasInterruptionError, setHasInterruptionError] = useState(false);
 
@@ -115,6 +120,9 @@ export function useStreamingChat() {
     handleInputChange,
     handleSubmit,
     isLoading: aiIsLoading || storeLoading,
+    isStreaming: aiIsLoading || storeLoading,
+    sendMessage: (content: string) => append({ role: 'user', content }),
+    activeSkills,
     error,
     hasInterruptionError,
     handleManualRetry,
