@@ -3,10 +3,14 @@
 import { ChatInput } from '@/components/chat/ChatInput'
 import { MessageFeed } from '@/components/chat/MessageFeed'
 import { useStreamingChat } from '@/hooks/useStreamingChat'
+import { useChatStore } from '@/store/chat'
 import { LocaleSwitcher } from '@/components/ui/LocaleSwitcher'
 
 export default function ChatPage() {
-  const { messages, isStreaming, sendMessage, activeSkills } = useStreamingChat()
+  const { messages, isLoading: isStreaming, append } = useStreamingChat()
+  const { activeSkills } = useChatStore()
+
+  const sendMessage = (content: string) => append({ role: 'user', content })
 
   return (
     <div className="flex flex-col h-screen bg-zinc-950 text-zinc-100 font-sans">
