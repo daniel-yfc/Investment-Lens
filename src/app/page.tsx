@@ -5,8 +5,11 @@ import { MessageFeed } from '@/components/chat/MessageFeed'
 import { useStreamingChat } from '@/hooks/useStreamingChat'
 import { LocaleSwitcher } from '@/components/ui/LocaleSwitcher'
 
+import { useChatStore } from '@/store/chat'
+
 export default function ChatPage() {
-  const { messages, isStreaming, sendMessage, activeSkills } = useStreamingChat()
+  const { messages, isLoading } = useStreamingChat()
+  const { activeSkills, sendMessage } = useChatStore()
 
   return (
     <div className="flex flex-col h-screen bg-zinc-950 text-zinc-100 font-sans">
@@ -23,14 +26,19 @@ export default function ChatPage() {
       <main className="flex-1 overflow-hidden relative">
         <MessageFeed
           messages={messages}
-          isStreaming={isStreaming}
+          isStreaming={isLoading}
           activeSkills={activeSkills}
         />
       </main>
 
       <footer className="flex-none p-4 pb-8 bg-zinc-950">
         <div className="max-w-4xl mx-auto">
-          <ChatInput onSend={sendMessage} disabled={isStreaming} />
+          <ChatInput
+            onSend={(content) => {
+              sendMessage(content)
+            }}
+            disabled={isLoading}
+          />
         </div>
       </footer>
     </div>
