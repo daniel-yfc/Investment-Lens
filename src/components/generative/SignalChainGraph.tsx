@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { cn } from "@/lib/utils";
 
 export type NodeType = "source" | "amplifier" | "risk" | "outcome";
@@ -48,14 +48,9 @@ const TYPE_LABELS: Record<NodeType, string> = {
 };
 
 function getEdgePath(
-  nodes: SignalNode[],
-  from: string,
-  to: string
-): { d: string; midX: number; midY: number } | null {
-  const src = nodes.find((n) => n.id === from);
-  const dst = nodes.find((n) => n.id === to);
-  if (!src || !dst) return null;
-
+  src: SignalNode,
+  dst: SignalNode
+): { d: string; midX: number; midY: number } {
   const x1 = (src.x ?? 0) + NODE_W;
   const y1 = (src.y ?? 0) + NODE_H / 2;
   const x2 = dst.x ?? 0;
@@ -97,6 +92,8 @@ export function SignalChainGraph({ nodes: initialNodes, edges, readonly = false,
     });
   }
 
+  const nodeMap = useMemo(() => new Map(nodes.map((n) => [n.id, n])), [nodes]);
+
   const [selected, setSelected] = useState<string | null>(null);
   const [dragging, setDragging] = useState<string | null>(null);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
@@ -110,7 +107,7 @@ export function SignalChainGraph({ nodes: initialNodes, edges, readonly = false,
       e.stopPropagation();
       setSelected(id);
       if (readonly) return;
-      const node = nodes.find((n) => n.id === id)!;
+      const node = nodeMap.get(id)!;
       const svgRect = svgRef.current!.getBoundingClientRect();
       setDragOffset({
         x: (e.clientX - svgRect.left) * (viewW / svgRect.width) - (node.x ?? 0),
@@ -118,7 +115,7 @@ export function SignalChainGraph({ nodes: initialNodes, edges, readonly = false,
       });
       setDragging(id);
     },
-    [nodes, readonly, viewW, viewH]
+    [nodeMap, readonly, viewW, viewH]
   );
 
   const handleMouseMove = useCallback(
@@ -143,7 +140,7 @@ export function SignalChainGraph({ nodes: initialNodes, edges, readonly = false,
     };
   }, [handleMouseMove, handleMouseUp]);
 
-  const selectedNode = nodes.find((n) => n.id === selected);
+  const selectedNode = selected ? nodeMap.get(selected) : null;
 
   return (
     <div className={cn("flex flex-col gap-4", className)}>
@@ -200,8 +197,11 @@ export function SignalChainGraph({ nodes: initialNodes, edges, readonly = false,
 
           {/* Edges */}
           {edges.map((edge) => {
-            const path = getEdgePath(nodes, edge.source, edge.target);
-            if (!path) return null;
+            const src = nodeMap.get(edge.source);
+            const dst = nodeMap.get(edge.target);
+            if (!src || !dst) return null;
+
+            const path = getEdgePath(src, dst);
             const isActive = edge.animated ?? true;
             return (
               <g key={edge.id}>
