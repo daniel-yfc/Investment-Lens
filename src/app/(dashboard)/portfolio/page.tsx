@@ -13,7 +13,10 @@ export default function PortfolioPage() {
 
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const activePortfolio = portfolios.find(p => p.id === activePortfolioId) || portfolios[0]
+  const activePortfolio = React.useMemo(() => {
+    if (!portfolios || portfolios.length === 0) return undefined;
+    return portfolios.find(p => p.id === activePortfolioId) || portfolios[0];
+  }, [portfolios, activePortfolioId]);
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
