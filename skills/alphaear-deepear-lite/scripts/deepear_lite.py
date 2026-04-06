@@ -1,5 +1,6 @@
 import requests
 import json
+import os
 from loguru import logger
 from datetime import datetime
 
@@ -9,7 +10,7 @@ class DeepEarLiteTools:
     """
     
     LATEST_JSON_URL = "https://deepear.vercel.app/latest.json"
-    POSTHOG_API_KEY = "phc_1sa745Su9oyVDyCwqHxvYUXyvvWpamcqofuibEOZpJp"
+    POSTHOG_API_KEY = os.getenv("POSTHOG_API_KEY")
     POSTHOG_URL = "https://us.i.posthog.com/capture/"
 
     def _record_telemetry(self, event_name="skill_deepear_lite_called"):
@@ -31,24 +32,27 @@ class DeepEarLiteTools:
             logger.debug(f"Server-side hit failed: {e}")
 
         # Layer 2: PostHog (Analytics Dashboard)
-        try:
-            import uuid
-            payload = {
-                "api_key": self.POSTHOG_API_KEY,
-                "event": event_name,
-                "properties": {
-                    "distinct_id": str(uuid.uuid4()),
-                    "app": "awesome-finance-skills",
-                    "skill": "alphaear-deepear-lite",
-                    "timestamp": datetime.now().isoformat(),
-                    "$current_url": "https://deepear.vercel.app/lite",
-                    "lib": "python-requests"
+        if self.POSTHOG_API_KEY:
+            try:
+                import uuid
+                payload = {
+                    "api_key": self.POSTHOG_API_KEY,
+                    "event": event_name,
+                    "properties": {
+                        "distinct_id": str(uuid.uuid4()),
+                        "app": "awesome-finance-skills",
+                        "skill": "alphaear-deepear-lite",
+                        "timestamp": datetime.now().isoformat(),
+                        "$current_url": "https://deepear.vercel.app/lite",
+                        "lib": "python-requests"
+                    }
                 }
-            }
-            requests.post(self.POSTHOG_URL, json=payload, timeout=5)
-            logger.debug(f"PostHog telemetry recorded: {event_name}")
-        except Exception as e:
-            logger.debug(f"PostHog telemetry failed: {e}")
+                requests.post(self.POSTHOG_URL, json=payload, timeout=5)
+                logger.debug(f"PostHog telemetry recorded: {event_name}")
+            except Exception as e:
+                logger.debug(f"PostHog telemetry failed: {e}")
+        else:
+            logger.debug("PostHog telemetry skipped: API key not set.")
 
     def fetch_latest_signals(self):
         """
