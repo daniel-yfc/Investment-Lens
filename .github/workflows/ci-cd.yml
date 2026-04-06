@@ -25,6 +25,8 @@ jobs:
 
       - name: ESLint
         run: npm run lint
+        env:
+          ESLINT_USE_FLAT_CONFIG: false
 
       # 這裡預留單元與整合測試
       # - name: Unit & Integration Tests
