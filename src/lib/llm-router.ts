@@ -6,10 +6,8 @@
  *   openrouter    — uses OPENROUTER_API_KEY, model via OPENROUTER_MODEL
  *   gemini        — uses GOOGLE_GENERATIVE_AI_API_KEY, model via GEMINI_MODEL
  *
- * Usage:
- *   import { getLLMModel, DEFAULT_SYSTEM_PROMPT } from '@/lib/llm-router'
- *   const { model } = getLLMModel()
- *   const result = await streamText({ model, system: DEFAULT_SYSTEM_PROMPT, messages })
+ * NOTE: This module must only be imported in Node.js runtime routes (not edge).
+ * The chat stream route.ts uses runtime = 'nodejs' for this reason.
  */
 
 import { createOpenAI } from '@ai-sdk/openai'
@@ -36,7 +34,6 @@ export function getLLMModel(): LLMConfig {
     case 'openrouter': {
       const apiKey = process.env.OPENROUTER_API_KEY
       if (!apiKey) throw new Error('OPENROUTER_API_KEY is not set')
-
       const modelId = process.env.OPENROUTER_MODEL ?? 'anthropic/claude-3.5-sonnet'
       const openrouter = createOpenAI({
         baseURL: 'https://openrouter.ai/api/v1',
@@ -52,7 +49,6 @@ export function getLLMModel(): LLMConfig {
     case 'gemini': {
       const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY
       if (!apiKey) throw new Error('GOOGLE_GENERATIVE_AI_API_KEY is not set')
-
       const modelId = process.env.GEMINI_MODEL ?? 'gemini-2.0-flash'
       const google = createGoogleGenerativeAI({ apiKey })
       return { model: google(modelId), provider: 'gemini', modelId }
@@ -62,7 +58,6 @@ export function getLLMModel(): LLMConfig {
     default: {
       const apiKey = process.env.OPENAI_API_KEY
       if (!apiKey) throw new Error('OPENAI_API_KEY is not set')
-
       const modelId = process.env.OPENAI_MODEL ?? 'gpt-4o'
       const openai = createOpenAI({ apiKey })
       return { model: openai(modelId), provider: 'openai', modelId }

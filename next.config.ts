@@ -1,7 +1,19 @@
-import type { NextConfig } from "next";
+import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
-  /* config options here */
-};
+  // Required for @ai-sdk/google and other Node.js-only AI SDK packages
+  serverExternalPackages: ['@ai-sdk/google', '@ai-sdk/openai', '@ai-sdk/anthropic'],
 
-export default nextConfig;
+  // Silence build warnings for optional peer deps in AI SDK
+  webpack: (config) => {
+    config.resolve.fallback = {
+      ...config.resolve.fallback,
+      fs: false,
+      net: false,
+      tls: false,
+    }
+    return config
+  },
+}
+
+export default nextConfig
