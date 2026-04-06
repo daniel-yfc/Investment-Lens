@@ -34,7 +34,12 @@ export default auth((req) => {
 
   if (isTestRequest) return withCSP(NextResponse.next())
 
-  // NextAuth v5: auth session is available on req.auth
+  // #8: Allow NextAuth OAuth routes through without auth check
+  // /api/auth/* must never be blocked or OAuth callback will 404-loop
+  if (url.pathname.startsWith('/api/auth')) {
+    return withCSP(NextResponse.next())
+  }
+
   const isAuth = !!req.auth
 
   // FA-07: Redirect unauthenticated /dashboard/* → /login

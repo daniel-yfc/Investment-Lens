@@ -4,12 +4,12 @@ import { ChatInput } from '@/components/chat/ChatInput'
 import { MessageFeed } from '@/components/chat/MessageFeed'
 import { useStreamingChat } from '@/hooks/useStreamingChat'
 import { LocaleSwitcher } from '@/components/ui/LocaleSwitcher'
-
-import { useChatStore } from '@/store/chat'
+import { useSession } from 'next-auth/react'
 
 export default function ChatPage() {
-  const { messages, isLoading } = useStreamingChat()
-  const { activeSkills, sendMessage } = useChatStore()
+  const { messages, isLoading, handleSubmit } = useStreamingChat()
+  const { data: session } = useSession()
+  const { activeSkills } = useStreamingChat()
 
   return (
     <div className="flex flex-col h-screen bg-zinc-950 text-zinc-100 font-sans">
@@ -17,8 +17,10 @@ export default function ChatPage() {
         <div className="max-w-4xl mx-auto flex items-center justify-between">
           <h1 className="text-xl font-semibold tracking-tight">Investment-Lens</h1>
           <div className="flex items-center gap-4">
-             <LocaleSwitcher />
-             <div className="text-sm text-zinc-400">登入: User</div>
+            <LocaleSwitcher />
+            <div className="text-sm text-zinc-400">
+              {session?.user?.name ?? session?.user?.email ?? '登入中...'}
+            </div>
           </div>
         </div>
       </header>
@@ -34,9 +36,7 @@ export default function ChatPage() {
       <footer className="flex-none p-4 pb-8 bg-zinc-950">
         <div className="max-w-4xl mx-auto">
           <ChatInput
-            onSend={(content) => {
-              sendMessage(content)
-            }}
+            onSend={handleSubmit}
             disabled={isLoading}
           />
         </div>

@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { devtools, subscribeWithSelector } from 'zustand/middleware'
-import { StreamChunk } from '@/types/stream.types'
+import type { StreamChunk } from '@/types/stream.types'
 
 export interface ToolCall {
   id: string
@@ -24,13 +24,13 @@ export interface ChatState {
   streamError:    Error | null
   retryCount:     number
 
-  sendMessage:        (content: string) => void      // adds user msg to store only
+  addUserMessage:     (content: string) => UIMessage  // returns the new message
   appendChunk:        (chunk: StreamChunk) => void
   setStreaming:       (v: boolean) => void
   setActiveSkills:    (skills: string[]) => void
   clearError:         () => void
   resetConversation:  () => void
-  retryLastMessage:   () => void
+  getLastUserMessage: () => UIMessage | undefined
   loadConversation:   (id: string) => Promise<void>
 }
 
@@ -74,8 +74,8 @@ export const useChatStore = create<ChatState>()(
       streamError:    null,
       retryCount:     0,
 
-      // Only adds user message to store; actual fetch is done by useStreamingChat
-      sendMessage: (content: string) => {
+      // Adds user message to store and returns it (for use in useStreamingChat)
+      addUserMessage: (content: string): UIMessage => {
         const userMsg: UIMessage = {
           id: generateId(),
           role: 'user',
@@ -86,9 +86,9 @@ export const useChatStore = create<ChatState>()(
           messages: [...s.messages, userMsg],
           isStreaming: true,
           streamError: null,
-          retryCount: 0,
           activeSkills: [],
         }))
+        return userMsg
       },
 
       appendChunk: (chunk: StreamChunk) => {
@@ -131,19 +131,16 @@ export const useChatStore = create<ChatState>()(
 
       setStreaming:      (v) => set({ isStreaming: v }),
       setActiveSkills:   (skills) => set({ activeSkills: skills }),
-      clearError:        () => set({ streamError: null, retryCount: 0 }),
+      clearError:        () => set({ streamError: null }),
       resetConversation: () => set({ messages: [], conversationId: null }),
 
-      retryLastMessage: () => {
+      // #10: Returns last user message for retry (used by useStreamingChat)
+      getLastUserMessage: () => {
         const { messages } = get()
-        let lastUser: UIMessage | undefined
         for (let i = messages.length - 1; i >= 0; i--) {
-          if (messages[i].role === 'user') { lastUser = messages[i]; break }
+          if (messages[i].role === 'user') return messages[i]
         }
-        if (lastUser) {
-          set((s) => ({ retryCount: s.retryCount + 1 }))
-          get().sendMessage(lastUser.content)
-        }
+        return undefined
       },
 
       loadConversation: async (_id: string) => {},
