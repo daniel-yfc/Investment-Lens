@@ -21,21 +21,29 @@ export function StreamingTextBlock({ content, isGenerating, className }: Streami
         components={{
           // Tailwind prose doesn't always handle deeply nested lists well by default
           // Add custom component overrides if needed for specific Markdown features
-          p: ({ children }) => <p className="mb-2 last:mb-0 leading-relaxed">{children}</p>,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          p: ({ children, ...props }: any) => (
+            <p {...props} className="mb-2 last:mb-0 leading-relaxed">{children}</p>
+          ),
           a: ({ ...props }) => (
             <a {...props} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline" />
           ),
-          table: ({ children }) => (
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          table: ({ children, ...props }: any) => (
             <div className="overflow-x-auto my-4 w-full">
-              <table className="min-w-full divide-y divide-border border rounded-md">{children}</table>
+              <table {...props} className="min-w-full divide-y divide-border border rounded-md">{children}</table>
             </div>
           ),
-          th: ({ children }) => (
-            <th className="px-3 py-2 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider bg-muted/50">
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          th: ({ children, ...props }: any) => (
+            <th {...props} className="px-3 py-2 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider bg-muted/50">
               {children}
             </th>
           ),
-          td: ({ children }) => <td className="px-3 py-2 whitespace-nowrap text-sm border-t">{children}</td>,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          td: ({ children, ...props }: any) => (
+            <td {...props} className="px-3 py-2 whitespace-nowrap text-sm border-t">{children}</td>
+          ),
         }}
       >
         {content || (isGenerating ? "..." : "")}

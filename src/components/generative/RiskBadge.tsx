@@ -23,6 +23,9 @@ export function RiskBadge({ level, label, tooltip, size = 'md' }: RiskBadgeProps
         SIZE_CLASSES[size]
       )}
       title={tooltip}
+      data-testid="risk-badge"
+      data-risk-level={level}
+      data-risk-size={size}
     >
       {label}
     </span>
