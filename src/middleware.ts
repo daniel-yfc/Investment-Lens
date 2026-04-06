@@ -4,9 +4,8 @@ import { auth } from '@/auth'
 
 /**
  * CSP header — allows:
- *   - Next.js hydration scripts (_next/static)
- *   - Vercel Analytics / Speed Insights (va.vercel-scripts.com)
- *   - Inline scripts required by Next.js App Router
+ *   - Next.js App Router hydration (unsafe-inline required)
+ *   - Vercel Analytics + Speed Insights
  */
 const CSP = [
   "default-src 'self'",
@@ -18,7 +17,12 @@ const CSP = [
   "frame-ancestors 'none'",
 ].join('; ')
 
-export default auth((req: NextRequest & { auth: unknown }) => {
+function withCSP(res: NextResponse): NextResponse {
+  res.headers.set('Content-Security-Policy', CSP)
+  return res
+}
+
+export default auth((req) => {
   const url = req.nextUrl
 
   // Playwright / CI test bypass
@@ -28,34 +32,25 @@ export default auth((req: NextRequest & { auth: unknown }) => {
     req.headers.get('user-agent')?.includes('Playwright') ||
     process.env.NODE_ENV === 'test'
 
-  if (isTestRequest) {
-    const res = NextResponse.next()
-    res.headers.set('Content-Security-Policy', CSP)
-    return res
-  }
+  if (isTestRequest) return withCSP(NextResponse.next())
 
-  const isAuth = !!(req as any).auth
+  // NextAuth v5: auth session is available on req.auth
+  const isAuth = !!req.auth
 
   // FA-07: Redirect unauthenticated /dashboard/* → /login
   if (url.pathname.startsWith('/dashboard') && !isAuth) {
     const loginUrl = new URL('/login', req.url)
     loginUrl.searchParams.set('callbackUrl', encodeURI(req.url))
-    const res = NextResponse.redirect(loginUrl)
-    res.headers.set('Content-Security-Policy', CSP)
-    return res
+    return withCSP(NextResponse.redirect(loginUrl))
   }
 
   // SE-01: 401 for unauthenticated /api/v1/*
   if (url.pathname.startsWith('/api/v1') && !isAuth) {
-    const res = NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    res.headers.set('Content-Security-Policy', CSP)
-    return res
+    return withCSP(NextResponse.json({ error: 'Unauthorized' }, { status: 401 }))
   }
 
-  const res = NextResponse.next()
-  res.headers.set('Content-Security-Policy', CSP)
-  return res
-})
+  return withCSP(NextResponse.next())
+}) as ReturnType<typeof auth>
 
 export const config = {
   matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
