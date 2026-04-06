@@ -24,12 +24,16 @@ export interface ChatState {
   streamError:    Error | null
   retryCount:     number
 
-  addUserMessage:     (content: string) => UIMessage  // returns the new message
+  // sendMessage: kept for backward-compat with existing tests — adds user bubble AND does fetch
+  sendMessage:        (content: string) => Promise<void>
+  // addUserMessage: used by useStreamingChat — only adds bubble, no fetch
+  addUserMessage:     (content: string) => UIMessage
   appendChunk:        (chunk: StreamChunk) => void
   setStreaming:       (v: boolean) => void
   setActiveSkills:    (skills: string[]) => void
   clearError:         () => void
   resetConversation:  () => void
+  retryLastMessage:   () => void
   getLastUserMessage: () => UIMessage | undefined
   loadConversation:   (id: string) => Promise<void>
 }
@@ -74,7 +78,37 @@ export const useChatStore = create<ChatState>()(
       streamError:    null,
       retryCount:     0,
 
-      // Adds user message to store and returns it (for use in useStreamingChat)
+      // Full send: adds bubble + fires fetch (for test compatibility)
+      sendMessage: async (content: string) => {
+        const userMsg: UIMessage = {
+          id: generateId(),
+          role: 'user',
+          content,
+          createdAt: new Date(),
+        }
+        set((s) => ({
+          messages: [...s.messages, userMsg],
+          isStreaming: true,
+          streamError: null,
+          retryCount: 0,
+          activeSkills: [],
+        }))
+        try {
+          const response = await fetch('/api/v1/chat/stream', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: content, conversationId: get().conversationId }),
+          })
+          if (!response.ok) {
+            const text = await response.text()
+            throw new Error(text)
+          }
+        } catch (error) {
+          set({ streamError: error as Error, isStreaming: false })
+        }
+      },
+
+      // Bubble-only: used by useStreamingChat (fetch handled by hook)
       addUserMessage: (content: string): UIMessage => {
         const userMsg: UIMessage = {
           id: generateId(),
@@ -131,10 +165,21 @@ export const useChatStore = create<ChatState>()(
 
       setStreaming:      (v) => set({ isStreaming: v }),
       setActiveSkills:   (skills) => set({ activeSkills: skills }),
-      clearError:        () => set({ streamError: null }),
+      clearError:        () => set({ streamError: null, retryCount: 0 }),
       resetConversation: () => set({ messages: [], conversationId: null }),
 
-      // #10: Returns last user message for retry (used by useStreamingChat)
+      retryLastMessage: () => {
+        const { messages } = get()
+        let lastUser: UIMessage | undefined
+        for (let i = messages.length - 1; i >= 0; i--) {
+          if (messages[i].role === 'user') { lastUser = messages[i]; break }
+        }
+        if (lastUser) {
+          set((s) => ({ retryCount: s.retryCount + 1 }))
+          get().sendMessage(lastUser.content)
+        }
+      },
+
       getLastUserMessage: () => {
         const { messages } = get()
         for (let i = messages.length - 1; i >= 0; i--) {

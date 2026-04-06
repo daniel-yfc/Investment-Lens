@@ -5,13 +5,10 @@ import { getLLMModel, DEFAULT_SYSTEM_PROMPT } from '@/lib/llm-router'
 import type { AnalysisResultCardProps } from '@/types/skill.types'
 
 export const runtime = 'nodejs'
-// #7: Vercel Pro = 60s, Hobby = 10s. Set explicitly to avoid silent timeout.
 export const maxDuration = 60
 
-// SE-02: Ticker whitelist
 const TICKER_REGEX = /^[A-Z0-9]{1,10}(\.[A-Z]{1,3})?$/
 
-// #12: Extract first valid ticker token from free-form message
 function sanitizeTicker(raw: string): string | null {
   const tokens = raw.trim().toUpperCase().split(/\s+/)
   for (const token of tokens) {
@@ -20,12 +17,11 @@ function sanitizeTicker(raw: string): string | null {
   return null
 }
 
-// Simple in-memory rate limiter
 const rateLimitMap = new Map<string, { count: number; resetAt: number }>()
 const RATE_LIMIT = 20
 const RATE_WINDOW_MS = 60_000
 
-function checkRateLimit(identifier: string): { success: boolean; remaining: number; resetAt: number } {
+function checkRateLimit(identifier: string) {
   const now = Date.now()
   const entry = rateLimitMap.get(identifier)
   if (!entry || now > entry.resetAt) {
@@ -44,21 +40,25 @@ export async function POST(req: Request) {
     const isTestAuth = req.headers.get('x-test-auth') === 'true'
     const isPlaywrightTest = req.headers.get('x-playwright-test') === 'true'
 
-    let session: { user: { id?: string; name?: string | null; email?: string | null }; expires: string } | null = null
+    // Resolve session — use any to avoid fighting NextAuth Session type variance
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let sessionUser: { id?: string; name?: string | null; email?: string | null } | undefined
+
     if (isTestAuth || isPlaywrightTest) {
-      session = { user: { id: 'test-user', name: 'Test', email: 'test@example.com' }, expires: '' }
+      sessionUser = { id: 'test-user', name: 'Test', email: 'test@example.com' }
     } else {
-      session = await auth()
+      const session = await auth()
+      sessionUser = session?.user
     }
 
-    if (!session?.user) {
+    if (!sessionUser) {
       return new NextResponse(JSON.stringify({ error: 'UNAUTHORIZED' }), {
         status: 401,
         headers: { 'Content-Type': 'application/json' },
       })
     }
 
-    const identifier = session.user.id ?? 'anonymous'
+    const identifier = sessionUser.id ?? 'anonymous'
     const { success, remaining, resetAt } = checkRateLimit(identifier)
     if (!success) {
       return new NextResponse(
@@ -77,12 +77,11 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json()
-    const { message, conversationId: _conversationId } = body
+    const { message } = body
     if (!message || typeof message !== 'string') {
       return NextResponse.json({ error: 'Message is required' }, { status: 400 })
     }
 
-    // Mock SSE for tests
     if (isTestAuth || isPlaywrightTest) {
       const encoder = new TextEncoder()
       const mockStream = new ReadableStream({
@@ -101,9 +100,7 @@ export async function POST(req: Request) {
       })
     }
 
-    // #12: Smarter ticker extraction
     const ticker = sanitizeTicker(message) ?? 'UNKNOWN'
-
     const encoder = new TextEncoder()
     const stream = new TransformStream()
     const writer = stream.writable.getWriter()
@@ -113,39 +110,35 @@ export async function POST(req: Request) {
         writer.write(encoder.encode(`data: ${JSON.stringify(chunk)}\n\n`))
 
       try {
-        await send({ type: 'text', content: `啟動 investment-lens Mode A 進行證券分析...\n\n` })
+        await send({ type: 'text', content: `啟動分析中...\n\n` })
         await send({ type: 'tool_call', skill: 'alphaear-stock', params: { query: message } })
         await send({ type: 'skill_progress', steps: [{ skill: 'alphaear-stock', status: 'running', label: '獲取 OHLCV 資料' }] })
 
         const { model, provider, modelId } = getLLMModel()
         await send({ type: 'skill_progress', steps: [{ skill: 'investment-lens', status: 'running', label: `呼叫 ${provider}/${modelId}` }] })
 
-        // #3: Request structured JSON output from LLM
         const { textStream } = streamText({
           model,
           system: DEFAULT_SYSTEM_PROMPT,
           messages: [
             {
               role: 'user',
-              content: `請針對 ${ticker} 進行投資分析。請回覆以下 JSON 格式（不要加 markdown 樣式）：
+              content: `請針對 ${ticker} 進行投資分析。請回覆以下 JSON 格式（不要加 markdown）：
 {
   "recommendation": "Buy" | "Hold" | "Sell" | "Neutral",
   "confidence": "High" | "Medium" | "Low",
   "thesis": "投資正面論點（2-3句）",
   "counterThesis": "反向論點（2-3句）",
-  "keyRisks": [
-    { "id": "r1", "label": "風險名稱", "severity": "high" | "medium" | "low", "detail": "說明" }
-  ],
-  "killConditions": ["論點失效條件1", "論點失效條件2"],
-  "summary": "給用戶看的完整分析文字"
+  "keyRisks": [{ "id": "r1", "label": "風險", "severity": "high", "detail": "說明" }],
+  "killConditions": ["條件1", "條件2"],
+  "summary": "完整分析文字"
 }`,
             },
           ],
           temperature: 0.3,
-          maxTokens: 2048,
+          maxOutputTokens: 2048,
         })
 
-        // Stream summary text while accumulating full response
         let fullText = ''
         for await (const delta of textStream) {
           fullText += delta
@@ -153,29 +146,21 @@ export async function POST(req: Request) {
 
         await send({ type: 'skill_progress', steps: [{ skill: 'investment-lens', status: 'done', label: '分析完成' }] })
 
-        // #3: Parse structured JSON from LLM; fallback gracefully
         let parsed: Partial<AnalysisResultCardProps> & { summary?: string } = {}
         try {
           const jsonMatch = fullText.match(/\{[\s\S]*\}/)
           if (jsonMatch) parsed = JSON.parse(jsonMatch[0])
         } catch {
-          // JSON parse failed — show raw text as summary
           parsed = { summary: fullText }
         }
 
-        // Emit human-readable summary as streaming text
-        if (parsed.summary) {
-          await send({ type: 'text', content: `\n\n${parsed.summary}` })
-        } else {
-          await send({ type: 'text', content: `\n\n分析完成。` })
-        }
+        await send({ type: 'text', content: `\n\n${parsed.summary ?? '分析完成。'}` })
 
-        // Emit structured AnalysisResultCard
         const analysisData: AnalysisResultCardProps = {
           ticker: ticker.toUpperCase(),
           recommendation: parsed.recommendation ?? 'Neutral',
           confidence: parsed.confidence ?? 'Low',
-          thesis: parsed.thesis ?? fullText.substring(0, 300),
+          thesis: parsed.thesis ?? '',
           counterThesis: parsed.counterThesis ?? '',
           keyRisks: parsed.keyRisks ?? [],
           killConditions: parsed.killConditions ?? [],
@@ -183,7 +168,6 @@ export async function POST(req: Request) {
         }
         await send({ type: 'tool_result', component: 'AnalysisResultCard', props: analysisData })
         await writer.write(encoder.encode('data: [DONE]\n\n'))
-
       } catch (streamError) {
         console.error('Streaming error:', streamError)
         await writer.write(
