@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { cn } from "@/lib/utils";
 
 export type NodeType = "source" | "amplifier" | "risk" | "outcome";
@@ -47,15 +47,11 @@ const TYPE_LABELS: Record<NodeType, string> = {
   source: "SRC", amplifier: "AMP", risk: "RSK", outcome: "OUT",
 };
 
+// Accepts pre-resolved nodes directly (O(1) caller, no internal scan)
 function getEdgePath(
-  nodes: SignalNode[],
-  from: string,
-  to: string
-): { d: string; midX: number; midY: number } | null {
-  const src = nodes.find((n) => n.id === from);
-  const dst = nodes.find((n) => n.id === to);
-  if (!src || !dst) return null;
-
+  src: SignalNode,
+  dst: SignalNode
+): { d: string; midX: number; midY: number } {
   const x1 = (src.x ?? 0) + NODE_W;
   const y1 = (src.y ?? 0) + NODE_H / 2;
   const x2 = dst.x ?? 0;
@@ -71,17 +67,34 @@ function getEdgePath(
   };
 }
 
+// Compute edge SVG path string from raw positions (used during direct DOM drag)
+function computeEdgeD(
+  srcPos: { x: number; y: number },
+  dstPos: { x: number; y: number }
+): { d: string; midX: number; midY: number } {
+  const x1 = srcPos.x + NODE_W;
+  const y1 = srcPos.y + NODE_H / 2;
+  const x2 = dstPos.x;
+  const y2 = dstPos.y + NODE_H / 2;
+  const cx1 = x1 + Math.abs(x2 - x1) * 0.45;
+  const cx2 = x2 - Math.abs(x2 - x1) * 0.45;
+  return {
+    d: `M ${x1} ${y1} C ${cx1} ${y1}, ${cx2} ${y2}, ${x2} ${y2}`,
+    midX: (x1 + x2) / 2,
+    midY: (y1 + y2) / 2,
+  };
+}
+
 export function SignalChainGraph({ nodes: initialNodes, edges, readonly = false, height = 340, className = "" }: SignalChainGraphProps) {
   const [nodes, setNodes] = useState(() => {
-    // initialize x, y if not provided (simple horizontal layout)
     return initialNodes.map((n, i) => ({
       ...n,
       x: n.x ?? i * 200 + 20,
-      y: n.y ?? height / 2 - NODE_H / 2
+      y: n.y ?? height / 2 - NODE_H / 2,
     }));
   });
 
-  // Using standard pattern instead of set in effect
+  // Sync external initialNodes changes while preserving drag positions
   const [prevInitialNodes, setPrevInitialNodes] = useState(initialNodes);
   if (initialNodes !== prevInitialNodes) {
     setPrevInitialNodes(initialNodes);
@@ -91,16 +104,26 @@ export function SignalChainGraph({ nodes: initialNodes, edges, readonly = false,
         return {
           ...inNode,
           x: existing?.x ?? inNode.x ?? 0,
-          y: existing?.y ?? inNode.y ?? 0
+          y: existing?.y ?? inNode.y ?? 0,
         };
       });
     });
   }
 
+  // O(1) node lookup map — invalidated only when nodes array changes
+  const nodeMap = useMemo(() => new Map(nodes.map(n => [n.id, n])), [nodes]);
+
   const [selected, setSelected] = useState<string | null>(null);
   const [dragging, setDragging] = useState<string | null>(null);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const svgRef = useRef<SVGSVGElement>(null);
+
+  // DOM refs for zero-React-render drag updates
+  const nodeGroupRefs = useRef<Map<string, SVGGElement>>(new Map());
+  const edgePathRefs = useRef<Map<string, SVGPathElement>>(new Map());
+  const edgeLabelRefs = useRef<Map<string, SVGTextElement>>(new Map());
+  // Live position tracking during drag (not React state — no re-render per frame)
+  const positionsRef = useRef<Map<string, { x: number; y: number }>>(new Map());
 
   const viewW = 820;
   const viewH = height;
@@ -110,15 +133,17 @@ export function SignalChainGraph({ nodes: initialNodes, edges, readonly = false,
       e.stopPropagation();
       setSelected(id);
       if (readonly) return;
-      const node = nodes.find((n) => n.id === id)!;
+      const node = nodeMap.get(id)!;
       const svgRect = svgRef.current!.getBoundingClientRect();
       setDragOffset({
         x: (e.clientX - svgRect.left) * (viewW / svgRect.width) - (node.x ?? 0),
         y: (e.clientY - svgRect.top) * (viewH / svgRect.height) - (node.y ?? 0),
       });
       setDragging(id);
+      // Snapshot all current positions into the live ref
+      nodes.forEach(n => positionsRef.current.set(n.id, { x: n.x ?? 0, y: n.y ?? 0 }));
     },
-    [nodes, readonly, viewW, viewH]
+    [nodeMap, nodes, readonly, viewW, viewH]
   );
 
   const handleMouseMove = useCallback(
@@ -127,12 +152,48 @@ export function SignalChainGraph({ nodes: initialNodes, edges, readonly = false,
       const svgRect = svgRef.current.getBoundingClientRect();
       const nx = Math.max(0, Math.min(viewW - NODE_W, (e.clientX - svgRect.left) * (viewW / svgRect.width) - dragOffset.x));
       const ny = Math.max(0, Math.min(viewH - NODE_H, (e.clientY - svgRect.top) * (viewH / svgRect.height) - dragOffset.y));
-      setNodes((prev) => prev.map((n) => (n.id === dragging ? { ...n, x: nx, y: ny } : n)));
+
+      // Direct DOM move — no React setState, no re-render
+      const nodeEl = nodeGroupRefs.current.get(dragging);
+      if (nodeEl) nodeEl.setAttribute("transform", `translate(${nx}, ${ny})`);
+
+      // Update live position for edge path calculations
+      positionsRef.current.set(dragging, { x: nx, y: ny });
+
+      // Recompute only connected edges via direct DOM
+      edges.forEach(edge => {
+        if (edge.source !== dragging && edge.target !== dragging) return;
+        const srcPos = positionsRef.current.get(edge.source);
+        const dstPos = positionsRef.current.get(edge.target);
+        if (!srcPos || !dstPos) return;
+
+        const { d, midX, midY } = computeEdgeD(srcPos, dstPos);
+
+        const pathEl = edgePathRefs.current.get(edge.id);
+        if (pathEl) pathEl.setAttribute("d", d);
+
+        if (edge.label) {
+          const labelEl = edgeLabelRefs.current.get(edge.id);
+          if (labelEl) {
+            labelEl.setAttribute("x", String(midX));
+            labelEl.setAttribute("y", String(midY - 6));
+          }
+        }
+      });
     },
-    [dragging, dragOffset, readonly, viewW, viewH]
+    [dragging, dragOffset, readonly, viewW, viewH, edges]
   );
 
-  const handleMouseUp = useCallback(() => setDragging(null), []);
+  const handleMouseUp = useCallback(() => {
+    if (dragging) {
+      // Commit final DOM position back to React state on release
+      const pos = positionsRef.current.get(dragging);
+      if (pos) {
+        setNodes(prev => prev.map(n => n.id === dragging ? { ...n, x: pos.x, y: pos.y } : n));
+      }
+      setDragging(null);
+    }
+  }, [dragging]);
 
   useEffect(() => {
     window.addEventListener("mousemove", handleMouseMove);
@@ -143,7 +204,7 @@ export function SignalChainGraph({ nodes: initialNodes, edges, readonly = false,
     };
   }, [handleMouseMove, handleMouseUp]);
 
-  const selectedNode = nodes.find((n) => n.id === selected);
+  const selectedNode = selected ? nodeMap.get(selected) : null;
 
   return (
     <div className={cn("flex flex-col gap-4", className)}>
@@ -200,12 +261,18 @@ export function SignalChainGraph({ nodes: initialNodes, edges, readonly = false,
 
           {/* Edges */}
           {edges.map((edge) => {
-            const path = getEdgePath(nodes, edge.source, edge.target);
-            if (!path) return null;
+            const src = nodeMap.get(edge.source);
+            const dst = nodeMap.get(edge.target);
+            if (!src || !dst) return null;
+            const path = getEdgePath(src, dst);
             const isActive = edge.animated ?? true;
             return (
               <g key={edge.id}>
                 <path
+                  ref={(el) => {
+                    if (el) edgePathRefs.current.set(edge.id, el);
+                    else edgePathRefs.current.delete(edge.id);
+                  }}
                   d={path.d}
                   fill="none"
                   stroke={isActive ? "#818cf8" : "#4b5563"}
@@ -216,7 +283,13 @@ export function SignalChainGraph({ nodes: initialNodes, edges, readonly = false,
                   filter={isActive ? "url(#glow)" : undefined}
                 />
                 {edge.label && (
-                  <text x={path.midX} y={path.midY - 6} textAnchor="middle" fontSize={9} fill="#a5b4fc" fontFamily="monospace" opacity={0.8}>
+                  <text
+                    ref={(el) => {
+                      if (el) edgeLabelRefs.current.set(edge.id, el);
+                      else edgeLabelRefs.current.delete(edge.id);
+                    }}
+                    x={path.midX} y={path.midY - 6} textAnchor="middle" fontSize={9} fill="#a5b4fc" fontFamily="monospace" opacity={0.8}
+                  >
                     {edge.label}
                   </text>
                 )}
@@ -228,14 +301,16 @@ export function SignalChainGraph({ nodes: initialNodes, edges, readonly = false,
           {nodes.map((node) => {
             const colors = TYPE_COLORS[node.type];
             const isSelected = selected === node.id;
-
-            // Size scaled by strength
             const scale = node.strength ? 0.8 + node.strength * 0.4 : 1;
             const width = NODE_W * scale;
             const height = NODE_H * scale;
 
             return (
               <g
+                ref={(el) => {
+                  if (el) nodeGroupRefs.current.set(node.id, el);
+                  else nodeGroupRefs.current.delete(node.id);
+                }}
                 key={node.id}
                 transform={`translate(${node.x ?? 0}, ${node.y ?? 0})`}
                 onMouseDown={(e) => handleMouseDown(e, node.id)}
@@ -256,7 +331,6 @@ export function SignalChainGraph({ nodes: initialNodes, edges, readonly = false,
                 <text x={14} y={height * 0.65} fontSize={13 * scale} fontFamily="sans-serif" fontWeight="600" fill="#f1f5f9">
                   {node.label}
                 </text>
-
                 <circle cx={0} cy={height / 2} r={4 * scale} fill={colors.dot} stroke={colors.bg} strokeWidth={1.5} />
                 <circle cx={width} cy={height / 2} r={4 * scale} fill={colors.dot} stroke={colors.bg} strokeWidth={1.5} />
               </g>
