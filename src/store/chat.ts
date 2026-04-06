@@ -135,7 +135,13 @@ export const useChatStore = create<ChatState>()(
       resetConversation: () => set({ messages: [], conversationId: null }),
       retryLastMessage:  () => {
         const messages = get().messages
-        const lastUser = [...messages].reverse().find(m => m.role === 'user')
+        let lastUser;
+        for (let i = messages.length - 1; i >= 0; i--) {
+          if (messages[i].role === 'user') {
+            lastUser = messages[i];
+            break;
+          }
+        }
         if (lastUser) {
           set(s => ({ retryCount: s.retryCount + 1 }))
           get().sendMessage(lastUser.content)
