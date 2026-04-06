@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useRef } from 'react'
+import React, { useRef, useMemo } from 'react'
 import { usePortfolioStore } from '@/store/portfolio'
 import { PortfolioHeatmap } from '@/components/generative/PortfolioHeatmap'
 import { Button } from '@/components/ui/button'
@@ -13,7 +13,10 @@ export default function PortfolioPage() {
 
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const activePortfolio = portfolios.find(p => p.id === activePortfolioId) || portfolios[0]
+  const activePortfolio = useMemo(() => {
+    if (!portfolios || portfolios.length === 0) return undefined;
+    return portfolios.find(p => p.id === activePortfolioId) || portfolios[0];
+  }, [portfolios, activePortfolioId]);
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -66,7 +69,7 @@ export default function PortfolioPage() {
         <div className="grid gap-6">
           <div className="grid md:grid-cols-3 gap-4">
             <div className="bg-zinc-900 p-6 rounded-xl border border-zinc-800 shadow-sm">
-              <h3 className="text-sm font-medium text-zinc-400 mb-1">總資產價值</h3>
+              <h3 className="text-sm font-medium text-zinc-400 mb-1">總資產價値</h3>
               <p className="text-3xl font-bold text-white tracking-tight" data-testid="total-value">
                 ${activePortfolio?.totalValue.toLocaleString(undefined, { maximumFractionDigits: 0 })}
               </p>
