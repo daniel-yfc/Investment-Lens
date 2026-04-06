@@ -9,7 +9,7 @@ export async function exportElementToPDF(elementId: string, filename: string = '
   }
 
   try {
-    const canvas = await html2canvas(element, { scale: 2 });
+    const canvas = await html2canvas(element, {});
     const imgData = canvas.toDataURL('image/png');
 
     const pdf = new jsPDF({

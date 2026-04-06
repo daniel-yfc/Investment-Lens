@@ -1,21 +1,29 @@
 import { useChat } from '@ai-sdk/react';
+import type { UseChatOptions, UseChatHelpers } from '@ai-sdk/react';
 import { useChatStore } from '@/store/chat';
+import type { UIMessage as StoreUIMessage } from '@/store/chat';
+import type { UIMessage } from 'ai';
 import { useCallback, useRef, useState } from 'react';
 
 const MAX_RETRIES = 3;
 const INITIAL_BACKOFF_MS = 1000;
 
 export function useStreamingChat() {
-  const { messages: storeMessages, isStreaming: storeLoading, setStreaming } = useChatStore();
+  const {
+    messages: storeMessages,
+    isStreaming: storeLoading,
+    setStreaming,
+    sendMessage,
+    activeSkills
+  } = useChatStore();
+
   const retryCountRef = useRef(0);
   const [hasInterruptionError, setHasInterruptionError] = useState(false);
 
   const chatHelpers = useChat({
     api: '/api/v1/chat/stream',
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    initialMessages: storeMessages as any[],
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    onResponse: (response: any) => {
+    initialMessages: storeMessages as unknown as UIMessage[],
+    onResponse: (response: Response) => {
       if (response.ok) {
         retryCountRef.current = 0;
         setHasInterruptionError(false);
@@ -24,15 +32,13 @@ export function useStreamingChat() {
     onFinish: () => {
       setStreaming(false);
     },
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    onError: (err: any) => {
+    onError: (err: Error) => {
       console.error('Chat stream interrupted:', err);
       setStreaming(false);
       setHasInterruptionError(true);
       handleStreamWithFallback();
     }
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } as any);
+  } as UseChatOptions<any>) as unknown as UseChatHelpers<any>;
 
   const {
     messages,
@@ -45,24 +51,33 @@ export function useStreamingChat() {
     stop,
     append,
     setMessages
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } = chatHelpers as any;
+  } = chatHelpers as unknown as {
+    messages: UIMessage[];
+    input: string;
+    handleInputChange: (e: React.ChangeEvent<HTMLInputElement> | React.ChangeEvent<HTMLTextAreaElement>) => void;
+    handleSubmit: (e?: React.FormEvent<HTMLFormElement>) => void;
+    isLoading: boolean;
+    error: Error | undefined;
+    reload: () => Promise<string | null | undefined>;
+    stop: () => void;
+    append: (message: any) => Promise<string | null | undefined>;
+    setMessages: (messages: UIMessage[] | ((messages: UIMessage[]) => UIMessage[])) => void;
+  };
 
   const handleStreamWithFallback = useCallback(() => {
     if (retryCountRef.current >= MAX_RETRIES) {
       console.warn('Max retries reached. Stream interruption fallback failed.');
       // FA-04: Show [⚠️ 回應不完整] marker on the last assistant message
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      setMessages((prev: any[]) => {
+      setMessages((prev: UIMessage[]) => {
         const lastMsg = prev[prev.length - 1];
         if (lastMsg && lastMsg.role === 'assistant') {
           return [
             ...prev.slice(0, -1),
             {
                ...lastMsg,
-               content: lastMsg.content + '\n\n[⚠️ 回應不完整]',
+               content: typeof (lastMsg as any).content === 'string' ? (lastMsg as any).content + '\n\n[⚠️ 回應不完整]' : (lastMsg as any).content,
             }
-          ];
+          ] as unknown as UIMessage[];
         }
         return prev;
       });
@@ -76,8 +91,7 @@ export function useStreamingChat() {
 
     setTimeout(() => {
       setStreaming(true);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      reload().catch((reloadErr: any) => {
+      reload().catch((reloadErr: Error) => {
          console.error('Retry failed:', reloadErr);
       });
     }, backoffMs);
@@ -110,11 +124,14 @@ export function useStreamingChat() {
   }, [reload, setStreaming]);
 
   return {
-    messages,
+    messages: messages as unknown as StoreUIMessage[],
     input,
     handleInputChange,
     handleSubmit,
     isLoading: aiIsLoading || storeLoading,
+    isStreaming: aiIsLoading || storeLoading,
+    sendMessage,
+    activeSkills,
     error,
     hasInterruptionError,
     handleManualRetry,
