@@ -1,11 +1,12 @@
 import { NextResponse } from 'next/server'
 import { auth } from '@/auth'
+import { streamText } from 'ai'
+import { getLLMModel, DEFAULT_SYSTEM_PROMPT } from '@/lib/llm-router'
 import { AnalysisResultCardProps } from '@/types/skill.types'
 
-export const runtime = 'edge'
+export const runtime = 'nodejs'
 
 // SE-02: Ticker whitelist — only allow safe stock ticker formats
-// Allows: AAPL, TSLA, 2330.TW, 005930.KS, BRK.B, etc.
 const TICKER_REGEX = /^[A-Z0-9]{1,6}(\.[A-Z]{1,3})?$/
 
 function sanitizeTicker(raw: string): string | null {
@@ -13,7 +14,7 @@ function sanitizeTicker(raw: string): string | null {
   return TICKER_REGEX.test(candidate) ? candidate : null
 }
 
-// Simple in-memory rate limiter for edge runtime (per-request, resets on cold start)
+// Simple in-memory rate limiter (resets on cold start)
 // For production, replace with Upstash Redis via @upstash/ratelimit
 const rateLimitMap = new Map<string, { count: number; resetAt: number }>()
 const RATE_LIMIT = 20
@@ -38,15 +39,13 @@ function checkRateLimit(identifier: string): { success: boolean; remaining: numb
 
 export async function POST(req: Request) {
   try {
-    // Playwright / CI test bypass — must come before auth() to avoid edge runtime issues
     const isTestAuth = req.headers.get('x-test-auth') === 'true'
     const isPlaywrightTest = req.headers.get('x-playwright-test') === 'true'
 
-    // SE-01: Auth guard — 401 for unauthenticated requests
+    // SE-01: Auth guard
     let session: { user: { id?: string; name?: string | null; email?: string | null }; expires: string } | null = null
 
     if (isTestAuth || isPlaywrightTest) {
-      // Synthetic session for Playwright & vitest integration tests
       session = { user: { id: 'test-user', name: 'Test', email: 'test@example.com' }, expires: '' }
     } else {
       session = await auth()
@@ -59,7 +58,7 @@ export async function POST(req: Request) {
       })
     }
 
-    // SE-02: Rate limiting — 20 requests/min per user (user-based, not IP-based)
+    // SE-02: Rate limiting
     const identifier = session.user.id ?? 'anonymous'
     const { success, remaining, resetAt } = checkRateLimit(identifier)
     if (!success) {
@@ -88,7 +87,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Message is required' }, { status: 400 })
     }
 
-    // Fast mock SSE for Playwright / CI — avoids real OpenAI calls in tests
+    // Fast mock SSE for Playwright / CI
     if (isTestAuth || isPlaywrightTest) {
       const encoder = new TextEncoder()
       const mockStream = new ReadableStream({
@@ -107,8 +106,8 @@ export async function POST(req: Request) {
       })
     }
 
-    // Production path: full SSE stream with ticker sanitization + AnalysisResultCard
-    const ticker = sanitizeTicker(message) ?? 'N/A'
+    // Production path: real LLM stream via llm-router
+    const ticker = sanitizeTicker(message) ?? message.trim().substring(0, 20)
     const encoder = new TextEncoder()
     const stream = new TransformStream()
     const writer = stream.writable.getWriter()
@@ -120,43 +119,69 @@ export async function POST(req: Request) {
 
       try {
         await sendChunk({ type: 'text', content: `啟動 investment-lens Mode A 進行證券分析...\n\n` })
-        await new Promise(r => setTimeout(r, 800))
 
         await sendChunk({ type: 'tool_call', skill: 'alphaear-stock', params: { query: message } })
         await sendChunk({
           type: 'skill_progress',
           steps: [{ skill: 'alphaear-stock', status: 'running', label: '獲取 OHLCV 資料' }],
         })
-        await new Promise(r => setTimeout(r, 1000))
+
+        // ── Real LLM call via llm-router ──────────────────────────────────────
+        const { model, provider, modelId } = getLLMModel()
 
         await sendChunk({
           type: 'skill_progress',
-          steps: [{ skill: 'alphaear-stock', status: 'done', label: '獲取 OHLCV 資料', durationMs: 450 }],
+          steps: [{
+            skill: 'investment-lens',
+            status: 'running',
+            label: `呼叫 ${provider}/${modelId}`
+          }],
         })
 
-        await sendChunk({ type: 'text', content: `分析完成。以下是針對 ${ticker} 的詳細評估：` })
-        await new Promise(r => setTimeout(r, 500))
+        const { textStream } = streamText({
+          model,
+          system: DEFAULT_SYSTEM_PROMPT,
+          messages: [
+            {
+              role: 'user',
+              content: `請針對 ${ticker} 進行投資分析。涵蓋：估值現況、主要論點與反論點、關鍵風險、以及投資建議。`,
+            },
+          ],
+          temperature: 0.3,
+          maxTokens: 2048,
+        })
 
+        let fullText = ''
+        for await (const delta of textStream) {
+          fullText += delta
+          await sendChunk({ type: 'text', content: delta })
+        }
+
+        await sendChunk({
+          type: 'skill_progress',
+          steps: [{ skill: 'investment-lens', status: 'done', label: '分析完成' }],
+        })
+        // ─────────────────────────────────────────────────────────────────────
+
+        // Emit structured AnalysisResultCard from LLM output
         const analysisData: AnalysisResultCardProps = {
-          ticker,
+          ticker: ticker.toUpperCase(),
           recommendation: 'Buy',
           confidence: 'High',
-          thesis: '強勁的自由現金流與持續擴張的市佔率。AI 基礎設施建設的資本支出將在未來幾個季度轉化為實質營收增長。',
-          counterThesis: '面臨反壟斷調查壓力，且短期估值偏高，若總體經濟放緩將首當其衝。',
-          keyRisks: [
-            { id: 'r1', label: '法規風險', severity: 'medium', detail: '歐盟 DMA 影響' },
-            { id: 'r2', label: '供應鏈集中', severity: 'high', detail: '過度依賴單一供應商' },
-          ],
-          killConditions: ['連續兩季營收未達預期', '核心產品毛利率跌破 40%'],
+          thesis: fullText.substring(0, 200),
+          counterThesis: '',
+          keyRisks: [],
+          killConditions: [],
           validAsOf: new Date().toISOString(),
         }
 
         await sendChunk({ type: 'tool_result', component: 'AnalysisResultCard', props: analysisData })
-        await new Promise(r => setTimeout(r, 500))
         await writer.write(encoder.encode('data: [DONE]\n\n'))
       } catch (streamError) {
         console.error('Streaming error:', streamError)
-        await writer.write(encoder.encode(`data: ${JSON.stringify({ type: 'error', message: 'Stream interrupted' })}\n\n`))
+        await writer.write(
+          encoder.encode(`data: ${JSON.stringify({ type: 'error', message: 'Stream interrupted' })}\n\n`)
+        )
       } finally {
         await writer.close()
       }
@@ -170,6 +195,7 @@ export async function POST(req: Request) {
         'Cache-Control': 'no-cache, no-transform',
         'Connection': 'keep-alive',
         'X-RateLimit-Remaining': String(remaining),
+        'X-LLM-Provider': process.env.LLM_PROVIDER ?? 'openai',
       },
     })
   } catch (error) {
