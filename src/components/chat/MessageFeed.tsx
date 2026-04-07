@@ -1,10 +1,10 @@
 'use client'
 
 import React, { useRef, useEffect } from 'react'
-import { UIMessage } from '@/store/chat'
+import type { UIMessage } from '@/store/chat'
 import { MessageBubble } from './MessageBubble'
 import { SkillProgressTracker } from '@/components/generative/SkillProgressTracker'
-import { SkillStep } from '@/types/skill.types'
+import type { SkillStep } from '@/types/skill.types'
 import { useTranslate } from '@/hooks/useTranslate'
 
 interface MessageFeedProps {
@@ -17,16 +17,17 @@ export function MessageFeed({ messages, isStreaming, activeSkills = [] }: Messag
   const bottomRef = useRef<HTMLDivElement>(null)
   const { t } = useTranslate()
 
-  // Auto scroll
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages, isStreaming, activeSkills])
 
-  // Mock steps for demonstration based on active skills tracked in state
-  const skillSteps: SkillStep[] = activeSkills.map(s => ({
+  // #4: fixed label — use skill name directly, don't try to string-replace the i18n key
+  const skillSteps: SkillStep[] = activeSkills.map((s) => ({
     skill: s,
-    label: `${t.chat.analyzing.replace('分析程序', s)}...`,
-    status: isStreaming ? 'running' : 'done'
+    label: isStreaming
+      ? `${t.chat.analyzing.replace('...', '')} · ${s}...`
+      : `${t.chat.analysisComplete} · ${s}`,
+    status: isStreaming ? 'running' : 'done',
   }))
 
   return (
@@ -38,13 +39,14 @@ export function MessageFeed({ messages, isStreaming, activeSkills = [] }: Messag
             <p>{t.chat.welcomeSub}</p>
           </div>
         ) : (
-          messages.map((msg, i) => (
-            <MessageBubble key={msg.id || i} message={msg} />
-          ))
+          messages.map((msg) => <MessageBubble key={msg.id} message={msg} />)
         )}
 
         {skillSteps.length > 0 && (
-          <SkillProgressTracker steps={skillSteps} currentSkill={activeSkills[activeSkills.length - 1]} />
+          <SkillProgressTracker
+            steps={skillSteps}
+            currentSkill={activeSkills[activeSkills.length - 1]}
+          />
         )}
 
         <div ref={bottomRef} className="h-1" />

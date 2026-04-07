@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useRef } from 'react'
+import React, { useRef, useMemo } from 'react'
 import { usePortfolioStore } from '@/store/portfolio'
 import { PortfolioHeatmap } from '@/components/generative/PortfolioHeatmap'
 import { Button } from '@/components/ui/button'
@@ -10,16 +10,16 @@ import { useTranslate } from '@/hooks/useTranslate'
 export default function PortfolioPage() {
   const { t } = useTranslate()
   const { portfolios, activePortfolioId, isRefreshing, importFromCSV, refreshQuotes } = usePortfolioStore()
-
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const activePortfolio = portfolios.find(p => p.id === activePortfolioId) || portfolios[0]
+  const activePortfolio = useMemo(() => {
+    if (!portfolios || portfolios.length === 0) return undefined
+    return portfolios.find((p) => p.id === activePortfolioId) || portfolios[0]
+  }, [portfolios, activePortfolioId])
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
-    if (file) {
-      importFromCSV(file)
-    }
+    if (file) importFromCSV(file)
   }
 
   return (
@@ -66,42 +66,47 @@ export default function PortfolioPage() {
         <div className="grid gap-6">
           <div className="grid md:grid-cols-3 gap-4">
             <div className="bg-zinc-900 p-6 rounded-xl border border-zinc-800 shadow-sm">
-              <h3 className="text-sm font-medium text-zinc-400 mb-1">總資產價值</h3>
+              <h3 className="text-sm font-medium text-zinc-400 mb-1">總資產價値</h3>
               <p className="text-3xl font-bold text-white tracking-tight" data-testid="total-value">
                 ${activePortfolio?.totalValue.toLocaleString(undefined, { maximumFractionDigits: 0 })}
               </p>
             </div>
             <div className="bg-zinc-900 p-6 rounded-xl border border-zinc-800 shadow-sm">
               <h3 className="text-sm font-medium text-zinc-400 mb-1">未實現損益</h3>
-              <p className="text-3xl font-bold text-emerald-500 tracking-tight">
-                {/* Simplified mock calculation */}
-                +7.4%
-              </p>
+              <p className="text-3xl font-bold text-emerald-500 tracking-tight">+7.4%</p>
             </div>
             <div className="bg-zinc-900 p-6 rounded-xl border border-zinc-800 shadow-sm">
               <h3 className="text-sm font-medium text-zinc-400 mb-1">最後更新時間</h3>
               <p className="text-lg font-medium text-white tracking-tight mt-1">
-                 {activePortfolio?.valueDate ? new Date(activePortfolio.valueDate).toLocaleTimeString() : '-'}
+                {activePortfolio?.valueDate
+                  ? new Date(activePortfolio.valueDate).toLocaleTimeString()
+                  : '-'}
               </p>
             </div>
           </div>
 
           <div className="bg-zinc-900 p-6 rounded-xl border border-zinc-800 shadow-sm">
-             <div className="flex items-center justify-between mb-6">
-                <h3 className="text-lg font-semibold text-white">{t.portfolio.heatmap}</h3>
-             </div>
-
-             <PortfolioHeatmap
-                holdings={activePortfolio?.holdings.map(h => ({
-                   ticker: h.ticker,
-                   name: h.name,
-                   weight: h.marketValue / activePortfolio.totalValue,
-                   pnlPct: h.currentPrice ? ((h.currentPrice - h.avgCost) / h.avgCost) * 100 : 0,
-                   marketValue: h.marketValue
-                })) || []}
-                metric="pnl_pct"
-                isLoading={isRefreshing}
-             />
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-lg font-semibold text-white">{t.portfolio.heatmap}</h3>
+            </div>
+            <PortfolioHeatmap
+              holdings={
+                // #9: guard against totalValue === 0 to avoid NaN weight
+                activePortfolio && activePortfolio.totalValue > 0
+                  ? activePortfolio.holdings.map((h) => ({
+                      ticker: h.ticker,
+                      name: h.name,
+                      weight: h.marketValue / activePortfolio.totalValue,
+                      pnlPct: h.currentPrice
+                        ? ((h.currentPrice - h.avgCost) / h.avgCost) * 100
+                        : 0,
+                      marketValue: h.marketValue,
+                    }))
+                  : []
+              }
+              metric="pnl_pct"
+              isLoading={isRefreshing}
+            />
           </div>
         </div>
       )}

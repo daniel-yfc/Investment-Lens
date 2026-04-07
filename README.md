@@ -59,18 +59,19 @@ Investment-Lens has two layers:
 | Rate Limiting | Upstash Redis |
 | AI Streaming | AI SDK (OpenAI) |
 | Charts | Recharts |
-| Testing | Playwright (E2E) |
+| Testing | Vitest (unit) + Playwright (E2E) |
 | Deployment | Vercel |
 
 ## Web App Features
 
-- **Streaming Chat Interface** — real-time SSE stream with `SkillProgressTracker` and generative UI rendering
+- **Streaming Chat Interface** — real-time SSE stream with `SkillProgressTracker` and generative UI rendering; exponential-backoff retry on stream interruption (up to 3 retries)
 - **Generative UI Components** — `AnalysisResultCard`, `SignalChainGraph`, `SkillProgressTracker`, `ReportReader`
-- **Portfolio Heatmap** — visual portfolio allocation and performance overview
+- **Portfolio Heatmap** — visual portfolio allocation and performance overview; `activePortfolio` resolved with `useMemo` for optimised re-renders
 - **Report Viewer** — structured investment report reader with auto-updating TOC sidebar
 - **Auth Guard** — NextAuth v5 session-based access control on all API routes
 - **Rate Limiting** — 20 requests/min per user (SE-02)
 - **CSP Headers** — Content Security Policy enforced via middleware (SE-03)
+- **SignalChainGraph** — O(1) node lookup via memoized `Map`; direct DOM mutation during drag for 60 fps performance
 
 ## Web App Structure
 
@@ -92,7 +93,7 @@ Investment-Lens/
 │   ├── auth.ts                 # Auth.js config
 │   └── middleware.ts           # Auth redirect + CSP headers
 ├── skills/                     # AI Agent Skills (Claude Code compatible)
-├── tests/                      # Playwright E2E tests
+├── tests/                      # Playwright E2E + Vitest unit tests
 └── drizzle.config.ts           # Database schema config
 ```
 
@@ -122,6 +123,14 @@ KV_REST_API_URL=https://...
 KV_REST_API_TOKEN=...
 ```
 
+Optional values:
+
+```bash
+# PostHog analytics — used by alphaear-deepear-lite skill telemetry
+# Get from: https://us.posthog.com/project/settings
+POSTHOG_API_KEY=phc_...
+```
+
 ### 3. Run Development Server
 
 ```bash
@@ -130,10 +139,20 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000)
 
-### 4. Run E2E Tests
+### 4. Run Tests
 
 ```bash
-npx playwright test
+# Unit tests (Vitest)
+npm run test:unit
+
+# E2E tests (Playwright)
+npm run test:e2e
+
+# Type check
+npm run type-check
+
+# Lint
+npm run lint
 ```
 
 ## API Reference
@@ -170,6 +189,7 @@ Streams investment analysis as Server-Sent Events.
 | SE-03: CSP headers | `middleware.ts` |
 | FA-07: /dashboard/* redirect → /login | `middleware.ts` matcher |
 | Ticker input sanitization | Regex whitelist `/^[A-Z0-9]{1,6}(\.[A-Z]{1,3})?$/` |
+| No hardcoded secrets | All API keys via `os.getenv()` / `.env.local` |
 
 ---
 

@@ -111,18 +111,63 @@ EXAMPLE_SCRIPT = '''#!/usr/bin/env python3
 """
 Example helper script for {skill_name}
 
-This is a placeholder script that can be executed directly.
-Replace with actual implementation or delete if not needed.
+This script demonstrates basic patterns for skill scripts, including:
+- Argument parsing with argparse
+- File I/O (reading and writing files)
+- Error handling and logging
 
-Example real scripts from other skills:
-- pdf/scripts/fill_fillable_fields.py - Fills PDF form fields
-- pdf/scripts/convert_pdf_to_images.py - Converts PDF pages to images
+Usage:
+    python3 example.py input.txt --output output.txt --verbose
 """
 
+import argparse
+import sys
+from pathlib import Path
+
+def process_data(input_path: Path, output_path: Path, verbose: bool = False):
+    """
+    Example processing function.
+    Reads an input file, converts content to uppercase, and writes to output.
+    """
+    if verbose:
+        print(f"Reading from {{input_path}}...")
+
+    try:
+        content = input_path.read_text(encoding="utf-8")
+
+        # Actual logic goes here
+        processed_content = content.upper()
+
+        if verbose:
+            print(f"Writing processed data to {{output_path}}...")
+
+        output_path.write_text(processed_content, encoding="utf-8")
+        print(f"Successfully processed {{input_path}} -> {{output_path}}")
+
+    except Exception as e:
+        print(f"Error: {{e}}", file=sys.stderr)
+        sys.exit(1)
+
 def main():
-    print("This is an example script for {skill_name}")
-    # TODO: Add actual script logic here
-    # This could be data processing, file conversion, API calls, etc.
+    parser = argparse.ArgumentParser(description="Example script for {skill_name}")
+    parser.add_argument("input", help="Path to the input file")
+    parser.add_argument("--output", "-o", help="Path to the output file (optional)")
+    parser.add_argument("--verbose", "-v", action="store_true", help="Enable verbose logging")
+
+    args = parser.parse_args()
+
+    input_path = Path(args.input)
+    if not input_path.exists():
+        print(f"Error: Input file {{input_path}} does not exist", file=sys.stderr)
+        sys.exit(1)
+
+    # Default output name if not provided
+    if args.output:
+        output_path = Path(args.output)
+    else:
+        output_path = input_path.with_name(f"processed_{{input_path.name}}")
+
+    process_data(input_path, output_path, args.verbose)
 
 if __name__ == "__main__":
     main()

@@ -2,9 +2,9 @@
 
 import React from 'react'
 import { cn } from '@/lib/utils'
-import { UIMessage } from '@/store/chat'
+import type { UIMessage } from '@/store/chat'
 import { AnalysisResultCard } from '@/components/generative/AnalysisResultCard'
-import { AnalysisResultCardProps } from '@/types/skill.types'
+import type { AnalysisResultCardProps } from '@/types/skill.types'
 
 interface MessageBubbleProps {
   message: UIMessage
@@ -14,18 +14,13 @@ export function MessageBubble({ message }: MessageBubbleProps) {
   const isUser = message.role === 'user'
 
   return (
-    <div
-      className={cn(
-        "flex w-full mb-6",
-        isUser ? "justify-end" : "justify-start"
-      )}
-    >
+    <div className={cn('flex w-full mb-6', isUser ? 'justify-end' : 'justify-start')}>
       <div
         className={cn(
-          "max-w-[85%] rounded-2xl px-5 py-4 leading-relaxed",
+          'max-w-[85%] rounded-2xl px-5 py-4 leading-relaxed',
           isUser
-            ? "bg-brand text-white rounded-br-none shadow-sm"
-            : "bg-zinc-800 text-zinc-100 rounded-bl-none border border-zinc-700/50 shadow-sm w-full"
+            ? 'bg-brand text-white rounded-br-none shadow-sm'
+            : 'bg-zinc-800 text-zinc-100 rounded-bl-none border border-zinc-700/50 shadow-sm w-full'
         )}
       >
         {isUser ? (
@@ -35,11 +30,19 @@ export function MessageBubble({ message }: MessageBubbleProps) {
             <div className="prose prose-invert max-w-none text-zinc-100 prose-p:leading-relaxed prose-pre:bg-zinc-900">
               <p className="whitespace-pre-wrap">{message.content}</p>
             </div>
-
-            {message.toolCalls?.map((tc, idx) => {
-              const args = tc.arguments as { type: string; component: string; props: AnalysisResultCardProps }
+            {/* #5: use tc.id as key instead of unstable index */}
+            {message.toolCalls?.map((tc) => {
+              const args = tc.arguments as {
+                type: string
+                component: string
+                props: AnalysisResultCardProps
+              }
               if (args.type === 'tool_result' && args.component === 'AnalysisResultCard') {
-                 return <div key={idx} className="mt-2 w-full max-w-2xl"><AnalysisResultCard {...args.props} /></div>
+                return (
+                  <div key={tc.id} className="mt-2 w-full max-w-2xl">
+                    <AnalysisResultCard {...args.props} />
+                  </div>
+                )
               }
               return null
             })}
