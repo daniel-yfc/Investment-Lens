@@ -2,10 +2,13 @@ import { NextResponse } from 'next/server'
 import { auth } from '@/auth'
 import { streamText } from 'ai'
 import { getLLMModel, DEFAULT_SYSTEM_PROMPT } from '@/lib/llm-router'
+import { ratelimit } from '@/lib/ratelimit'
+import * as Sentry from '@sentry/nextjs'
 import type { AnalysisResultCardProps } from '@/types/skill.types'
 
 export const runtime = 'nodejs'
-export const maxDuration = 60
+// Hobby plan max = 10s. Upgrade to Pro for 60s.
+export const maxDuration = 10
 
 const TICKER_REGEX = /^[A-Z0-9]{1,10}(\.[A-Z]{1,3})?$/
 
@@ -17,31 +20,11 @@ function sanitizeTicker(raw: string): string | null {
   return null
 }
 
-const rateLimitMap = new Map<string, { count: number; resetAt: number }>()
-const RATE_LIMIT = 20
-const RATE_WINDOW_MS = 60_000
-
-function checkRateLimit(identifier: string) {
-  const now = Date.now()
-  const entry = rateLimitMap.get(identifier)
-  if (!entry || now > entry.resetAt) {
-    rateLimitMap.set(identifier, { count: 1, resetAt: now + RATE_WINDOW_MS })
-    return { success: true, remaining: RATE_LIMIT - 1, resetAt: now + RATE_WINDOW_MS }
-  }
-  if (entry.count >= RATE_LIMIT) {
-    return { success: false, remaining: 0, resetAt: entry.resetAt }
-  }
-  entry.count++
-  return { success: true, remaining: RATE_LIMIT - entry.count, resetAt: entry.resetAt }
-}
-
 export async function POST(req: Request) {
   try {
     const isTestAuth = req.headers.get('x-test-auth') === 'true'
     const isPlaywrightTest = req.headers.get('x-playwright-test') === 'true'
 
-    // Resolve session — use any to avoid fighting NextAuth Session type variance
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let sessionUser: { id?: string; name?: string | null; email?: string | null } | undefined
 
     if (isTestAuth || isPlaywrightTest) {
@@ -59,7 +42,9 @@ export async function POST(req: Request) {
     }
 
     const identifier = sessionUser.id ?? 'anonymous'
-    const { success, remaining, resetAt } = checkRateLimit(identifier)
+
+    // Upstash persistent rate limiter
+    const { success, limit, remaining, reset } = await ratelimit.limit(identifier)
     if (!success) {
       return new NextResponse(
         JSON.stringify({ error: 'RATE_LIMIT_EXCEEDED', message: 'Too many requests.' }),
@@ -67,10 +52,10 @@ export async function POST(req: Request) {
           status: 429,
           headers: {
             'Content-Type': 'application/json',
-            'X-RateLimit-Limit': String(RATE_LIMIT),
+            'X-RateLimit-Limit': String(limit),
             'X-RateLimit-Remaining': '0',
-            'X-RateLimit-Reset': String(resetAt),
-            'Retry-After': String(Math.ceil((resetAt - Date.now()) / 1000)),
+            'X-RateLimit-Reset': String(reset),
+            'Retry-After': String(Math.ceil((reset - Date.now()) / 1000)),
           },
         }
       )
@@ -82,6 +67,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Message is required' }, { status: 400 })
     }
 
+    // Test mock stream
     if (isTestAuth || isPlaywrightTest) {
       const encoder = new TextEncoder()
       const mockStream = new ReadableStream({
@@ -169,7 +155,10 @@ export async function POST(req: Request) {
         await send({ type: 'tool_result', component: 'AnalysisResultCard', props: analysisData })
         await writer.write(encoder.encode('data: [DONE]\n\n'))
       } catch (streamError) {
-        console.error('Streaming error:', streamError)
+        Sentry.captureException(streamError, {
+          tags: { route: 'chat-stream', ticker },
+          user: { id: identifier },
+        })
         await writer.write(
           encoder.encode(`data: ${JSON.stringify({ type: 'error', message: 'Stream interrupted' })}\n\n`)
         )
@@ -190,7 +179,7 @@ export async function POST(req: Request) {
       },
     })
   } catch (error) {
-    console.error('Error in chat stream:', error)
+    Sentry.captureException(error, { tags: { route: 'chat-stream' } })
     return new NextResponse(JSON.stringify({ error: 'INTERNAL_ERROR' }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' },

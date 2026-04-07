@@ -6,6 +6,7 @@ import type { UIMessage } from '@/store/chat'
 
 const MAX_RETRIES = 3
 const INITIAL_BACKOFF_MS = 1000
+const IS_DEV = process.env.NODE_ENV === 'development'
 
 export function useStreamingChat() {
   const {
@@ -59,7 +60,7 @@ export function useStreamingChat() {
           try {
             appendChunk(JSON.parse(raw))
           } catch {
-            // malformed line — skip
+            // malformed SSE line — skip silently
           }
         }
       }
@@ -67,7 +68,6 @@ export function useStreamingChat() {
     [appendChunk]
   )
 
-  // Core stream launcher — used by both handleSubmit and handleManualRetry
   const launchStream = useCallback(
     async (message: string) => {
       setStreaming(true)
@@ -82,11 +82,12 @@ export function useStreamingChat() {
           setHasInterruptionError(false)
         } catch (err: unknown) {
           if ((err as Error)?.name === 'AbortError') return
-          console.error('Stream error:', err)
+          if (IS_DEV) console.error('[useStreamingChat] stream error:', err)
+
           if (retryCountRef.current < MAX_RETRIES) {
             const backoff = INITIAL_BACKOFF_MS * Math.pow(2, retryCountRef.current)
             retryCountRef.current += 1
-            console.log(`Retry ${retryCountRef.current}/${MAX_RETRIES} in ${backoff}ms`)
+            if (IS_DEV) console.warn(`[useStreamingChat] retry ${retryCountRef.current}/${MAX_RETRIES} in ${backoff}ms`)
             await new Promise((r) => setTimeout(r, backoff))
             return attempt()
           }
@@ -103,23 +104,21 @@ export function useStreamingChat() {
     [readSSEStream, appendChunk, setStreaming]
   )
 
-  // #1: handleSubmit is the ONLY entry point for new messages
   const handleSubmit = useCallback(
     async (message: string) => {
       if (!message.trim() || isStreaming) return
-      addUserMessage(message)  // add bubble to store
+      addUserMessage(message)
       await launchStream(message)
     },
     [isStreaming, addUserMessage, launchStream]
   )
 
-  // #10: retry uses getLastUserMessage — no duplicate bubble
   const handleManualRetry = useCallback(async () => {
     const lastUser = getLastUserMessage()
     if (!lastUser || isStreaming) return
     setHasInterruptionError(false)
     retryCountRef.current = 0
-    await launchStream(lastUser.content)  // does NOT call addUserMessage
+    await launchStream(lastUser.content)
   }, [getLastUserMessage, isStreaming, launchStream])
 
   const stop = useCallback(() => {
