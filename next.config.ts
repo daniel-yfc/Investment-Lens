@@ -2,8 +2,12 @@ import type { NextConfig } from 'next'
 import { withSentryConfig } from '@sentry/nextjs'
 
 const nextConfig: NextConfig = {
-  // Required for @ai-sdk/* Node.js-only packages
-  serverExternalPackages: ['@ai-sdk/google', '@ai-sdk/openai', '@ai-sdk/anthropic'],
+  serverExternalPackages: [
+    '@ai-sdk/google',
+    '@ai-sdk/openai',
+    '@ai-sdk/anthropic',
+    '@sentry/nextjs',
+  ],
 
   webpack: (config) => {
     config.resolve.fallback = {
@@ -17,13 +21,13 @@ const nextConfig: NextConfig = {
 }
 
 export default withSentryConfig(nextConfig, {
-  org: process.env.SENTRY_ORG,
-  project: process.env.SENTRY_PROJECT,
+  // Required — falls back to empty string so TS is happy;
+  // set SENTRY_ORG / SENTRY_PROJECT in Vercel env vars
+  org: process.env.SENTRY_ORG ?? '',
+  project: process.env.SENTRY_PROJECT ?? '',
 
-  // Source map upload auth token — set SENTRY_AUTH_TOKEN in Vercel env vars
   authToken: process.env.SENTRY_AUTH_TOKEN,
 
-  // Upload wider set of client files for better stack trace resolution
   widenClientFileUpload: true,
 
   // Proxy Sentry requests through /monitoring to bypass ad-blockers
@@ -31,4 +35,9 @@ export default withSentryConfig(nextConfig, {
 
   // Suppress output unless in CI
   silent: !process.env.CI,
+
+  // Disable source map upload if auth token is missing (local dev)
+  sourcemaps: {
+    disable: !process.env.SENTRY_AUTH_TOKEN,
+  },
 })
