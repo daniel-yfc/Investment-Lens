@@ -1,9 +1,5 @@
 /**
- * Sentry client helper — safe to import in both server and client components.
- * Actual initialisation is done in sentry.server.config.ts / sentry.client.config.ts.
- *
- * Usage:
- *   import * as Sentry from '@sentry/nextjs'
- *   Sentry.captureException(err)
+ * Sentry re-export helper — safe to import in both server and client components.
+ * Actual init is done in instrumentation.ts (server/edge) and instrumentation-client.ts (browser).
  */
-export { captureException, captureMessage, setUser, withScope } from '@sentry/nextjs'
+export { captureException, captureMessage, setUser, withScope, logger } from '@sentry/nextjs'

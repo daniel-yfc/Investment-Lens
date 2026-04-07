@@ -16,7 +16,6 @@ function withCSP(res: NextResponse): NextResponse {
   return res
 }
 
-// Use NextAuth v5 auth() as middleware directly — no cast needed
 export default auth((req) => {
   const url = req.nextUrl
 
@@ -28,9 +27,12 @@ export default auth((req) => {
 
   if (isTestRequest) return withCSP(NextResponse.next())
 
-  // Allow NextAuth OAuth callback through unconditionally
-  if (url.pathname.startsWith('/api/auth')) {
-    return withCSP(NextResponse.next())
+  // Allow NextAuth OAuth callback and Sentry tunnel through unconditionally
+  if (
+    url.pathname.startsWith('/api/auth') ||
+    url.pathname.startsWith('/monitoring')
+  ) {
+    return NextResponse.next()
   }
 
   const isAuth = !!req.auth
@@ -49,5 +51,6 @@ export default auth((req) => {
 })
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
+  // Exclude monitoring tunnel, Next.js internals, and static files per Sentry SKILL.md
+  matcher: ['/((?!monitoring|_next/static|_next/image|favicon.ico).*)'],
 }
