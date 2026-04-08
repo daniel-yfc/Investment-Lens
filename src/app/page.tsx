@@ -7,13 +7,14 @@ import { LocaleSwitcher } from '@/components/ui/LocaleSwitcher'
 import { useSession } from 'next-auth/react'
 import { useCallback } from 'react'
 
+export const dynamic = 'force-dynamic'
+
 export default function ChatPage() {
   // Single hook call — avoid calling useStreamingChat() twice
   const { messages, isLoading, handleSubmit, activeSkills } = useStreamingChat()
   const { data: session } = useSession()
 
   // ChatInput.onSend expects (message: string) => void
-  // handleSubmit returns Promise<void>, so wrap to satisfy the type
   const onSend = useCallback(
     (message: string) => { void handleSubmit(message) },
     [handleSubmit]
