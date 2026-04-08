@@ -4,6 +4,10 @@ const nextConfig: NextConfig = {
   // Required for @ai-sdk/* Node.js-only packages
   serverExternalPackages: ['@ai-sdk/google', '@ai-sdk/openai', '@ai-sdk/anthropic'],
 
+  eslint: {
+    dirs: ['src'],
+  },
+
   webpack: (config) => {
     config.resolve.fallback = {
       ...config.resolve.fallback,
