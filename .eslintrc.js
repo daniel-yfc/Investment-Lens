@@ -1,11 +1,4 @@
-module.exports = {
-  extends: [
-    "next/core-web-vitals",
-    "next/typescript",
-    "plugin:@typescript-eslint/recommended"
-  ],
-  rules: {
-    "@typescript-eslint/no-explicit-any": "off",
-    "@typescript-eslint/no-unused-vars": "off"
-  }
-};
+// This file is kept for IDE compatibility only.
+// ESLint v9 uses eslint.config.js (flat config) instead.
+// See eslint.config.js for the actual configuration.
+module.exports = {}
