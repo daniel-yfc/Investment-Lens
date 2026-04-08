@@ -15,21 +15,14 @@ const nextConfig: NextConfig = {
   },
 }
 
-const { withSentryConfig } = await import('@sentry/nextjs')
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { withSentryConfig } = require('@sentry/nextjs')
 
 export default withSentryConfig(nextConfig, {
   org: process.env.SENTRY_ORG,
   project: process.env.SENTRY_PROJECT,
-
-  // Source map upload auth token — set SENTRY_AUTH_TOKEN in Vercel env vars
   authToken: process.env.SENTRY_AUTH_TOKEN,
-
-  // Upload wider set of client files for better stack trace resolution
   widenClientFileUpload: true,
-
-  // Proxy Sentry requests through /monitoring to bypass ad-blockers
   tunnelRoute: '/monitoring',
-
-  // Suppress output unless in CI
   silent: !process.env.CI,
 })
