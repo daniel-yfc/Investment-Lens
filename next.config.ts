@@ -1,5 +1,4 @@
 import type { NextConfig } from 'next'
-import { withSentryConfig } from '@sentry/nextjs'
 
 const nextConfig: NextConfig = {
   // Required for @ai-sdk/* Node.js-only packages
@@ -15,6 +14,8 @@ const nextConfig: NextConfig = {
     return config
   },
 }
+
+const { withSentryConfig } = await import('@sentry/nextjs')
 
 export default withSentryConfig(nextConfig, {
   org: process.env.SENTRY_ORG,

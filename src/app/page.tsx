@@ -5,11 +5,19 @@ import { MessageFeed } from '@/components/chat/MessageFeed'
 import { useStreamingChat } from '@/hooks/useStreamingChat'
 import { LocaleSwitcher } from '@/components/ui/LocaleSwitcher'
 import { useSession } from 'next-auth/react'
+import { useCallback } from 'react'
 
 export default function ChatPage() {
-  const { messages, isLoading, handleSubmit } = useStreamingChat()
+  // Single hook call — avoid calling useStreamingChat() twice
+  const { messages, isLoading, handleSubmit, activeSkills } = useStreamingChat()
   const { data: session } = useSession()
-  const { activeSkills } = useStreamingChat()
+
+  // ChatInput.onSend expects (message: string) => void
+  // handleSubmit returns Promise<void>, so wrap to satisfy the type
+  const onSend = useCallback(
+    (message: string) => { void handleSubmit(message) },
+    [handleSubmit]
+  )
 
   return (
     <div className="flex flex-col h-screen bg-zinc-950 text-zinc-100 font-sans">
@@ -36,7 +44,7 @@ export default function ChatPage() {
       <footer className="flex-none p-4 pb-8 bg-zinc-950">
         <div className="max-w-4xl mx-auto">
           <ChatInput
-            onSend={handleSubmit}
+            onSend={onSend}
             disabled={isLoading}
           />
         </div>

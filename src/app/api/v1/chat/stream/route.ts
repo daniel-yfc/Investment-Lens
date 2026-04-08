@@ -7,7 +7,6 @@ import * as Sentry from '@sentry/nextjs'
 import type { AnalysisResultCardProps } from '@/types/skill.types'
 
 export const runtime = 'nodejs'
-// Hobby plan max = 10s. Upgrade to Pro for 60s LLM streaming.
 export const maxDuration = 10
 
 const TICKER_REGEX = /^[A-Z0-9]{1,10}(\.[A-Z]{1,3})?$/
@@ -21,101 +20,99 @@ function sanitizeTicker(raw: string): string | null {
 }
 
 export async function POST(req: Request) {
-  return Sentry.withScope(async (scope) => {
-    scope.setTag('route', 'chat-stream')
+  try {
+    const isTestAuth = req.headers.get('x-test-auth') === 'true'
+    const isPlaywrightTest = req.headers.get('x-playwright-test') === 'true'
 
-    try {
-      const isTestAuth = req.headers.get('x-test-auth') === 'true'
-      const isPlaywrightTest = req.headers.get('x-playwright-test') === 'true'
+    let sessionUser: { id?: string; name?: string | null; email?: string | null } | undefined
 
-      let sessionUser: { id?: string; name?: string | null; email?: string | null } | undefined
+    if (isTestAuth || isPlaywrightTest) {
+      sessionUser = { id: 'test-user', name: 'Test', email: 'test@example.com' }
+    } else {
+      const session = await auth()
+      sessionUser = session?.user
+    }
 
-      if (isTestAuth || isPlaywrightTest) {
-        sessionUser = { id: 'test-user', name: 'Test', email: 'test@example.com' }
-      } else {
-        const session = await auth()
-        sessionUser = session?.user
-      }
+    if (!sessionUser) {
+      return new NextResponse(JSON.stringify({ error: 'UNAUTHORIZED' }), {
+        status: 401,
+        headers: { 'Content-Type': 'application/json' },
+      })
+    }
 
-      if (!sessionUser) {
-        return new NextResponse(JSON.stringify({ error: 'UNAUTHORIZED' }), {
-          status: 401,
-          headers: { 'Content-Type': 'application/json' },
-        })
-      }
+    const identifier = sessionUser.id ?? 'anonymous'
+    Sentry.setUser({ id: identifier, email: sessionUser.email ?? undefined })
+    Sentry.setTag('route', 'chat-stream')
 
-      scope.setUser({ id: sessionUser.id, email: sessionUser.email ?? undefined })
-
-      const identifier = sessionUser.id ?? 'anonymous'
-      const { success, limit, remaining, reset } = await ratelimit.limit(identifier)
-      if (!success) {
-        return new NextResponse(
-          JSON.stringify({ error: 'RATE_LIMIT_EXCEEDED', message: 'Too many requests.' }),
-          {
-            status: 429,
-            headers: {
-              'Content-Type': 'application/json',
-              'X-RateLimit-Limit': String(limit),
-              'X-RateLimit-Remaining': '0',
-              'X-RateLimit-Reset': String(reset),
-              'Retry-After': String(Math.ceil((reset - Date.now()) / 1000)),
-            },
-          }
-        )
-      }
-
-      const body = await req.json()
-      const { message } = body
-      if (!message || typeof message !== 'string') {
-        return NextResponse.json({ error: 'Message is required' }, { status: 400 })
-      }
-
-      scope.setExtra('message_length', message.length)
-
-      if (isTestAuth || isPlaywrightTest) {
-        const encoder = new TextEncoder()
-        const mockStream = new ReadableStream({
-          start(controller) {
-            controller.enqueue(encoder.encode('data: {"type":"text","content":"TSMC Analyst"}\n\n'))
-            controller.enqueue(encoder.encode('data: {"type":"done"}\n\n'))
-            controller.close()
-          },
-        })
-        return new NextResponse(mockStream, {
+    const { success, limit, remaining, reset } = await ratelimit.limit(identifier)
+    if (!success) {
+      return new NextResponse(
+        JSON.stringify({ error: 'RATE_LIMIT_EXCEEDED', message: 'Too many requests.' }),
+        {
+          status: 429,
           headers: {
-            'Content-Type': 'text/event-stream',
-            'Cache-Control': 'no-cache, no-transform',
-            'X-RateLimit-Remaining': String(remaining),
+            'Content-Type': 'application/json',
+            'X-RateLimit-Limit': String(limit),
+            'X-RateLimit-Remaining': '0',
+            'X-RateLimit-Reset': String(reset),
+            'Retry-After': String(Math.ceil((reset - Date.now()) / 1000)),
           },
-        })
-      }
+        }
+      )
+    }
 
-      const ticker = sanitizeTicker(message) ?? 'UNKNOWN'
-      scope.setTag('ticker', ticker)
+    const body = await req.json()
+    const { message } = body
+    if (!message || typeof message !== 'string') {
+      return NextResponse.json({ error: 'Message is required' }, { status: 400 })
+    }
 
+    Sentry.setExtra('message_length', message.length)
+
+    if (isTestAuth || isPlaywrightTest) {
       const encoder = new TextEncoder()
-      const stream = new TransformStream()
-      const writer = stream.writable.getWriter()
+      const mockStream = new ReadableStream({
+        start(controller) {
+          controller.enqueue(encoder.encode('data: {"type":"text","content":"TSMC Analyst"}\n\n'))
+          controller.enqueue(encoder.encode('data: {"type":"done"}\n\n'))
+          controller.close()
+        },
+      })
+      return new NextResponse(mockStream, {
+        headers: {
+          'Content-Type': 'text/event-stream',
+          'Cache-Control': 'no-cache, no-transform',
+          'X-RateLimit-Remaining': String(remaining),
+        },
+      })
+    }
 
-      const startStreaming = async () => {
-        const send = async (chunk: unknown) =>
-          writer.write(encoder.encode(`data: ${JSON.stringify(chunk)}\n\n`))
+    const ticker = sanitizeTicker(message) ?? 'UNKNOWN'
+    Sentry.setTag('ticker', ticker)
 
-        try {
-          await send({ type: 'text', content: `啟動分析中...\n\n` })
-          await send({ type: 'tool_call', skill: 'alphaear-stock', params: { query: message } })
-          await send({ type: 'skill_progress', steps: [{ skill: 'alphaear-stock', status: 'running', label: '獲取 OHLCV 資料' }] })
+    const encoder = new TextEncoder()
+    const stream = new TransformStream()
+    const writer = stream.writable.getWriter()
 
-          const { model, provider, modelId } = getLLMModel()
-          await send({ type: 'skill_progress', steps: [{ skill: 'investment-lens', status: 'running', label: `呼叫 ${provider}/${modelId}` }] })
+    const startStreaming = async () => {
+      const send = async (chunk: unknown) =>
+        writer.write(encoder.encode(`data: ${JSON.stringify(chunk)}\n\n`))
 
-          const { textStream } = streamText({
-            model,
-            system: DEFAULT_SYSTEM_PROMPT,
-            messages: [
-              {
-                role: 'user',
-                content: `請針對 ${ticker} 進行投資分析。請回覆以下 JSON 格式（不要加 markdown）：
+      try {
+        await send({ type: 'text', content: `啟動分析中...\n\n` })
+        await send({ type: 'tool_call', skill: 'alphaear-stock', params: { query: message } })
+        await send({ type: 'skill_progress', steps: [{ skill: 'alphaear-stock', status: 'running', label: '獲取 OHLCV 資料' }] })
+
+        const { model, provider, modelId } = getLLMModel()
+        await send({ type: 'skill_progress', steps: [{ skill: 'investment-lens', status: 'running', label: `呼叫 ${provider}/${modelId}` }] })
+
+        const { textStream } = streamText({
+          model,
+          system: DEFAULT_SYSTEM_PROMPT,
+          messages: [
+            {
+              role: 'user',
+              content: `請針對 ${ticker} 進行投資分析。請回覆以下 JSON 格式（不要加 markdown）：
 {
   "recommendation": "Buy" | "Hold" | "Sell" | "Neutral",
   "confidence": "High" | "Medium" | "Low",
@@ -125,68 +122,67 @@ export async function POST(req: Request) {
   "killConditions": ["條件1", "條件2"],
   "summary": "完整分析文字"
 }`,
-              },
-            ],
-            temperature: 0.3,
-            maxOutputTokens: 2048,
-          })
+            },
+          ],
+          temperature: 0.3,
+          maxOutputTokens: 2048,
+        })
 
-          let fullText = ''
-          for await (const delta of textStream) {
-            fullText += delta
-          }
-
-          await send({ type: 'skill_progress', steps: [{ skill: 'investment-lens', status: 'done', label: '分析完成' }] })
-
-          let parsed: Partial<AnalysisResultCardProps> & { summary?: string } = {}
-          try {
-            const jsonMatch = fullText.match(/\{[\s\S]*\}/)
-            if (jsonMatch) parsed = JSON.parse(jsonMatch[0])
-          } catch {
-            parsed = { summary: fullText }
-          }
-
-          await send({ type: 'text', content: `\n\n${parsed.summary ?? '分析完成。'}` })
-
-          const analysisData: AnalysisResultCardProps = {
-            ticker: ticker.toUpperCase(),
-            recommendation: parsed.recommendation ?? 'Neutral',
-            confidence: parsed.confidence ?? 'Low',
-            thesis: parsed.thesis ?? '',
-            counterThesis: parsed.counterThesis ?? '',
-            keyRisks: parsed.keyRisks ?? [],
-            killConditions: parsed.killConditions ?? [],
-            validAsOf: new Date().toISOString(),
-          }
-          await send({ type: 'tool_result', component: 'AnalysisResultCard', props: analysisData })
-          await writer.write(encoder.encode('data: [DONE]\n\n'))
-        } catch (streamError) {
-          Sentry.captureException(streamError)
-          await writer.write(
-            encoder.encode(`data: ${JSON.stringify({ type: 'error', message: 'Stream interrupted' })}\n\n`)
-          )
-        } finally {
-          await writer.close()
+        let fullText = ''
+        for await (const delta of textStream) {
+          fullText += delta
         }
+
+        await send({ type: 'skill_progress', steps: [{ skill: 'investment-lens', status: 'done', label: '分析完成' }] })
+
+        let parsed: Partial<AnalysisResultCardProps> & { summary?: string } = {}
+        try {
+          const jsonMatch = fullText.match(/\{[\s\S]*\}/)
+          if (jsonMatch) parsed = JSON.parse(jsonMatch[0])
+        } catch {
+          parsed = { summary: fullText }
+        }
+
+        await send({ type: 'text', content: `\n\n${parsed.summary ?? '分析完成。'}` })
+
+        const analysisData: AnalysisResultCardProps = {
+          ticker: ticker.toUpperCase(),
+          recommendation: parsed.recommendation ?? 'Neutral',
+          confidence: parsed.confidence ?? 'Low',
+          thesis: parsed.thesis ?? '',
+          counterThesis: parsed.counterThesis ?? '',
+          keyRisks: parsed.keyRisks ?? [],
+          killConditions: parsed.killConditions ?? [],
+          validAsOf: new Date().toISOString(),
+        }
+        await send({ type: 'tool_result', component: 'AnalysisResultCard', props: analysisData })
+        await writer.write(encoder.encode('data: [DONE]\n\n'))
+      } catch (streamError) {
+        Sentry.captureException(streamError)
+        await writer.write(
+          encoder.encode(`data: ${JSON.stringify({ type: 'error', message: 'Stream interrupted' })}\n\n`)
+        )
+      } finally {
+        await writer.close()
       }
-
-      startStreaming()
-
-      return new Response(stream.readable, {
-        headers: {
-          'Content-Type': 'text/event-stream',
-          'Cache-Control': 'no-cache, no-transform',
-          'Connection': 'keep-alive',
-          'X-RateLimit-Remaining': String(remaining),
-          'X-LLM-Provider': process.env.LLM_PROVIDER ?? 'openai',
-        },
-      })
-    } catch (error) {
-      Sentry.captureException(error)
-      return new NextResponse(JSON.stringify({ error: 'INTERNAL_ERROR' }), {
-        status: 500,
-        headers: { 'Content-Type': 'application/json' },
-      })
     }
-  })
+
+    startStreaming()
+
+    return new Response(stream.readable, {
+      headers: {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache, no-transform',
+        'Connection': 'keep-alive',
+        'X-RateLimit-Remaining': String(remaining),
+        'X-LLM-Provider': process.env.LLM_PROVIDER ?? 'openai',
+      },
+    })
+  } catch (error) {
+    Sentry.captureException(error)
+    return new NextResponse(JSON.stringify({ error: 'INTERNAL_ERROR' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
+    })
+  }
 }

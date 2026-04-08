@@ -1,8 +1,9 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { useChatStore } from '../chat';
+import type { ChatState } from '../chat';
 
 describe('useChatStore', () => {
-  let sendMessageSpy: ReturnType<typeof vi.fn>;
+  let sendMessageSpy: (content: string) => Promise<void>;
 
   beforeEach(() => {
     useChatStore.setState({
@@ -186,7 +187,7 @@ describe('useChatStore', () => {
     });
 
     it('should retryLastMessage', () => {
-      sendMessageSpy = vi.fn().mockImplementation(async () => {});
+      sendMessageSpy = vi.fn().mockImplementation(async () => {}) as unknown as ChatState['sendMessage'];
       useChatStore.setState({ sendMessage: sendMessageSpy });
 
       useChatStore.setState({
@@ -206,7 +207,7 @@ describe('useChatStore', () => {
     });
 
     it('should not retryLastMessage if no user message exists', () => {
-      sendMessageSpy = vi.fn().mockImplementation(async () => {});
+      sendMessageSpy = vi.fn().mockImplementation(async () => {}) as unknown as ChatState['sendMessage'];
       useChatStore.setState({ sendMessage: sendMessageSpy });
 
       useChatStore.setState({

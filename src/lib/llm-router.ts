@@ -5,18 +5,15 @@
  *   openai        (default) — uses OPENAI_API_KEY
  *   openrouter    — uses OPENROUTER_API_KEY, model via OPENROUTER_MODEL
  *   gemini        — uses GOOGLE_GENERATIVE_AI_API_KEY, model via GEMINI_MODEL
- *
- * NOTE: This module must only be imported in Node.js runtime routes (not edge).
  */
-
 import { createOpenAI } from '@ai-sdk/openai'
 import { createGoogleGenerativeAI } from '@ai-sdk/google'
-import type { LanguageModelV1 } from '@ai-sdk/provider'
+import type { LanguageModelV2 } from '@ai-sdk/provider'
 
 export type LLMProvider = 'openai' | 'openrouter' | 'gemini'
 
 export interface LLMConfig {
-  model: LanguageModelV1
+  model: LanguageModelV2
   provider: LLMProvider
   modelId: string
 }
@@ -42,7 +39,7 @@ export function getLLMModel(): LLMConfig {
           'X-Title': 'Investment-Lens',
         },
       })
-      return { model: openrouter(modelId) as LanguageModelV1, provider: 'openrouter', modelId }
+      return { model: openrouter(modelId) as unknown as LanguageModelV2, provider: 'openrouter', modelId }
     }
 
     case 'gemini': {
@@ -50,7 +47,7 @@ export function getLLMModel(): LLMConfig {
       if (!apiKey) throw new Error('GOOGLE_GENERATIVE_AI_API_KEY is not set')
       const modelId = process.env.GEMINI_MODEL ?? 'gemini-2.0-flash'
       const google = createGoogleGenerativeAI({ apiKey })
-      return { model: google(modelId) as unknown as LanguageModelV1, provider: 'gemini', modelId }
+      return { model: google(modelId) as unknown as LanguageModelV2, provider: 'gemini', modelId }
     }
 
     case 'openai':
@@ -59,7 +56,7 @@ export function getLLMModel(): LLMConfig {
       if (!apiKey) throw new Error('OPENAI_API_KEY is not set')
       const modelId = process.env.OPENAI_MODEL ?? 'gpt-4o'
       const openai = createOpenAI({ apiKey })
-      return { model: openai(modelId) as LanguageModelV1, provider: 'openai', modelId }
+      return { model: openai(modelId) as unknown as LanguageModelV2, provider: 'openai', modelId }
     }
   }
 }
