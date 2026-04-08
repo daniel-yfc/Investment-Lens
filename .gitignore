@@ -51,3 +51,4 @@ test-results/
 # patch & shell scripts (temp, not for version control)
 *.patch
 *.sh
+.env*.local
