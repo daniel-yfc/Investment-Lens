@@ -56,7 +56,6 @@ export function useStreamingChat() {
   const handleStreamWithFallback = useCallback(() => {
     if (retryCountRef.current >= MAX_RETRIES) {
       console.warn('Max retries reached. Stream interruption fallback failed.');
-      // FA-04: Show [⚠️ 回應不完整] marker on the last assistant message
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       setMessages((prev: any[]) => {
         const lastMsg = prev[prev.length - 1];
@@ -89,22 +88,22 @@ export function useStreamingChat() {
   }, [reload, setStreaming, setMessages]);
 
   const handleSubmit = useCallback(
-    (e?: React.FormEvent<HTMLFormElement>) => {
-      e?.preventDefault();
-      if (!input.trim() || storeLoading) return;
+    (message: string) => {
+      if (!message.trim() || storeLoading) return;
 
       setHasInterruptionError(false);
       retryCountRef.current = 0;
       setStreaming(true);
 
       try {
-        originalHandleSubmit(e);
+        append({ role: 'user', content: message });
+        originalHandleSubmit(undefined, { data: { message } });
       } catch (submitErr) {
          console.error('Submit error:', submitErr);
          setStreaming(false);
       }
     },
-    [input, storeLoading, setStreaming, originalHandleSubmit]
+    [storeLoading, setStreaming, append, originalHandleSubmit]
   );
 
   const handleManualRetry = useCallback(() => {
