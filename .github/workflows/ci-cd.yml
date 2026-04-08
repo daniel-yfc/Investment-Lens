@@ -24,7 +24,7 @@ jobs:
         run: npm run type-check --if-present
 
       - name: ESLint
-        run: npm run lint
+        run: npx eslint src --ext .ts,.tsx
 
       # 這裡預留單元與整合測試
       # - name: Unit & Integration Tests
