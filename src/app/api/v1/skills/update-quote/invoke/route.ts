@@ -2,10 +2,8 @@ import { NextResponse } from 'next/server'
 
 export async function POST(req: Request) {
   try {
+    const startTime = Date.now()
     const { portfolioId } = await req.json()
-
-    // Mock API delay
-    await new Promise(r => setTimeout(r, 1500))
 
     // Mock response representing an updated portfolio with new quotes
     const mockUpdatedPortfolio = {
@@ -21,7 +19,7 @@ export async function POST(req: Request) {
       skill: 'update-quote',
       status: 'completed',
       result: mockUpdatedPortfolio,
-      executionTime: 1500,
+      executionTime: Date.now() - startTime,
       timestamp: new Date().toISOString()
     })
   } catch (error) {
