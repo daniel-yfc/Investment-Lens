@@ -109,10 +109,8 @@ class ReportUtils:
         """Best-effort repair for malformed json-chart fenced blocks."""
         if not text:
             return text
-        # (Simplified logic: if closing ``` is missing, append it)
-        # Full logic omitted for brevity as it was complex regex, but retaining simple closure fix
-        if "```json-chart" in text and text.count("```") % 2 != 0:
-            text += "\n```"
+        # Use regex to find an unclosed ```json-chart block at the end of the text
+        text = re.sub(r'(```json-chart(?:(?!```).)*)$', r'\1\n```', text, flags=re.DOTALL)
         return text
 
     @staticmethod
