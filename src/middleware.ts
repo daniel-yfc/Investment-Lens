@@ -20,10 +20,11 @@ export default auth((req) => {
   const url = req.nextUrl
 
   const isTestRequest =
-    req.headers.get('x-playwright-test') === 'true' ||
-    req.headers.get('x-test-auth') === 'true' ||
-    req.headers.get('user-agent')?.includes('Playwright') ||
-    process.env.NODE_ENV === 'test'
+    process.env.NODE_ENV === 'test' ||
+    (process.env.NODE_ENV !== 'production' &&
+      (req.headers.get('x-playwright-test') === 'true' ||
+        req.headers.get('x-test-auth') === 'true' ||
+        req.headers.get('user-agent')?.includes('Playwright')))
 
   if (isTestRequest) return withCSP(NextResponse.next())
 
