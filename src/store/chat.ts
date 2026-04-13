@@ -182,10 +182,7 @@ export const useChatStore = create<ChatState>()(
 
       getLastUserMessage: () => {
         const { messages } = get()
-        for (let i = messages.length - 1; i >= 0; i--) {
-          if (messages[i].role === 'user') return messages[i]
-        }
-        return undefined
+        return messages.findLast(m => m.role === 'user')
       },
 
       loadConversation: async (_id: string) => {},
