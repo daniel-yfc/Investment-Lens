@@ -1,8 +1,8 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { useMemo } from 'react';
-import { Treemap, ResponsiveContainer, Tooltip } from 'recharts';
+import { Treemap, ResponsiveContainer, Tooltip, TooltipProps } from 'recharts';
+import { NameType, ValueType } from 'recharts/types/component/DefaultTooltipContent';
 import { cn } from '@/lib/utils';
 
 export interface PortfolioHolding {
@@ -15,6 +15,24 @@ export interface PortfolioHolding {
   returnPercent: number; // Total return
 }
 
+interface TreemapContentProps {
+  depth?: number;
+  x?: number;
+  y?: number;
+  width?: number;
+  height?: number;
+  name?: string;
+  changePercent?: number;
+  returnPercent?: number;
+  metric?: 'changePercent' | 'returnPercent';
+}
+
+interface CustomTooltipProps extends TooltipProps<ValueType, NameType> {
+  active?: boolean;
+  payload?: any;
+  metric?: 'changePercent' | 'returnPercent';
+}
+
 interface PortfolioHeatmapProps {
   holdings: PortfolioHolding[];
   metric?: 'changePercent' | 'returnPercent';
@@ -22,8 +40,8 @@ interface PortfolioHeatmapProps {
 }
 
 // Custom Treemap Content to render boxes with colors based on performance
-const CustomizedContent = (props: any) => {
-  const { depth, x, y, width, height, name, changePercent, returnPercent, metric } = props;
+const CustomizedContent = (props: TreemapContentProps) => {
+  const { depth, x = 0, y = 0, width = 0, height = 0, name, changePercent = 0, returnPercent = 0, metric } = props;
 
   // Render root container differently if needed
   if (depth === 0) return null;
@@ -79,7 +97,7 @@ const CustomizedContent = (props: any) => {
   );
 };
 
-const CustomTooltip = ({ active, payload, metric }: any) => {
+const CustomTooltip = ({ active, payload, metric }: CustomTooltipProps) => {
   if (active && payload && payload.length) {
     const data = payload[0].payload;
     const currentMetric = metric === 'changePercent' ? data.changePercent : data.returnPercent;
@@ -142,9 +160,9 @@ export function PortfolioHeatmap({ holdings, metric = 'changePercent', className
           stroke="#fff"
           fill="#8884d8"
           isAnimationActive={false} // Turn off animation for better performance with many items (PE-04)
-          content={<CustomizedContent metric={metric} /> as any}
+          content={<CustomizedContent metric={metric} />}
         >
-          <Tooltip content={(props: any) => <CustomTooltip {...props} metric={metric} />} />
+          <Tooltip content={(props) => <CustomTooltip {...props} metric={metric} />} />
         </Treemap>
       </ResponsiveContainer>
     </div>
