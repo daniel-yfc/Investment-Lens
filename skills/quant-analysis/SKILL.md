@@ -1,12 +1,13 @@
 ---
 name: quant-analysis
-description: Use this skill when the task explicitly requires formal quantitative
-  finance methods: VaR, CVaR, portfolio optimisation (mean-variance, Black-Litterman,
-  risk parity), Monte Carlo simulation, backtesting, factor regression, GARCH
-  volatility modelling, or statistical validation. Do NOT use for qualitative
-  commentary, narrative valuation, report writing, or basic portfolio review
-  without statistical requirements. This skill is a sub-engine that returns
-  structured results for reintegration into investment-lens.
+description: >-
+  Use this skill when the task explicitly requires formal quantitative finance
+  methods (VaR, CVaR, portfolio optimisation including mean-variance,
+  Black-Litterman, risk parity), Monte Carlo simulation, backtesting, factor
+  regression, GARCH volatility modelling, or statistical validation. Do NOT use
+  for qualitative commentary, narrative valuation, report writing, or basic
+  portfolio review without statistical requirements. This skill is a sub-engine
+  that returns structured results for reintegration into investment-lens.
 allowed-tools:
 - Read
 - Bash
