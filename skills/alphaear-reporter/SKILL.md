@@ -1,6 +1,7 @@
 ---
 name: alphaear-reporter
-description: Convert completed investment analysis into structured human-readable
+description: >-
+  Convert completed investment analysis into structured human-readable
   output (research notes, initiating coverage reports, thesis memos). Owns the full
   5-task initiating coverage workflow.
 allowed-tools:
@@ -8,18 +9,15 @@ allowed-tools:
 - Grep
 - Bash
 metadata:
-  argument-hint: '[research note | initiating coverage | investor brief | company
-    name]'
+  argument-hint: '[research note | initiating coverage | investor brief | company name]'
   version: '2.1'
   language: zh-tw
   last-updated: '2026-03-26'
   effort: medium
-    user-invocable: true
+  user-invocable: true
   upstream-primary-skill: investment-lens
-  post-invoke-check: 'Confirm output matches audience and template; Mode B: confirm
-    single-task mode'
-  compatibility: Modes A/C require no runtime dependencies. Mode B requires xlsx,
-    chart, docx skills.
+  post-invoke-check: 'Confirm output matches audience and template; Mode B: confirm single-task mode'
+  compatibility: 'Modes A/C require no runtime dependencies. Mode B requires xlsx, chart, docx skills.'
 ---
 
 # AlphaEar Reporter
@@ -83,25 +81,20 @@ If missing, ask before drafting.
 ## Transformation Logic
 
 ### Source from `investment-lens`
-Preserve recommendation, confidence, thesis, risks, kill conditions.
-Convert internal framework language to readable prose where needed.
+Preserve recommendation, confidence, thesis, risks, kill conditions. Convert internal framework language to readable prose where needed.
 
 ### Source from AlphaEar signal skills
-Summarise the signal chain. State confidence and time horizon.
-Distinguish observed signal from inferred conclusion.
+Summarise the signal chain. State confidence and time horizon. Distinguish observed signal from inferred conclusion.
 
 ### Source from `quant-analysis`
-Integrate statistical outputs as supporting evidence.
-Do not let statistics replace judgment automatically.
+Integrate statistical outputs as supporting evidence. Do not let statistics replace judgment automatically.
 
 ### Multiple analyses provided
-Merge only when they refer to the same asset, theme, or decision context.
-Resolve duplication. Surface contradictions explicitly — never flatten them.
+Merge only when they refer to the same asset, theme, or decision context. Resolve duplication. Surface contradictions explicitly — never flatten them.
 
 ---
 
 ## Validation Checklist (before finalising)
-
 - [ ] Output format matches requested audience.
 - [ ] All recommendations supported by analysis.
 - [ ] Valid-as-of date visible.
