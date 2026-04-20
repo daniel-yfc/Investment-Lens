@@ -1,8 +1,22 @@
 ---
 name: alphaear-stock
-description: Use this skill when raw historical OHLCV price data for a stock or ETF is needed for analysis, validation, or downstream quantitative modelling. Use it for date-ranged price retrieval for any globally listed equity or ETF. Do not use it for refreshing portfolio CSV prices (use update-quote), for live news (use alphaear-news), or for investment interpretation (use investment-lens).
+description: Use this skill when raw historical OHLCV price data for a stock or
+  ETF is needed for analysis, validation, or downstream quantitative modelling.
+  Use it for date-ranged price retrieval for any globally listed equity or ETF.
+  Do not use it for refreshing portfolio CSV prices (use update-quote), for live
+  news (use alphaear-news), or for investment interpretation (use investment-lens).
+allowed-tools:
+- Read
+- Bash
+metadata:
+  argument-hint: '[ticker | start_date | end_date]'
+  version: '1.1'
+  language: zh-tw
+  last-updated: '2026-04-21'
+  effort: low
+  user-invocable: 'true'
+  compatibility: Requires pandas, yfinance, scripts/database_manager.py
 ---
-
 # AlphaEar Stock Skill
 
 ## Purpose
@@ -24,7 +38,7 @@ Data is cached locally in SQLite to avoid redundant fetches.
 ## Ticker Format
 
 | Market | Format | Example |
-|--------|--------|---------| 
+|--------|--------|---------|
 | US equities | Plain | `AAPL`, `TSLA` |
 | Taiwan (TWSE) | `.TW` | `2330.TW` |
 | Taiwan (OTC) | `.TWO` | `6443.TWO` |
@@ -45,6 +59,8 @@ Use `scripts/stock_tools.py` via `StockTools`:
 - `get_stock_price(ticker, start_date, end_date)` — returns DataFrame.
   - Ticker must include exchange suffix for non-US markets.
   - Date format: `'YYYY-MM-DD'`. Defaults: 90 days to today.
+  - Pass `auto_adjust=True` when computing total-return or performance analysis (adjusts for dividends and splits). Leave at default (`False`) when comparing raw prices.
+  - Always state which `auto_adjust` value was used in any output that includes price or return figures.
 
 ## Available Scripts
 
