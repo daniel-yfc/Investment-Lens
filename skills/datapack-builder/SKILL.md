@@ -1,6 +1,7 @@
 ---
 name: datapack-builder
-description: Build professional financial services data packs from CIMs, SEC filings,
+description: >-
+  Build professional financial services data packs from CIMs, SEC filings,
   or web search into investment committee-ready Excel workbooks.
 allowed-tools:
 - Read
@@ -14,9 +15,10 @@ metadata:
   language: zh-tw
   last-updated: '2026-03-26'
   effort: high
-  user-invocable: 'true'
+  user-invocable: true
   post-invoke-check: Confirm final delivery checklist passed before output
-  compatibility: Requires xlsx skill, internet or MCP server access for SEC EDGAR
+  compatibility: >-
+    Requires xlsx skill, internet or MCP server access for SEC EDGAR
     / public filings
 ---
 
@@ -31,7 +33,7 @@ Build professional, standardized financial data packs for private equity, invest
 - **Balance sheet must balance.** `Total Assets = Total Liabilities + Equity`. Verify this before delivery. Unbalanced sheets are a hard rejection at any IC.
 - SEC EDGAR EDGAR full-text search (`efts.sec.gov`) returns 10 results max per query. Paginate if needed to find the correct filing.
 - CIM financial tables often use non-standard EBITDA adjustments without labelling them. Load `references/normalization.md` before extracting any EBITDA figure.
-- `riskfolio-lib` and `scipy` are NOT available in this skill’s scope. For quantitative modelling, hand off to `quant-analysis`.
+- `riskfolio-lib` and `scipy` are NOT available in this skill's scope. For quantitative modelling, hand off to `quant-analysis`.
 - Excel formulas must use `=` prefix. Hard-coded numbers in formula cells are a QC failure — all calculations must be traceable.
 - Color scheme (blue inputs / black formulas / green cross-sheet links) must be applied consistently. Inconsistent colouring breaks the IC review convention.
 
