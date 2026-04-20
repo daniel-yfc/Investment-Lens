@@ -10,13 +10,12 @@ metadata:
   argument-hint: '[transmission chain | logic flow | Draw.io diagram]'
   version: '1.1'
   language: zh-tw
-  last-updated: '2026-03-26'
+  last-updated: '2026-04-20'
   effort: medium
   user-invocable: 'true'
   upstream-primary-skill: investment-lens
   compatibility: Requires standard Python library only (no external packages)
 ---
-
 # AlphaEar Logic Visualizer Skill
 
 ## Overview
@@ -25,8 +24,8 @@ Create visual representations of investment logic flows by generating Draw.io XM
 
 ## Workflow
 
-1. **Generate XML** — use the **Draw.io XML Generation Prompt** from `references/PROMPTS.md` to convert the logical chain into XML.
-2. **Save/Render** — call `visualizer.render_drawio_to_html(xml_content, filename)` to save as a viewable HTML file.
+1. **Generate XML** — use the **Draw.io XML Generation Prompt** from `references/PROMPTS.md` (section: `## Draw.io XML Generation Prompt`) to convert the logical chain into XML. If `references/PROMPTS.md` is unavailable, generate Draw.io XML directly using the structure: `<mxGraphModel><root><mxCell id="0"/><mxCell id="1" parent="0"/>` with one `<mxCell>` per node/edge, ensuring all `id` attributes are unique strings.
+2. **Save/Render** — call `visualizer.render_drawio_to_html(xml_content, filename)` to save as a viewable HTML file. Verify XML starts with `<mxGraphModel>` and all `<mxCell>` nodes have unique `id` attributes before calling this method.
 
 **Example:**
 ```python
