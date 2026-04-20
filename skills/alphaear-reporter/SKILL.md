@@ -14,7 +14,7 @@ metadata:
   language: zh-tw
   last-updated: '2026-03-26'
   effort: medium
-  user-invocable: 'true'
+    user-invocable: true
   upstream-primary-skill: investment-lens
   post-invoke-check: 'Confirm output matches audience and template; Mode B: confirm
     single-task mode'
