@@ -1,8 +1,25 @@
 ---
 name: quant-analysis
-description: Use this skill when the task explicitly requires formal quantitative finance methods: VaR, CVaR, portfolio optimisation (mean-variance, Black-Litterman, risk parity), Monte Carlo simulation, backtesting, factor regression, GARCH volatility modelling, or statistical validation. Do NOT use for qualitative commentary, narrative valuation, report writing, or basic portfolio review without statistical requirements. This skill is a sub-engine that returns structured results for reintegration into investment-lens.
+description: Use this skill when the task explicitly requires formal quantitative
+  finance methods: VaR, CVaR, portfolio optimisation (mean-variance, Black-Litterman,
+  risk parity), Monte Carlo simulation, backtesting, factor regression, GARCH
+  volatility modelling, or statistical validation. Do NOT use for qualitative
+  commentary, narrative valuation, report writing, or basic portfolio review
+  without statistical requirements. This skill is a sub-engine that returns
+  structured results for reintegration into investment-lens.
+allowed-tools:
+- Read
+- Bash
+metadata:
+  argument-hint: '[objective | tickers | model_type | lookback_period]'
+  version: '1.1'
+  language: zh-tw
+  last-updated: '2026-04-21'
+  effort: high
+  user-invocable: 'false'
+  upstream-primary-skill: investment-lens
+  compatibility: Requires Python 3.9+, pandas, numpy, scipy, riskfolio-lib, arch
 ---
-
 # Quant Analysis
 
 ## Purpose
