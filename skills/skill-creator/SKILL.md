@@ -2,6 +2,17 @@
 name: skill-creator
 description: Create or update AgentSkills. Use when designing, structuring, or packaging
   skills with scripts, references, and assets.
+allowed-tools:
+- Read
+- Write
+- Bash
+metadata:
+  argument-hint: '[skill-name | update | create]'
+  version: '1.0'
+  language: zh-tw
+  last-updated: '2026-04-21'
+  effort: high
+  user-invocable: false
 ---
 
 # Skill Creator
