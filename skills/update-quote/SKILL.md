@@ -1,6 +1,7 @@
 ---
 name: update-quote
-description: Refreshes current market prices, NAVs, and exchange rates in a portfolio
+description: >-
+  Refreshes current market prices, NAVs, and exchange rates in a portfolio
   CSV, recalculating values. Do NOT use for raw historical OHLCV data (use alphaear-stock).
 allowed-tools:
 - Bash
@@ -8,11 +9,13 @@ allowed-tools:
 - Write
 metadata:
   argument-hint: '[CSV content | ticker symbol | ''FX only'']'
-  disable-model-invocation: 'true'
+  user-invocable: false
   version: '1.1'
+  language: zh-tw
   last-updated: '2026-03-26'
   effort: medium
-  compatibility: Requires curl, python3, internet access to Yahoo Finance, CoinGecko
+  compatibility: >-
+    Requires curl, python3, internet access to Yahoo Finance, CoinGecko
     API, and rate.bot.com.tw
 ---
 
@@ -32,8 +35,8 @@ This skill has ONE job: refresh current prices in a portfolio CSV and update `va
 | Prompt for MANUAL-only holdings | Quantitative modelling → `quant-analysis` |
 
 **HARD RULE**: Do not invoke investment analysis or any framework from `investment-lens`.
-If user asks “and what do you think about this portfolio?” respond:
-> “Quote refresh complete. For analysis, please use `/investment-lens`.”
+If user asks "and what do you think about this portfolio?" respond:
+> "Quote refresh complete. For analysis, please use `/investment-lens`."
 
 **Boundary with `alphaear-stock`**: `update-quote` writes to your CSV and updates
 `value_date`. `alphaear-stock` provides historical OHLCV DataFrames for analysis
@@ -70,8 +73,7 @@ Load `references/asset-classification.md` to resolve ambiguous tickers. Apply:
 
 For all MANUAL ONLY items, output:
 ```
-⚠️ [Holding Name] ([CFI Code]) cannot be auto-fetched.
-Please provide the current NAV/price manually:
+⚠️ [Holding Name] ([CFI Code]) cannot be auto-fetched. Please provide the current NAV/price manually:
 - Source: [specific URL or platform]
 - Expected format: [NAV per unit in original currency]
 Paste the value here, or type 'skip' to leave unchanged.
@@ -95,7 +97,7 @@ Paste the value here, or type 'skip' to leave unchanged.
 ```bash
 curl -s "https://query1.finance.yahoo.com/v8/finance/chart/{TICKER}?interval=1d&range=1d" \
   | python3 -c "import sys,json; d=json.load(sys.stdin); \
-    print(d['chart']['result'][0]['meta']['regularMarketPrice'])"
+  print(d['chart']['result'][0]['meta']['regularMarketPrice'])"
 ```
 
 **CoinGecko (BTC/ETH):**
@@ -104,15 +106,14 @@ curl -s "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies
   | python3 -c "import sys,json; d=json.load(sys.stdin); print(d['bitcoin']['usd'])"
 ```
 
-**BTC Sanity Check**: If fetched BTC price < $10,000 or > $500,000, flag as
-`[PRICE ANOMALY — verify manually]` and do NOT write to CSV.
+**BTC Sanity Check**: If fetched BTC price < $10,000 or > $500,000, flag as `[PRICE ANOMALY — verify manually]` and do NOT write to CSV.
 
 ---
 
 ## STEP 5 — TWD Recalculation
 
-- `持有部位(台幣) = 持有部位(原幣) × 匯率`
-- `未實現損益(TWD) = (最新報價 - 平均成本(原幣)) × 單位數 × 匯率`
+- `持有部位(台幣) = 持有部位(原幣) × 化率`
+- `未實現損益(TWD) = (最新報價 - 平均成本(原幣)) × 單位數 × 化率`
 - `未實現報酬率 = (最新報價 - 平均成本(原幣)) / 平均成本(原幣) × 100%`
 
 If FX rate not specified, use Bank of Taiwan mid-rate and note:
@@ -127,8 +128,7 @@ If FX rate not specified, use Bank of Taiwan mid-rate and note:
 # last_updated_by: investment-lens/update-quote v1.1
 ```
 
-The `[auto]` tag distinguishes system-updated from user-entered timestamps.
-This is the canonical record for `investment-lens` Gate 0-A freshness check.
+The `[auto]` tag distinguishes system-updated from user-entered timestamps. This is the canonical record for `investment-lens` Gate 0-A freshness check.
 
 ---
 
@@ -136,21 +136,14 @@ This is the canonical record for `investment-lens` Gate 0-A freshness check.
 
 ```
 ✅ Update-Quote Complete — [YYYY-MM-DD HH:MM UTC+8]
-
 Auto-updated (Yahoo Finance): [N] holdings
 Auto-updated (CoinGecko): [N] holdings
 Manual confirmation pending: [list]
 Skipped (already fresh): [N] holdings
 Anomalies flagged: [list, or 'None']
-
-FX rates used:
-  USD/TWD: [X]
-  EUR/TWD: [X]
-  AUD/TWD: [X]
-
+FX rates used: USD/TWD: [X]  EUR/TWD: [X]  AUD/TWD: [X]
 Portfolio total (TWD): NT$[X]
 Change from previous value_date: [+/-]NT$[Y] ([+/-]Z%)
-
 ⚠️ Pending manual updates for: [list]
 To proceed with analysis: /investment-lens [paste updated CSV]
 ```
