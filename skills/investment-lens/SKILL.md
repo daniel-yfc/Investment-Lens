@@ -1,8 +1,22 @@
 ---
 name: investment-lens
-description: Use this skill when the task requires qualitative investment analysis for a single stock, ETF, index, or crypto asset; portfolio diagnostics and rebalancing; personal retirement or goal-based allocation; or monitoring and classifying existing investment signals. Do NOT use for quantitative modelling (use quant-analysis), price/quote refreshes (use update-quote), or formatting completed analysis into reports (use alphaear-reporter).
+description: Use this skill when the task requires qualitative investment analysis
+  for a single stock, ETF, index, or crypto asset; portfolio diagnostics and
+  rebalancing; personal retirement or goal-based allocation; or monitoring and
+  classifying existing investment signals. Do NOT use for quantitative modelling
+  (use quant-analysis), price/quote refreshes (use update-quote), or formatting
+  completed analysis into reports (use alphaear-reporter).
+allowed-tools:
+- Read
+- Bash
+metadata:
+  argument-hint: '[ticker | portfolio | ''retirement'' | signal update]'
+  version: '1.1'
+  language: zh-tw
+  last-updated: '2026-04-21'
+  effort: high
+  user-invocable: 'true'
 ---
-
 # Investment Lens
 
 ## Purpose
@@ -53,7 +67,7 @@ See `scripts/SCRIPTS.md` for full script index and usage.
 
 ## Gotchas
 
-- `fin_agent.py` is a library module (no CLI entry point). Invoke it via the agentic pipeline described in `references/PROMPTS.md`, not as a standalone command.
+- `fin_agent.py` is a library module (no CLI entry point). Invoke it via the agentic pipeline described in `references/PROMPTS.md` (section: `## FinAgent Pipeline`). If `references/PROMPTS.md` is unavailable, invoke `FinResearcher` → `FinAnalyst` → signal tracking sequentially using method calls documented in `scripts/SCRIPTS.md`.
 - `scripts/` uses relative imports (`from .utils.database_manager import ...`). Run from the `scripts/` directory or set `PYTHONPATH` accordingly.
 - The `sanitize_signal_output` method in `FinUtils` drops tickers it cannot verify against the local DB. If the DB is empty, all impact tickers will be stripped. Populate DB with `alphaear-news` first.
 - Mode C output must always include the IPS disclaimer. Do not omit even if user requests brevity.
@@ -77,7 +91,6 @@ Normalise input to one of:
 - `signal_update_request` → Mode D
 
 Minimum required fields: ticker or holdings, base currency, valid-as-of date, user objective, time horizon (where relevant).
-
 If ambiguous, ask one clarifying question before proceeding.
 
 ## Step 2 — Core Analysis
@@ -86,11 +99,8 @@ Follow mode-specific instructions from the loaded mode file.
 
 ## Step 3 — Quant Handoff Decision
 
-Escalate to `quant-analysis` only if the task explicitly requires:
-mean-variance optimisation, Black-Litterman, risk parity, VaR/CVaR, Monte Carlo, factor modelling, or backtesting.
-
+Escalate to `quant-analysis` only if the task explicitly requires: mean-variance optimisation, Black-Litterman, risk parity, VaR/CVaR, Monte Carlo, factor modelling, or backtesting.
 When escalating, read `references/quant-handoff.md` and create a structured handoff request.
-
 After receiving quantitative outputs, integrate them into the final interpretation.
 
 ## Step 4 — Bias and Risk Discipline
@@ -135,6 +145,7 @@ Templates:
 ## Reference Loading Instructions
 
 **CRITICAL CONTEXT WARNING:** This skill contains large reference files. To prevent context window overflow, **DO NOT load all references upfront**. Only load the specific reference file when actively executing the step that requires it.
+
 - `asset-classification.md`: Load ONLY when specifically performing tasks related to this file.
 - `market-asset-analysis.md`: Load ONLY when specifically performing tasks related to this file.
 - `all-seasons-portfolio.md`: Load ONLY when specifically performing tasks related to this file.
