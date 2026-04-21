@@ -15,14 +15,14 @@ describe('getLLMModel', () => {
   beforeEach(() => {
     vi.resetAllMocks()
     // Reset env vars to ensure a clean state for each test
-    vi.stubEnv('LLM_PROVIDER', '')
+    vi.stubEnv('LLM_PROVIDER', undefined)
     vi.stubEnv('OPENAI_API_KEY', '')
     vi.stubEnv('OPENROUTER_API_KEY', '')
     vi.stubEnv('GOOGLE_GENERATIVE_AI_API_KEY', '')
-    vi.stubEnv('OPENAI_MODEL', '')
-    vi.stubEnv('OPENROUTER_MODEL', '')
-    vi.stubEnv('GEMINI_MODEL', '')
-    vi.stubEnv('NEXT_PUBLIC_APP_URL', '')
+    vi.stubEnv('OPENAI_MODEL', undefined)
+    vi.stubEnv('OPENROUTER_MODEL', undefined)
+    vi.stubEnv('GEMINI_MODEL', undefined)
+    vi.stubEnv('NEXT_PUBLIC_APP_URL', undefined)
 
     // Default mocks for provider functions
     const mockModel = { id: 'mock-model' };
@@ -90,7 +90,7 @@ describe('getLLMModel', () => {
     it('should use default referer if NEXT_PUBLIC_APP_URL is missing', () => {
         vi.stubEnv('LLM_PROVIDER', 'openrouter')
         vi.stubEnv('OPENROUTER_API_KEY', 'test-openrouter-key')
-        vi.stubEnv('NEXT_PUBLIC_APP_URL', '')
+        vi.stubEnv('NEXT_PUBLIC_APP_URL', undefined)
         const openrouterMock = vi.fn().mockReturnValue({ id: 'anthropic/claude-3.5-sonnet' });
         (createOpenAI as any).mockReturnValue(openrouterMock)
 
