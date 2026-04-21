@@ -297,7 +297,7 @@ scripts/init_skill.py my-skill --path skills/public --resources scripts --exampl
 The script:
 
 - Creates the skill directory at the specified path
-- Generates a SKILL.md template with proper frontmatter and TODO placeholders
+- Generates a SKILL.md template with proper frontmatter and USER-FILL placeholders
 - Optionally creates resource directories based on `--resources`
 - Optionally adds example files when `--examples` is set
 
