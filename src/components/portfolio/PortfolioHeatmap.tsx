@@ -126,19 +126,31 @@ export function PortfolioHeatmap({ holdings, metric = 'changePercent', className
   const data = useMemo(() => {
     if (!holdings || holdings.length === 0) return [];
 
-    const totalValue = holdings.reduce((sum, h) => sum + (h.shares * h.price), 0);
+    const { children, totalValue } = holdings.reduce(
+      (acc, h) => {
+        const value = h.shares * h.price;
+        acc.children.push({
+          name: h.symbol,
+          value,
+          totalValue: 0, // Placeholder, updated below
+          changePercent: h.changePercent,
+          returnPercent: h.returnPercent,
+          metric // Pass down the selected metric for rendering
+        });
+        acc.totalValue += value;
+        return acc;
+      },
+      { children: [] as any[], totalValue: 0 }
+    );
+
+    for (let i = 0; i < children.length; i++) {
+      children[i].totalValue = totalValue;
+    }
 
     // Treemap requires a specific data structure
     return [{
       name: 'Portfolio',
-      children: holdings.map(h => ({
-        name: h.symbol,
-        value: h.shares * h.price,
-        totalValue,
-        changePercent: h.changePercent,
-        returnPercent: h.returnPercent,
-        metric // Pass down the selected metric for rendering
-      })).sort((a, b) => b.value - a.value) // Sort by size
+      children: children.sort((a, b) => b.value - a.value) // Sort by size
     }];
   }, [holdings, metric]);
 
