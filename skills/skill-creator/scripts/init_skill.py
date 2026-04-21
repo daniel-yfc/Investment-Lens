@@ -22,7 +22,7 @@ ALLOWED_RESOURCES = {"scripts", "references", "assets"}
 
 SKILL_TEMPLATE = """---
 name: {skill_name}
-description: [TODO: Complete and informative explanation of what the skill does and when to use it. Include WHEN to use this skill - specific scenarios, file types, or tasks that trigger it.]
+description: "{skill_description}"
 ---
 
 # {skill_title}
@@ -297,7 +297,7 @@ def create_resource_dirs(skill_dir, skill_name, skill_title, resources, include_
                 print("[OK] Created assets/")
 
 
-def init_skill(skill_name, path, resources, include_examples):
+def init_skill(skill_name, path, resources, include_examples, skill_description):
     """
     Initialize a new skill directory with template SKILL.md.
 
@@ -306,6 +306,7 @@ def init_skill(skill_name, path, resources, include_examples):
         path: Path where the skill directory should be created
         resources: Resource directories to create
         include_examples: Whether to create example files in resource directories
+        skill_description: Description for the skill to insert into SKILL.md
 
     Returns:
         Path to created skill directory, or None if error
@@ -328,7 +329,7 @@ def init_skill(skill_name, path, resources, include_examples):
 
     # Create SKILL.md from template
     skill_title = title_case_skill_name(skill_name)
-    skill_content = SKILL_TEMPLATE.format(skill_name=skill_name, skill_title=skill_title)
+    skill_content = SKILL_TEMPLATE.format(skill_name=skill_name, skill_title=skill_title, skill_description=skill_description)
 
     skill_md_path = skill_dir / "SKILL.md"
     try:
@@ -378,6 +379,11 @@ def main():
         action="store_true",
         help="Create example files inside the selected resource directories",
     )
+    parser.add_argument(
+        "--description",
+        default="[TODO: Complete and informative explanation of what the skill does and when to use it. Include WHEN to use this skill - specific scenarios, file types, or tasks that trigger it.]",
+        help="Description for the skill to insert into SKILL.md",
+    )
     args = parser.parse_args()
 
     raw_skill_name = args.skill_name
@@ -411,7 +417,7 @@ def main():
         print("   Resources: none (create as needed)")
     print()
 
-    result = init_skill(skill_name, path, resources, args.examples)
+    result = init_skill(skill_name, path, resources, args.examples, args.description)
 
     if result:
         sys.exit(0)
