@@ -30,8 +30,7 @@ export function useStreamingChat() {
       setStreaming(false);
     },
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    onError: (err: any) => {
-      console.error('Chat stream interrupted:', err);
+    onError: (_err: any) => {
       setStreaming(false);
       setHasInterruptionError(true);
       handleStreamWithFallback();
@@ -55,7 +54,6 @@ export function useStreamingChat() {
 
   const handleStreamWithFallback = useCallback(() => {
     if (retryCountRef.current >= MAX_RETRIES) {
-      console.warn('Max retries reached. Stream interruption fallback failed.');
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       setMessages((prev: any[]) => {
         const lastMsg = prev[prev.length - 1];
@@ -76,13 +74,11 @@ export function useStreamingChat() {
     const backoffMs = INITIAL_BACKOFF_MS * Math.pow(2, retryCountRef.current);
     retryCountRef.current += 1;
 
-    console.log(`Retrying connection in ${backoffMs}ms... (Attempt ${retryCountRef.current}/${MAX_RETRIES})`);
-
     setTimeout(() => {
       setStreaming(true);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      reload().catch((reloadErr: any) => {
-         console.error('Retry failed:', reloadErr);
+      reload().catch((_reloadErr: any) => {
+         // Silently fail as fallback logic handles retries or error state
       });
     }, backoffMs);
   }, [reload, setStreaming, setMessages]);
@@ -98,8 +94,7 @@ export function useStreamingChat() {
       try {
         append({ role: 'user', content: message });
         originalHandleSubmit(undefined, { data: { message } });
-      } catch (submitErr) {
-         console.error('Submit error:', submitErr);
+      } catch {
          setStreaming(false);
       }
     },

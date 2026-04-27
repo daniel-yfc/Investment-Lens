@@ -81,8 +81,9 @@ export function SignalChainGraph({ nodes: initialNodes, edges, readonly = false,
   if (initialNodes !== prevInitialNodes) {
     setPrevInitialNodes(initialNodes);
     setNodes(prevNodes => {
+      const prevNodesMap = new Map(prevNodes.map(n => [n.id, n]));
       return initialNodes.map(inNode => {
-        const existing = prevNodes.find(n => n.id === inNode.id);
+        const existing = prevNodesMap.get(inNode.id);
         return {
           ...inNode,
           x: existing?.x ?? inNode.x ?? 0,

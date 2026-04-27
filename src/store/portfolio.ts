@@ -87,7 +87,7 @@ export const usePortfolioStore = create<PortfolioState>()(
                const totalValue = holdings.reduce((sum, h) => sum + h.marketValue, 0)
 
                const newPortfolio: Portfolio = {
-                 id: Math.random().toString(36).substring(7),
+                 id: crypto.randomUUID(),
                  name: file.name.replace('.csv', ''),
                  baseCurrency: 'TWD',
                  holdings,
