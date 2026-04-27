@@ -21,8 +21,12 @@ export function PortfolioManager({
   const [viewMode, setViewMode] = useState<'table' | 'heatmap'>('table');
   const [heatmapMetric, setHeatmapMetric] = useState<'changePercent' | 'returnPercent'>('returnPercent');
 
-  const totalMarketValue = holdings.reduce((sum, h) => sum + (h.shares * h.price), 0);
-  const totalCostBasis = holdings.reduce((sum, h) => sum + (h.shares * h.costBasis), 0);
+  let totalMarketValue = 0;
+  let totalCostBasis = 0;
+  for (const h of holdings) {
+    totalMarketValue += h.shares * h.price;
+    totalCostBasis += h.shares * h.costBasis;
+  }
   const totalReturn = totalMarketValue - totalCostBasis;
   const totalReturnPercent = totalCostBasis > 0 ? (totalReturn / totalCostBasis) * 100 : 0;
 
