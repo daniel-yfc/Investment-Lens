@@ -21,12 +21,14 @@ function sanitizeTicker(raw: string): string | null {
 
 export async function POST(req: Request) {
   try {
-    const isTestAuth = req.headers.get('x-test-auth') === 'true'
-    const isPlaywrightTest = req.headers.get('x-playwright-test') === 'true'
+    const isTestRequest =
+      process.env.NODE_ENV !== 'production' &&
+      !!process.env.E2E_TEST_TOKEN &&
+      req.headers.get('x-e2e-test-token') === process.env.E2E_TEST_TOKEN
 
     let sessionUser: { id?: string; name?: string | null; email?: string | null } | undefined
 
-    if (isTestAuth || isPlaywrightTest) {
+    if (isTestRequest) {
       sessionUser = { id: 'test-user', name: 'Test', email: 'test@example.com' }
     } else {
       const session = await auth()
@@ -69,7 +71,7 @@ export async function POST(req: Request) {
 
     Sentry.setExtra('message_length', message.length)
 
-    if (isTestAuth || isPlaywrightTest) {
+    if (isTestRequest) {
       const encoder = new TextEncoder()
       const mockStream = new ReadableStream({
         start(controller) {
