@@ -1,7 +1,6 @@
 'use client'
 
-import React from 'react'
-import { PortfolioHeatmapProps, HoldingItem } from '@/types/portfolio.types'
+import { PortfolioHeatmapProps } from '@/types/portfolio.types'
 import { cn } from '@/lib/utils'
 
 export function PortfolioHeatmap({ holdings, metric, colorScale = 'diverging', isLoading }: PortfolioHeatmapProps) {
