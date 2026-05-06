@@ -381,7 +381,7 @@ def main():
     )
     parser.add_argument(
         "--description",
-        default="[TODO: Complete and informative explanation of what the skill does and when to use it. Include WHEN to use this skill - specific scenarios, file types, or tasks that trigger it.]",
+        default="[USER-FILL: Provide a complete and informative explanation of what the skill does and when to use it. Include specific scenarios, file types, or tasks that trigger it. Example: 'Comprehensive document creation and editing for .docx files. Use when the user needs to: (1) Create new documents, (2) Edit existing content, or (3) Manage tracked changes.']",
         help="Description for the skill to insert into SKILL.md",
     )
     args = parser.parse_args()
