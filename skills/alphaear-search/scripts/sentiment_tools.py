@@ -209,23 +209,34 @@ class SentimentTools:
             titles = [item['title'] for item in to_analyze]
             results = self.analyze_sentiment_bert(titles)
             
-            for item, analysis in zip(to_analyze, results):
-                cursor.execute("""
-                    UPDATE daily_news 
-                    SET sentiment_score = ?, meta_data = json_set(COALESCE(meta_data, '{}'), '$.sentiment_reason', ?)
-                    WHERE id = ?
-                """, (analysis['score'], analysis['reason'], item['id']))
-                updated_count += 1
+            update_data = [
+                (analysis['score'], analysis['reason'], item['id'])
+                for item, analysis in zip(to_analyze, results)
+            ]
+
+            cursor.executemany("""
+                UPDATE daily_news
+                SET sentiment_score = ?, meta_data = json_set(COALESCE(meta_data, '{}'), '$.sentiment_reason', ?)
+                WHERE id = ?
+            """, update_data)
+            updated_count = len(to_analyze)
         else:
             logger.info(f"🚶 Using LLM for analysis of {len(to_analyze)} items...")
+            update_data = []
             for item in to_analyze:
                 analysis = self.analyze_sentiment_llm(item['title'])
-                cursor.execute("""
-                    UPDATE daily_news 
-                    SET sentiment_score = ?, meta_data = json_set(COALESCE(meta_data, '{}'), '$.sentiment_reason', ?)
-                    WHERE id = ?
-                """, (analysis.get('score', 0.0), analysis.get('reason', ''), item['id']))
-                updated_count += 1
+                update_data.append((
+                    analysis.get('score', 0.0),
+                    analysis.get('reason', ''),
+                    item['id']
+                ))
+
+            cursor.executemany("""
+                UPDATE daily_news
+                SET sentiment_score = ?, meta_data = json_set(COALESCE(meta_data, '{}'), '$.sentiment_reason', ?)
+                WHERE id = ?
+            """, update_data)
+            updated_count = len(to_analyze)
         
         self.db.conn.commit()
         return updated_count
