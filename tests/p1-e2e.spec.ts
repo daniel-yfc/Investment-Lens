@@ -11,8 +11,6 @@ test.describe('E2E Acceptance Criteria tests', () => {
     const res = await request.post('http://localhost:3000/api/v1/chat/stream', {
       headers: {
         'Content-Type': 'application/json',
-        'x-playwright-test': 'true',
-        'x-test-auth': 'true'
       },
       data: { message: '分析台積電 2330.TW', conversationId: null }
     });

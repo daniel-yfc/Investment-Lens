@@ -22,9 +22,8 @@ export default auth((req) => {
   const isTestRequest =
     process.env.NODE_ENV === 'test' ||
     (process.env.NODE_ENV !== 'production' &&
-      (req.headers.get('x-playwright-test') === 'true' ||
-        req.headers.get('x-test-auth') === 'true' ||
-        req.headers.get('user-agent')?.includes('Playwright')))
+      !!process.env.E2E_TEST_TOKEN &&
+      req.headers.get('x-e2e-test-token') === process.env.E2E_TEST_TOKEN)
 
   if (isTestRequest) return withCSP(NextResponse.next())
 

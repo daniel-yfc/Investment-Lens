@@ -17,8 +17,6 @@ test.describe('API Integration tests for /api/v1/chat/stream', () => {
     const res = await request.post('http://localhost:3000/api/v1/chat/stream', {
       headers: {
         'Content-Type': 'application/json',
-        'x-playwright-test': 'true',
-        'x-test-auth': 'true'
       },
       data: { message: '分析台積電 2330.TW', conversationId: null }
     });
@@ -33,8 +31,6 @@ test.describe('API Integration tests for /api/v1/chat/stream', () => {
       request.post('http://localhost:3000/api/v1/chat/stream', {
         headers: {
           'Content-Type': 'application/json',
-          'x-playwright-test': 'true',
-          'x-test-auth': 'true',
           'x-forwarded-for': 'rate-limit-test-ip-3'
         },
         data: { message: 'rate limit test ' + i }

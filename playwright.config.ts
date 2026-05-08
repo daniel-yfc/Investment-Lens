@@ -9,6 +9,9 @@ export default defineConfig({
   reporter: 'html',
   use: {
     trace: 'on-first-retry',
+    extraHTTPHeaders: {
+      'x-e2e-test-token': process.env.E2E_TEST_TOKEN || 'local-test-token',
+    },
   },
   projects: [
     {
