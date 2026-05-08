@@ -13,15 +13,24 @@ load_dotenv()
 # Fix for Kronos internal imports
 import sys
 import os
-KRONOS_DIR = os.path.join(os.path.dirname(__file__), 'predictor')
+SCRIPTS_DIR = os.path.dirname(os.path.abspath(__file__))
+KRONOS_DIR = os.path.join(SCRIPTS_DIR, 'predictor')
+
+if SCRIPTS_DIR not in sys.path:
+    sys.path.insert(0, SCRIPTS_DIR)
 if KRONOS_DIR not in sys.path:
-    sys.path.append(KRONOS_DIR)
+    sys.path.insert(0, KRONOS_DIR)
 
 import glob
 from sentence_transformers import SentenceTransformer
 
-from .predictor.model import Kronos, KronosTokenizer, KronosPredictor
-from .schema.models import KLinePoint
+# Enable absolute imports for internal predictor modules if running as a script
+try:
+    from .predictor.model import Kronos, KronosTokenizer, KronosPredictor
+    from .schema.models import KLinePoint
+except (ImportError, ValueError):
+    from model import Kronos, KronosTokenizer, KronosPredictor
+    from schema.models import KLinePoint
 
 class KronosPredictorUtility:
     """
