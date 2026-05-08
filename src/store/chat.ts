@@ -54,17 +54,19 @@ function appendToLastAssistant(
       { id: generateId(), role: 'assistant', content: '', createdAt: new Date(), ...update },
     ]
   }
-  return messages.map((m, i) =>
-    i === messages.length - 1
-      ? {
-          ...m,
-          content: update.content ? m.content + update.content : m.content,
-          toolCalls: update.toolCalls
-            ? [...(m.toolCalls ?? []), ...update.toolCalls]
-            : m.toolCalls,
-        }
-      : m
-  )
+  const newMessages = [...messages]
+  const lastIndex = newMessages.length - 1
+  const m = newMessages[lastIndex]
+
+  newMessages[lastIndex] = {
+    ...m,
+    content: update.content ? m.content + update.content : m.content,
+    toolCalls: update.toolCalls
+      ? [...(m.toolCalls ?? []), ...update.toolCalls]
+      : m.toolCalls,
+  }
+
+  return newMessages
 }
 
 export const useChatStore = create<ChatState>()(
